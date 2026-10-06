@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Xlabs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEEFF1;--ink:#17191C;--muted:#62666D;--line:#D2D4D9;--panel:#17191C;--panel-ink:#E6E8EB;--panel-dim:#8A8F98;--accent:#2845F5;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111214;--ink:#ECEDEF;--muted:#8E939B;--line:#2A2D32;--panel:#1A1C20;--panel-ink:#E6E8EB;--panel-dim:#80858E;--accent:#7C90FF}}
+:root[data-theme="dark"]{--bg:#111214;--ink:#ECEDEF;--muted:#8E939B;--line:#2A2D32;--panel:#1A1C20;--panel-ink:#E6E8EB;--panel-dim:#80858E;--accent:#7C90FF}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.6 "Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 28px}
+header{display:flex;justify-content:space-between;align-items:center;padding:28px 0}
+.logo{font-weight:600;font-size:20px;letter-spacing:-.02em;text-decoration:none}
+nav{display:flex;gap:28px;font-size:15px}
+nav a{text-decoration:none;color:var(--muted)}
+nav a:hover{color:var(--ink)}
+.hero{padding:88px 0 96px;display:grid;grid-template-columns:1.05fr 1fr;gap:56px;align-items:center}
+h1{font-size:clamp(38px,5.6vw,64px);line-height:1.04;letter-spacing:-.035em;font-weight:500;margin:0 0 24px}
+.lede{color:var(--muted);max-width:30em;margin:0 0 32px}
+.btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-block;padding:12px 20px;border-radius:6px;font-size:15px;font-weight:500;text-decoration:none;border:1px solid var(--ink)}
+.btn.primary{background:var(--ink);color:var(--bg)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent);color:#fff}
+.term{background:var(--panel);color:var(--panel-ink);border-radius:8px;padding:20px 22px;font:400 13.5px/1.7 "JetBrains Mono",ui-monospace,Menlo,monospace;min-height:288px;overflow-x:auto}
+.term .bar{color:var(--panel-dim);margin-bottom:12px}
+.term .p{color:var(--accent);filter:brightness(1.35)}
+.term .d{color:var(--panel-dim)}
+.cursor{display:inline-block;width:8px;height:15px;background:var(--panel-ink);vertical-align:-2px;animation:b 1.1s steps(1) infinite}
+@keyframes b{50%{opacity:0}}
+section{border-top:1px solid var(--line);padding:72px 0}
+h2{font-size:15px;font-weight:600;margin:0 0 28px;color:var(--muted);letter-spacing:0}
+.about{font-size:clamp(22px,2.8vw,30px);line-height:1.35;letter-spacing:-.02em;max-width:26em;margin:0}
+.proj{display:grid;grid-template-columns:1fr 1.3fr;gap:56px}
+.proj h3{font-size:34px;letter-spacing:-.03em;font-weight:500;margin:0 0 12px}
+.proj p{margin:0 0 20px;color:var(--muted)}
+.facts{margin:0;padding:0;list-style:none}
+.facts li{display:flex;justify-content:space-between;gap:24px;padding:14px 0;border-bottom:1px solid var(--line)}
+.facts li:first-child{border-top:1px solid var(--line)}
+.facts span:first-child{color:var(--muted)}
+.facts span:last-child{text-align:right;font-weight:500}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:40px}
+.cols h4{margin:0 0 8px;font-size:17px;font-weight:600}
+.cols p{margin:0;color:var(--muted);font-size:16px}
+.road{display:grid;grid-template-columns:1fr 1fr;gap:56px}
+.road ul{list-style:none;margin:0;padding:0}
+.road li{padding:10px 0;border-bottom:1px solid var(--line);display:flex;gap:12px}
+.road .k{color:var(--muted);font-size:15px;margin-bottom:12px;display:block}
+.tick{color:var(--accent);flex:none;width:1.2em}
+.todo .tick{color:var(--muted)}
+footer{border-top:1px solid var(--line);padding:40px 0 56px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;color:var(--muted);font-size:15px}
+footer a{margin-left:20px}
+@media (max-width:820px){
+  .hero,.proj,.road{grid-template-columns:1fr;gap:40px}
+  .hero{padding:48px 0 64px}
+  .cols{grid-template-columns:1fr;gap:28px}
+  nav{gap:18px}
+}
+@media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+.docs{display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px;padding:24px 0 96px}
+.side{position:sticky;top:24px;align-self:start;display:flex;flex-direction:column;gap:2px;font-size:15px}
+.side a{text-decoration:none;color:var(--muted);padding:6px 10px;border-left:2px solid var(--line)}
+.side a:hover{color:var(--ink)}
+.side a[aria-current="page"]{color:var(--ink);border-left-color:var(--accent);font-weight:500}
+.side .h{font-size:13px;color:var(--muted);margin:0 0 10px 12px}
+.doc{max-width:720px;min-width:0}
+.doc h1{font-size:clamp(32px,4.4vw,44px);margin:0 0 24px}
+.doc h2{font-size:24px;letter-spacing:-.02em;font-weight:600;color:var(--ink);margin:48px 0 14px}
+.doc h3{font-size:18px;font-weight:600;margin:32px 0 10px}
+.doc p,.doc li{max-width:68ch}
+.doc li{margin:4px 0}
+.doc code{font:400 .88em "JetBrains Mono",ui-monospace,Menlo,monospace;background:var(--line);padding:2px 5px;border-radius:4px}
+.doc pre{background:var(--panel);color:var(--panel-ink);padding:16px 18px;border-radius:8px;overflow-x:auto;line-height:1.6}
+.doc pre code{background:none;padding:0;font-size:13.5px}
+.doc a{color:var(--accent)}
+.tw{overflow-x:auto;margin:20px 0}
+.doc table{border-collapse:collapse;width:100%;font-size:15px}
+.doc th,.doc td{text-align:left;padding:10px 14px 10px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.doc th{color:var(--muted);font-weight:500}
+.doc .src{margin-top:56px;font-size:14px}
+.docs-top{display:none}
+@media (max-width:820px){
+ .docs{grid-template-columns:1fr;gap:24px}
+ .side{position:static;flex-direction:row;flex-wrap:wrap;gap:6px}
+ .side a{border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+ .side a[aria-current="page"]{border-color:var(--accent)}
+ .side .h{display:none}
+}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="logo" href="#/">Xlabs</a>
+    <nav>
+      <a href="#about">About</a>
+      <a href="#minimal-os">Minimal-OS</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#/docs" data-top>Docs</a>
+    </nav>
+  </header>
+
+  <main id="home">
+    <div class="hero">
+      <div>
+        <h1>Small software, built from the ground up.</h1>
+        <p class="lede">Xlabs makes low-level software with as little in the way as possible. Our current project is Minimal-OS, an operating system for x86_64.</p>
+        <div class="btns">
+          <a class="btn primary" href="https://github.com/fsminecrafter/Minimal-OS">View Minimal-OS on GitHub</a>
+          <a class="btn" href="https://github.com/fsminecrafter/Minimal-OS/releases">Download an ISO</a>
+        </div>
+      </div>
+      <div class="term" aria-label="Minimal-OS terminal example">
+        <div class="bar">Minimal-OS terminal</div>
+        <div id="out"></div>
+      </div>
+    </div>
+
+    <section id="about">
+      <h2>About</h2>
+      <p class="about">We write C and assembly, keep the codebase readable, and publish everything as open source under GPL-3.0.</p>
+    </section>
+
+    <section id="minimal-os">
+      <h2>Project</h2>
+      <div class="proj">
+        <div>
+          <h3>Minimal-OS</h3>
+          <p>An operating system written in C and Assembly for x86_64 processors. It boots from an ISO, runs in QEMU, and currently needs 1024 MB of memory.</p>
+          <div class="btns"><a class="btn primary" href="#/docs">Read the docs</a><a class="btn" href="https://github.com/fsminecrafter/Minimal-OS">Source</a></div>
+        </div>
+        <ul class="facts">
+          <li><span>Languages</span><span>C, x86 Assembly</span></li>
+          <li><span>Architecture</span><span>x86_64</span></li>
+          <li><span>File system</span><span>MinimaFS</span></li>
+          <li><span>Programs</span><span>.run executables</span></li>
+          <li><span>License</span><span>GPL-3.0</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>What it does today</h2>
+      <div class="cols">
+        <div><h4>Runs on several cores</h4><p>Multithreading and multicore support, with a process manager and time scheduler.</p></div>
+        <div><h4>Runs your programs</h4><p>Syscalls, a user layer and a service manager. Build apps with the Minimal-OS SDK.</p></div>
+        <div><h4>Talks to hardware</h4><p>Graphics, USB keyboard, audio and AHCI disk storage.</p></div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <h2>Roadmap</h2>
+      <div class="road">
+        <div>
+          <span class="k">Shipped in 0.4.x</span>
+          <ul>
+            <li><span class="tick">✓</span>Graphics and display handler</li>
+            <li><span class="tick">✓</span>MinimaFS file system</li>
+            <li><span class="tick">✓</span>Multicore and services manager</li>
+            <li><span class="tick">✓</span>Syscalls and .run executables</li>
+          </ul>
+        </div>
+        <div class="todo">
+          <span class="k">Next, planned for 0.4.5x</span>
+          <ul>
+            <li><span class="tick">○</span>Simple desktop</li>
+            <li><span class="tick">○</span>Window manager</li>
+            <li><span class="tick">○</span>File browser</li>
+            <li><span class="tick">○</span>Text editor</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+<main id="docs" class="docs" hidden>
+<nav class="side" aria-label="Documentation"><span class="h">Minimal-OS docs</span><a href="#/docs/system-overview" data-nav="system-overview">Overview</a><a href="#/docs/build-and-debugging" data-nav="build-and-debugging">Build and debugging</a><a href="#/docs/boot-and-kernel" data-nav="boot-and-kernel">Boot and kernel</a><a href="#/docs/hardware-and-drivers" data-nav="hardware-and-drivers">Hardware and drivers</a><a href="#/docs/storage-and-packages" data-nav="storage-and-packages">Storage and packages</a><a href="#/docs/networking" data-nav="networking">Networking</a><a href="#/docs/services" data-nav="services">Services</a><a href="#/docs/install-and-services" data-nav="install-and-services">Install and services</a><a href="#/docs/user-programs" data-nav="user-programs">User programs</a><a href="#/docs/user-sdk-syscalls" data-nav="user-sdk-syscalls">SDK and syscalls</a></nav>
+<div><article class="doc" data-doc="system-overview" hidden><h1>Minimal-OS Documentation Index</h1>
+<p>This directory contains the system documentation. Start with the guide that
+matches the layer you are changing.</p>
+<h2>Guides</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#/docs/boot-and-kernel">Boot and kernel</a></td>
+<td>Boot transition, memory, processes, SMP, scheduling, and syscalls</td>
+</tr>
+<tr>
+<td><a href="#/docs/hardware-and-drivers">Hardware</a></td>
+<td>PCI, graphics, USB, audio, storage, and driver managers</td>
+</tr>
+<tr>
+<td><a href="#/docs/storage-and-packages">Storage and packages</a></td>
+<td>MinimaFS, disk commands, <code>.mpkg</code>, install directories, and format</td>
+</tr>
+<tr>
+<td><a href="#/docs/networking">Networking</a></td>
+<td>Ethernet, IPv4, ARP, UDP, DHCP, DNS, TCP, and TLS</td>
+</tr>
+<tr>
+<td><a href="#/docs/services">Services</a></td>
+<td><code>.service</code> files, startup commands, supervision, and registration</td>
+</tr>
+<tr>
+<td><a href="#/docs/user-programs">User programs</a></td>
+<td>SDK, <code>.run</code>, <code>.slib</code>, ELF loading, and user/kernel boundaries</td>
+</tr>
+<tr>
+<td><a href="#/docs/build-and-debugging">Build and debugging</a></td>
+<td>Make targets, ISO generation, QEMU, tests, and logs</td>
+</tr>
+<tr>
+<td><a href="#/docs/user-sdk-syscalls">SDK syscalls</a></td>
+<td>Detailed user-space syscall API reference</td>
+</tr>
+<tr>
+<td><a href="#/docs/install-and-services">Install and services</a></td>
+<td>Short installation and service quick-start</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Source Map</h2>
+<p>| <code>src/impl/boot</code> | Multiboot2 entry, page tables, long-mode transition |
+| <code>src/impl/kernel</code> | Startup, memory, scheduler, syscalls, services |
+| <code>src/impl/proc</code> | Processes, threads, context switching, run queues |
+| <code>src/impl/filesystem</code> | MinimaFS and AHCI-backed disk operations |
+| <code>src/impl/net</code> | Network stack and TLS client |
+| <code>src/modules</code> | Hardware drivers and device managers |
+| <code>src/impl/commands</code> | Terminal commands |
+| <code>src/intf</code> | Kernel interfaces and shared headers |
+| <code>Minimal-OS-SDK</code> | User programs, libraries, headers, and SDK tools |
+| <code>tools</code> | Host builders, tests, QEMU scripts, and utilities |</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/system-overview.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="build-and-debugging" hidden><h1>Build And Debugging</h1>
+<h2>Prerequisites</h2>
+<p>The documented Debian/Ubuntu dependencies include GCC/binutils tooling, NASM,
+GRUB tools, xorriso, make, and QEMU. The repository's
+<code>build_gccbinutils.sh</code> creates the cross-toolchain expected by the Makefile at
+<code>$HOME/cross/bin/x86_64-elf-gcc</code> and <code>x86_64-elf-ld</code>.</p>
+<p>Create a QEMU disk image before running the full storage workflow:</p>
+<pre><code class="language-sh">fallocate -l 256M sata256.img
+</code></pre>
+<h2>Make Targets</h2>
+<pre><code class="language-sh">make build-x86_64
+make run
+make minimaSSL-slib
+make clean
+</code></pre>
+<p><code>build-x86_64</code> compiles enabled modules, kernel implementation files, minimaSSL
+crypto sources, resource packages, and embedded package objects. It links
+<code>dist/x86_64/kernel.bin</code>, copies it to the ISO input tree, and creates
+<code>dist/x86_64/kernel.iso</code>.</p>
+<p><code>run</code> builds first, then starts QEMU with the ISO, serial console, USB keyboard,
+AHCI disk, RTL8139 networking, and audio devices.</p>
+<p><code>minimaSSL-slib</code> builds the SDK library and copies the result to the distribution
+build. The install1 rule then copies it into <code>src/resources/install1</code> before
+building the embedded package.</p>
+<p><code>clean</code> removes kernel and distribution output, <code>Minimal-OS-SDK/build</code>, generated
+<code>.run</code> files, generated minimaSSL bundles, and package objects. It does not
+remove source resources or the disk image.</p>
+<h2>Resource Rebuilds</h2>
+<p>Resource directories are packaged into install1, install2, and install3:</p>
+<pre><code class="language-text">src/resources/install1 -&gt; 0:/etc
+src/resources/install2 -&gt; 0:/programs
+src/resources/install3 -&gt; 0:/services
+</code></pre>
+<p>Files added to install2/install3 are included as package prerequisites, so a
+changed program or service causes the corresponding embedded package to rebuild.
+Run <code>make clean</code> when removing a generated file should also remove its stale
+package object.</p>
+<h2>HTTPS Test</h2>
+<p>Run the focused TLS integration test:</p>
+<pre><code class="language-sh">bash tools/debug/https_test.sh
+</code></pre>
+<p>The script:</p>
+<ol>
+<li>builds the kernel;</li>
+<li>creates a temporary self-signed certificate;</li>
+<li>starts <code>openssl s_server -tls1_3</code> on the host;</li>
+<li>starts QEMU with user-mode networking;</li>
+<li>sends <code>n</code> at the disk prompt;</li>
+<li>runs <code>dhcp</code>;</li>
+<li>runs <code>wget https://10.0.2.2:8443/</code>;</li>
+<li>checks for handshake and download completion.</li>
+</ol>
+<p>The test intentionally uses an IP address and defers certificate verification.
+It validates the TLS record/key schedule and HTTP exchange, not public CA trust.</p>
+<p>The crypto known-answer test is:</p>
+<pre><code class="language-sh">gcc -std=c11 -I Minimal-OS-SDK/libraries/minimaSSL/include \
+  tools/debug/mssl_tls_gcm_kat.c \
+  Minimal-OS-SDK/libraries/minimaSSL/src/tls_gcm.c \
+  -o /tmp/mssl_tls_gcm_kat
+/tmp/mssl_tls_gcm_kat
+</code></pre>
+<h2>CI And Interactive Tests</h2>
+<pre><code class="language-sh">make ci-test
+make ci-interact
+</code></pre>
+<p><code>ci_test.sh</code> is intended for automated checks. <code>ci_interact.sh</code> drives the
+terminal over serial and waits for command-specific success patterns. When a
+pattern fails, inspect its serial output and the generated QEMU log.</p>
+<h2>Logs And Diagnostics</h2>
+<p>Useful output sources include:</p>
+<ul>
+<li>serial terminal output for initialization, commands, services, and TLS;</li>
+<li><code>tools/debug/https_test.log</code> for the HTTPS test guest console;</li>
+<li><code>tools/debug/https_server.log</code> for OpenSSL trace output;</li>
+<li><code>qemu.log</code> for QEMU guest errors and interrupts.</li>
+</ul>
+<p>OpenSSL's <code>bad record mac</code> means it rejected an authenticated TLS record before
+it could decode the encrypted inner message. Compare it with the guest's TLS
+stage message; the server-side error is often the primary failure and the guest
+receive error is a follow-on alert/close.</p>
+<h2>Debugging Rules</h2>
+<p>Build the smallest focused test after a change. Preserve existing user changes
+in a dirty worktree. Avoid using generated logs as source-of-truth code. For
+kernel crashes, inspect process creation, allocator state, interrupt state,
+serial output, and the last subsystem initialization message in that order.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/build-and-debugging.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="boot-and-kernel" hidden><h1>Boot And Kernel</h1>
+<h2>Boot Chain</h2>
+<p>GRUB loads the Multiboot2 kernel from the ISO. The boot entry is split between
+<code>src/impl/boot/main.asm</code> and <code>src/impl/boot/main64.asm</code>:</p>
+<ol>
+<li>Save the Multiboot information pointer.</li>
+<li>Verify the Multiboot signature, CPUID, and x86_64 long-mode support.</li>
+<li>Build initial PML4, PDPT, and page-directory tables.</li>
+<li>Enable PAE, long mode, NX, and paging.</li>
+<li>Load the 64-bit GDT and jump to <code>long_mode_start</code>.</li>
+<li>Pass the Multiboot information address to <code>kernel_main()</code>.</li>
+</ol>
+<p>The initial low-memory map uses 2 MiB pages. PML4 slot 511 is reserved for a
+high MMIO address range. Later device mappings are made by <code>src/impl/kernel/mmio.c</code>.
+The Multiboot memory-map tag is parsed by <code>multiboot2parse.c</code> to determine the
+available RAM reported to the allocator and system information commands.</p>
+<p>The GRUB menu provides three entries: <code>Minimal-OS</code> for normal startup,
+<code>Minimal-OS Memory Tester x64</code> for a standalone pattern test of free PMM pages,
+and <code>Minimal-OS (No Disk)</code> to boot without probing or mounting storage. The
+memory test reserves only free PMM pages and halts after reporting PASS or FAIL.</p>
+<h2>Startup Order</h2>
+<p><code>kernel_main()</code> in <code>src/impl/kernel/main.c</code> performs the high-level startup:</p>
+<ul>
+<li>serial output, BSP/SMP state, GDT, and command registration;</li>
+<li>memory and startup routines;</li>
+<li>PCI enumeration;</li>
+<li>USB and graphics driver-manager registration;</li>
+<li>RTL8139 network registration, Ethernet/IP/UDP/TCP setup, and network syscall state;</li>
+<li>time and random seeding;</li>
+<li>audio and AHCI storage-driver registration;</li>
+<li>AP startup, interrupts, kernel background processes, and the terminal.</li>
+</ul>
+<p>The terminal owns the disk interaction. In normal mode it probes and mounts the
+disk and starts services; no-disk mode skips that path and still starts the
+terminal and keyboard tasks.</p>
+<h2>Memory</h2>
+<p>The physical memory manager (<code>src/impl/pmm.c</code>) allocates 4 KiB pages. The heap
+allocator (<code>src/impl/kernel/allocator.c</code>) provides variable-size allocations
+for kernel structures, file buffers, process objects, and driver state.</p>
+<p>Use page allocation for DMA-aligned or page-owned memory. Use <code>alloc()</code> or
+<code>alloc_unzeroed()</code> for ordinary objects. Large structures such as directory
+descriptors are deliberately heap allocated because kernel stacks are small.</p>
+<h2>Processes And Threads</h2>
+<p>Kernel processes are created with <code>createProcess(name, entry)</code>. A process entry
+must either loop, call <code>sleep()</code>, or terminate through <code>process_exit()</code>/<code>kill()</code>;
+returning from a raw kernel entry is not a normal completion mechanism.</p>
+<p>User <code>.run</code> programs are loaded as user processes. The loader creates an image,
+user stack, page mappings, and argument block, then enters ring 3 through the
+process trampoline. See <a href="#/docs/user-programs">user programs</a>.</p>
+<p>Threads are lightweight wrappers around kernel processes. <code>thread_join()</code> polls
+for process termination while yielding through <code>sleep()</code>.</p>
+<h2>Scheduling And SMP</h2>
+<p>Each online CPU owns a run queue with three levels:</p>
+<ul>
+<li>interactive: terminal input and short blocking work;</li>
+<li>normal: ordinary processes;</li>
+<li>background: CPU-heavy or lower-priority work.</li>
+</ul>
+<p>A process that consumes its quantum is demoted. A process that blocks is
+promoted on wake. Periodic boosting prevents starvation, and periodic
+rebalancing moves queued processes between CPUs when the load difference is
+large enough.</p>
+<p>Run-queue locks are SMP-safe spinlocks. <code>cli</code> only disables interrupts on the
+current CPU; it is not a replacement for an atomic lock shared by CPUs.</p>
+<p><code>process_t</code> contains fields consumed by context-switch assembly. Fields before
+the documented ABI boundary must not move without updating the assembly and
+verification code.</p>
+<h2>Syscall Boundary</h2>
+<p>User code invokes <code>int 0x80</code>. The syscall ISR saves registers into the packed
+<code>syscall_regs_t</code> layout, and <code>syscall_dispatch()</code> validates the requested
+operation and user pointers before calling a subsystem implementation.</p>
+<p>The user privilege table is separate from the syscall number table. For
+example, a user program may use TCP and filesystem calls, while DHCP remains a
+privileged operation because it changes the machine-wide network configuration.
+See <a href="#/docs/user-sdk-syscalls">user SDK syscalls</a> for the complete user-facing API.</p>
+<h2>Kernel Interfaces</h2>
+<p>Public kernel contracts live in <code>src/intf</code>:</p>
+<ul>
+<li><code>x86_64/proc.h</code> and <code>x86_64/scheduler.h</code> define process/scheduler state.</li>
+<li><code>x86_64/allocator.h</code> and <code>x86_64/pmm.h</code> define memory allocation.</li>
+<li><code>x86_64/minimafs.h</code> defines filesystem objects and operations.</li>
+<li><code>x86_64/syscall.h</code> defines the syscall ABI structures and constants.</li>
+<li>subsystem manager headers define driver registration and lifecycle methods.</li>
+</ul>
+<p>Implementations can grow internal structures, but shared headers and assembly
+offset contracts must remain synchronized.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/boot-and-kernel.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="hardware-and-drivers" hidden><h1>Hardware And Drivers</h1>
+<h2>Driver Manager Pattern</h2>
+<p>Hardware support is registered during kernel startup through manager APIs. A
+manager selects an available driver, initializes it, and exposes a stable
+subsystem interface to the rest of the kernel. This keeps device-specific code
+out of terminal commands and protocol implementations.</p>
+<p>Relevant interfaces are in <code>src/intf/x86_64</code> and implementations are in
+<code>src/modules</code>:</p>
+<ul>
+<li><code>network_manager.h</code> / network drivers;</li>
+<li><code>gpu_manager.h</code> / framebuffer drivers;</li>
+<li><code>usb_manager.h</code> / host-controller and device drivers;</li>
+<li>audio manager interfaces;</li>
+<li>storage manager and AHCI interfaces.</li>
+</ul>
+<p>A missing device is normally a supported degraded state. Graphics can continue
+headless, USB can fall back to PS/2, and audio can report that no compatible
+controller exists.</p>
+<h2>PCI And MMIO</h2>
+<p>PCI enumeration discovers devices by bus, device, and function. Driver code
+reads vendor/device IDs and maps BARs through the kernel MMIO allocator rather
+than using arbitrary virtual addresses.</p>
+<p>The MMIO subsystem reserves a high virtual range, creates page-table entries,
+and maps device registers or framebuffer memory. Device mappings must remain
+page aligned and should use the mapping helpers rather than direct identity
+assumptions.</p>
+<h2>Graphics</h2>
+<p>The preferred graphics path uses the linear framebuffer selected by the
+Multiboot2 bootloader (VBE on legacy BIOS or GOP on UEFI), so it does not need a
+GPU-specific register driver for basic display output. The renderer supports
+32-bit RGB layouts and uses the bootloader-provided pitch and channel masks.
+The Bochs/VBE driver remains as a fallback for the Bochs <code>1234:1111</code> device; it
+is not probed against arbitrary display controllers. This is a software
+framebuffer path, not accelerated 3D support. If the bootloader cannot supply a
+32-bit RGB framebuffer, generic graphics initialization is unavailable.</p>
+<p>After initialization, the terminal uses the shared graphics/text helpers. The
+framebuffer is also exposed to user programs through the <code>SYS_GRAPHICS</code> syscall
+family.</p>
+<p>The terminal sets a text-grid resolution over the framebuffer. Graphics commands
+and SDK wrappers operate on pixels, primitives, text, resolution, and terminal
+clear operations.</p>
+<h2>USB</h2>
+<p>The UHCI path initializes the controller, builds frame lists and transfer
+ descriptors, enumerates devices, and detects HID boot keyboards. USB manager
+code registers the controller driver and exposes keyboard state to the terminal.</p>
+<p>User programs use <code>SYS_USB</code> wrappers for initialization, polling, keyboard
+presence, key translation, and keyboard metadata. USB polling is intentionally
+explicit because the kernel must service the controller while user code is
+running.</p>
+<h2>Audio</h2>
+<p>Audio drivers are registered through the audio manager. The AC'97 path searches
+for a compatible controller, configures the device, and provides a mix/update
+callback. The kernel audio process updates playback independently of the
+terminal.</p>
+<p>If no compatible audio controller is present, initialization reports that state
+and the rest of the system continues.</p>
+<h2>AHCI Storage</h2>
+<p>AHCI probing identifies SATA devices and exposes sector size/capacity to the
+MinimaFS disk wrapper. <code>initdisk</code> owns disk discovery and device initialization;
+<code>format</code> and <code>mount</code> operate on the selected MinimaFS drive.</p>
+<p>The filesystem uses a DMA bounce buffer for block I/O. Storage operations are
+kept behind MinimaFS APIs so commands and package extraction do not manipulate
+AHCI descriptors directly.</p>
+<h2>Adding A Driver</h2>
+<p>A new driver normally needs:</p>
+<ol>
+<li>a hardware-facing interface structure and callbacks;</li>
+<li>a manager registration call during <code>kernel_main()</code>;</li>
+<li>PCI/device detection and resource mapping;</li>
+<li>an implementation under <code>src/modules</code> or the relevant subsystem;</li>
+<li>a fallback behavior when the device is absent;</li>
+<li>build configuration in <code>config.mk</code> if the module is optional.</li>
+</ol>
+<p>Keep interrupt handlers short, protect shared state with the appropriate local
+interrupt and SMP locking rules, and expose only subsystem-level operations to
+commands and user syscalls.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/hardware-and-drivers.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="storage-and-packages" hidden><h1>Storage And Packages</h1>
+<h2>MinimaFS Model</h2>
+<p>MinimaFS stores a directory tree in 4 KiB blocks on an AHCI-backed disk.
+Mounted drives use paths such as <code>0:/</code>, <code>1:/</code>, and <code>0:/programs</code>. Metadata
+records file type, format, size, timestamps, runnable state, and block layout.
+Directory descriptors contain entries and storage descriptors track the volume
+root, block counts, and free space.</p>
+<p>The filesystem API is declared in <code>src/intf/x86_64/minimafs.h</code>. Commands should
+use resolved MinimaFS paths and the API rather than constructing raw disk
+structures.</p>
+<h2>Disk Workflow</h2>
+<p>The usual first-use sequence is:</p>
+<pre><code class="language-text">initdisk
+format
+mount
+</code></pre>
+<p><code>initdisk</code> probes storage and creates the kernel disk wrapper. <code>format</code> erases
+the selected filesystem area, writes MinimaFS metadata, creates standard
+folders, and installs embedded resource packages. <code>mount</code> attaches an existing
+filesystem without erasing it.</p>
+<p>The current allocation bitmap supports at most 256 MiB. The QEMU workflow uses
+a <code>sata256.img</code> disk image. Formatting a larger physical device is clamped to
+the supported size.</p>
+<h2>Embedded Install Packages</h2>
+<p>The root Makefile packages these directories as <code>MPKG0001</code> archives:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Destination after <code>format</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/resources/install1</code></td>
+<td><code>0:/etc</code></td>
+</tr>
+<tr>
+<td><code>src/resources/install2</code></td>
+<td><code>0:/programs</code></td>
+</tr>
+<tr>
+<td><code>src/resources/install3</code></td>
+<td><code>0:/services</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>The archives are converted to ELF binary objects with <code>objcopy</code> and linked into
+the kernel. This is intentional: a newly formatted disk has no files from
+which the format command could load an installer.</p>
+<p><code>install1</code> receives the generated <code>minimaSSL.slib</code>. A service file added to
+<code>install3</code> is therefore present at <code>0:/services</code> before service discovery runs.</p>
+<h2>MPKG Format</h2>
+<p>The host builder is <code>tools/mkpkg/mkpkg.py</code>. It writes:</p>
+<ul>
+<li>an 8-byte <code>MPKG0001</code> magic;</li>
+<li>a version and entry count;</li>
+<li>fixed-size entry records with names, flags, compression method, sizes, and
+  payload offsets;</li>
+<li>stored or LZSS-compressed payload data.</li>
+</ul>
+<p>Directory entries have no payload. File entries use either <code>MPKG_METHOD_STORE</code>
+or <code>MPKG_METHOD_LZSS</code>. The kernel validates names, table bounds, payload ranges,
+and decompression output before writing an entry.</p>
+<p>Use the command interface to work with packages already on disk:</p>
+<pre><code class="language-text">pkg zip 0:/source store
+pkg unzip 0:/archive.mpkg 0:/target
+pkginfo 0:/archive.mpkg
+installpkg 0:/archive.mpkg 0:/target
+</code></pre>
+<p>User programs use <code>mos_pkg_zip()</code>, <code>mos_pkg_unzip()</code>, and <code>mos_pkg_info()</code> over
+<code>SYS_PKG</code>.</p>
+<h2>File Operations</h2>
+<p>Kernel code can create, open, read, write, list, delete, and remove files through
+MinimaFS. User code uses the corresponding SDK wrappers:</p>
+<ul>
+<li><code>mos_open()</code> and <code>mos_close()</code> manage existing files;</li>
+<li><code>mos_read()</code> and <code>mos_fwrite()</code> transfer data;</li>
+<li><code>mos_seek()</code>, <code>mos_tell()</code>, <code>mos_size()</code>, and <code>mos_feof()</code> inspect position;</li>
+<li><code>mos_create()</code> creates an empty file before opening it writable;</li>
+<li><code>mos_listdir()</code>, <code>mos_exists()</code>, and <code>mos_is_dir()</code> inspect paths;</li>
+<li><code>mos_get_metadata()</code> returns stable user-facing metadata.</li>
+</ul>
+<p>Filesystem paths are strings, not user-space integer descriptors in the public
+SDK. Open file handles are kernel-owned values returned by <code>SYS_OPEN</code> and must
+be closed.</p>
+<h2>Safety Rules</h2>
+<p>Package extraction must reject absolute paths and <code>..</code> traversal. Validate
+sizes before allocating or reading payloads. Use heap memory for directory
+structures and large file buffers instead of kernel stacks. When adding a new
+format or package feature, keep the host encoder and kernel decoder constants
+synchronized.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/storage-and-packages.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="networking" hidden><h1>Networking</h1>
+<h2>Stack Layers</h2>
+<p>The kernel network path is:</p>
+<pre><code class="language-text">RTL8139 -&gt; Ethernet -&gt; IPv4/ARP -&gt; UDP/TCP -&gt; syscall handles
+</code></pre>
+<p><code>network_manager</code> selects the NIC driver. Ethernet frames are passed to IPv4,
+which dispatches UDP and TCP payloads. ARP resolves next-hop IPv4 addresses to
+MAC addresses. The protocol implementations live in <code>src/impl/net</code>.</p>
+<p>The stack uses host-order IPv4 addresses in its internal and user syscall APIs.
+Only wire headers use network byte order.</p>
+<h2>Initialization</h2>
+<p><code>kernel_main()</code> registers the RTL8139 driver and initializes Ethernet, IP, UDP,
+TCP, and <code>net_syscall</code>. The NIC must be initialized before protocol traffic can
+be sent. <code>network_manager_poll()</code> pumps received frames and is called from
+blocking protocol operations and user polling wrappers.</p>
+<p>The stack has bounded connection, listener, handle, and receive-queue tables.
+The <code>SYS_ERR_BUSY</code> result means another caller currently owns a non-reentrant
+network operation; retry it rather than treating it as a permanent failure.</p>
+<h2>DHCP</h2>
+<p>The terminal <code>dhcp</code> command sends a DISCOVER, waits for an OFFER, sends a
+REQUEST, and waits for an ACK. It configures:</p>
+<ul>
+<li>guest IPv4 address;</li>
+<li>netmask;</li>
+<li>gateway;</li>
+<li>DNS server.</li>
+</ul>
+<p>DHCP is intentionally an operator action. A user <code>.run</code> program calling
+<code>mos_net_dhcp()</code> receives <code>SYS_ERR_PERM</code> because changing the lease changes the
+machine-wide interface configuration.</p>
+<h2>DNS</h2>
+<p><code>dns_resolve()</code> sends a UDP A-record query to the configured DNS server. The
+resolver registers a temporary UDP handler, pumps the NIC while waiting, and
+removes the handler when the query completes or times out.</p>
+<p>The terminal <code>wget</code> command resolves a hostname when the URL does not contain a
+numeric address. DNS failures are reported separately from TCP and TLS failures.</p>
+<h2>TCP</h2>
+<p>TCP supports active connections, listeners, accept queues, retransmission,
+ACKs, receive buffers, and bounded send windows. User programs receive integer
+handles rather than raw <code>tcp_conn_t*</code> pointers. Handles are owned by the
+creating process and are closed when the owner dies.</p>
+<p>Client pattern:</p>
+<pre><code class="language-c">long h = mos_tcp_connect(ip, 80, 5000);
+if (h &gt; 0) {
+    mos_tcp_send(h, request, request_len);
+    mos_net_poll();
+    mos_tcp_recv(h, buffer, sizeof buffer);
+    mos_tcp_close(h);
+}
+</code></pre>
+<p>Server pattern:</p>
+<pre><code class="language-c">long listener = mos_tcp_listen(8080, 4);
+long client = mos_tcp_accept(listener, &amp;peer_ip, &amp;peer_port);
+</code></pre>
+<p><code>mos_tcp_accept()</code> is non-blocking. It returns zero when the backlog is empty
+and <code>SYS_ERR_AGAIN</code> is normalized to zero by the SDK wrapper. A server should
+sleep briefly between attempts. <code>mos_tcp_handoff()</code> transfers an accepted
+connection to a child process.</p>
+<h2>UDP</h2>
+<p>A user program binds a UDP handle, receives queued datagrams, and sends to a
+host-order destination address. Datagrams larger than the destination buffer
+are truncated and the remainder is discarded.</p>
+<p>Broadcast uses <code>SYSCALL_NET_IP_BROADCAST</code>. The QEMU user-mode network backend
+does not forward LAN broadcasts beyond the guest, so broadcast discovery needs
+a tap or bridged network configuration.</p>
+<h2>TLS And Wget</h2>
+<p>The kernel <code>wget</code> command performs a TLS 1.3 client handshake over TCP. The
+current tested cipher path is <code>TLS_AES_128_GCM_SHA256</code>:</p>
+<ol>
+<li>create a ClientHello with X25519 key share;</li>
+<li>parse ServerHello and derive handshake traffic secrets;</li>
+<li>authenticate encrypted handshake records;</li>
+<li>verify the server Finished message;</li>
+<li>derive application traffic secrets;</li>
+<li>send the HTTP request in an encrypted application record;</li>
+<li>decrypt the HTTP response.</li>
+</ol>
+<p>The TLS client defers certificate verification. It is suitable for the current
+controlled integration test but should not be treated as a complete web PKI
+client. <code>tools/debug/https_test.sh</code> runs an OpenSSL TLS 1.3 server and verifies
+this path end to end.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/networking.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="services" hidden><h1>Services</h1>
+<h2>Discovery And Registration</h2>
+<p>Services are filesystem definitions, not C registration calls. After the boot
+disk is mounted, <code>terminal_program_entry()</code> calls <code>service_manager_init()</code>.
+The manager scans <code>0:/services</code>, accepts files whose names end in <code>.service</code>,
+parses them, and creates a monitor process for each valid entry.</p>
+<p>A service is registered only when it has at least one <code>[STARTUP]</code> action:
+<code>exec</code> or <code>script</code>. The terminal command <code>services</code> lists entries that parsed
+and registered successfully.</p>
+<h2>File Format</h2>
+<pre><code class="language-ini">[GENERAL]
+name=&quot;Example Service&quot;
+desc=&quot;Runs an example&quot;
+exit=Restart
+exitscript=&quot;run 0:/programs/recovery.run&quot;
+
+[STARTUP]
+exec=&quot;0:/programs/example.run&quot;
+</code></pre>
+<p>Supported general keys:</p>
+<ul>
+<li><code>name</code>: display name; defaults to the filename;</li>
+<li><code>desc</code>: text shown by <code>services</code>;</li>
+<li><code>exit</code>: <code>None</code>, <code>Restart</code>, or <code>Script</code>;</li>
+<li><code>exitscript</code>: command used by <code>Script</code> after a monitored process exits.</li>
+</ul>
+<p>Supported startup keys:</p>
+<ul>
+<li><code>exec</code>: direct <code>.run</code> path, <code>run &lt;path&gt;</code>, or an arbitrary terminal command;</li>
+<li><code>script</code>: <code>run &lt;path&gt;</code> for a launchable <code>.run</code>, or another command string.</li>
+</ul>
+<p>Values may be quoted. <code>//</code> starts a comment outside quotes.</p>
+<h2>Startup Forms</h2>
+<p>A directly monitored executable uses a path:</p>
+<pre><code class="language-ini">[STARTUP]
+exec=&quot;0:/programs/worker.run&quot;
+</code></pre>
+<p>The equivalent command form is also recognized:</p>
+<pre><code class="language-ini">[STARTUP]
+exec=&quot;run 0:/programs/worker.run&quot;
+</code></pre>
+<p>An arbitrary command can be run once:</p>
+<pre><code class="language-ini">[STARTUP]
+exec=&quot;echo service started&quot;
+</code></pre>
+<p>Command-style entries call the terminal command dispatcher and do not expose a
+process ID to the service monitor. <code>exit=Restart</code> and <code>exit=Script</code> therefore
+cannot supervise their completion. Use a <code>.run</code> path when restart or exit
+handling is required.</p>
+<h2>Supervision</h2>
+<p>For a direct <code>.run</code> launch, the manager:</p>
+<ol>
+<li>normalizes the path to a <code>0:/...</code> path;</li>
+<li>launches the bundle as a process;</li>
+<li>waits for its process ID;</li>
+<li>applies the exit policy.</li>
+</ol>
+<p><code>None</code> stops after exit. <code>Restart</code> waits briefly and starts again. <code>Script</code>
+executes <code>exitscript</code> once and then stops.</p>
+<p>A failed launch is logged on serial and does not create a usable monitored
+service. A malformed file, missing startup action, or unsupported startup
+configuration is skipped.</p>
+<h2>Packaging A Service</h2>
+<p>Place the definition in <code>src/resources/install3</code>:</p>
+<pre><code class="language-text">src/resources/install3/example.service
+</code></pre>
+<p><code>make build-x86_64</code> packages install3 and embeds it in the kernel. Running
+<code>format</code> extracts it to <code>0:/services</code> before service discovery. A referenced
+<code>.run</code> program should be placed in <code>src/resources/install2</code>, which becomes
+<code>0:/programs</code>.</p>
+<p>The complete install mapping is:</p>
+<pre><code class="language-text">install1 -&gt; 0:/etc
+install2 -&gt; 0:/programs
+install3 -&gt; 0:/services
+</code></pre>
+<h2>Troubleshooting</h2>
+<p>Use <code>services</code> after mounting to inspect registrations. Use the serial console
+to distinguish these cases:</p>
+<ul>
+<li>no services directory: install3 was empty or format did not run;</li>
+<li>parse failure: the file syntax or section/key names are invalid;</li>
+<li>no startup action: add exactly one <code>exec</code> or <code>script</code> key;</li>
+<li>failed to start: the referenced <code>.run</code> path is missing or invalid;</li>
+<li>repeated starts: the service has <code>exit=Restart</code> and exits normally.</li>
+</ul><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/services.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="install-and-services" hidden><h1>Install Packages and Services</h1>
+<p>Minimal-OS builds three resource packages into the kernel image:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Source directory</th>
+<th>Destination after <code>format</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/resources/install1</code></td>
+<td><code>0:/etc</code></td>
+</tr>
+<tr>
+<td><code>src/resources/install2</code></td>
+<td><code>0:/programs</code></td>
+</tr>
+<tr>
+<td><code>src/resources/install3</code></td>
+<td><code>0:/services</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Each directory is packaged as an <code>.mpkg</code> archive during <code>make build-x86_64</code>.
+The archives are embedded in the kernel because formatting happens before the
+new MinimaFS disk contains any files. The <code>format</code> command extracts the
+archives into their destination directories.</p>
+<h2>Adding A Service</h2>
+<p>Place a <code>.service</code> file in <code>src/resources/install3</code>. No C registration call is
+needed. The file is packaged automatically, extracted to <code>0:/services</code>, and
+discovered after the boot disk is mounted.</p>
+<p>Example: <code>src/resources/install3/example.service</code></p>
+<pre><code class="language-ini">[GENERAL]
+name=&quot;Example Service&quot;
+desc=&quot;Runs the example program&quot;
+exit=Restart
+
+[STARTUP]
+exec=&quot;0:/programs/example.run&quot;
+</code></pre>
+<p><code>[STARTUP]</code> must contain exactly one startup action:</p>
+<ul>
+<li><code>exec="0:/programs/example.run"</code> starts a <code>.run</code> bundle directly.</li>
+<li><code>exec="run 0:/programs/example.run"</code> starts a <code>.run</code> bundle through the
+    command system and monitors it like a direct <code>exec</code> path.</li>
+<li><code>exec="echo service started"</code> runs any terminal command once.</li>
+<li><code>script="run 0:/programs/example.run"</code> starts it through the command system.</li>
+</ul>
+<p>Command-style <code>exec</code> and <code>script</code> entries run once without PID tracking, so
+<code>exit=Restart</code> and <code>exit=Script</code> cannot monitor or react to their completion.</p>
+<p>The <code>exit</code> setting controls what happens after the startup process exits:</p>
+<ul>
+<li><code>None</code> stops monitoring the service.</li>
+<li><code>Restart</code> starts it again after a short delay.</li>
+<li><code>Script</code> runs the command in <code>exitscript</code>.</li>
+</ul>
+<p>Example with an exit script:</p>
+<pre><code class="language-ini">[GENERAL]
+name=&quot;Worker&quot;
+desc=&quot;Background worker&quot;
+exit=Script
+exitscript=&quot;run 0:/programs/worker-failed.run&quot;
+
+[STARTUP]
+exec=&quot;0:/programs/worker.run&quot;
+</code></pre>
+<p>After boot, use:</p>
+<pre><code class="language-text">services
+</code></pre>
+<p>to list successfully parsed and registered services. Invalid files, files
+without a <code>.service</code> extension, and services without <code>exec</code> or <code>script</code> are
+skipped.</p>
+<h2>Build And Clean</h2>
+<p>Build the kernel and regenerate all install packages:</p>
+<pre><code class="language-sh">make build-x86_64
+</code></pre>
+<p><code>minimaSSL.slib</code> is generated into <code>src/resources/install1</code> and installed as
+<code>0:/etc/minimaSSL.slib</code> during <code>format</code>.</p>
+<p>Remove kernel, SDK, generated package, and <code>.run</code> build artifacts with:</p>
+<pre><code class="language-sh">make clean
+</code></pre>
+<p>The current kernel links the freestanding minimaSSL crypto implementation
+statically. The installed <code>.slib</code> is the filesystem distribution artifact; the
+OS does not currently dynamically load <code>.slib</code> code.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/install-and-services.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="user-programs" hidden><h1>User Programs And SDK</h1>
+<h2>Program Model</h2>
+<p>The SDK produces self-contained x86_64 PIE programs with no dynamic linker.
+The kernel loads these programs as user processes and enters them in ring 3.
+The current process model still shares the kernel PML4, so the syscall ABI is a
+capability boundary but not yet a fully isolated address-space boundary.</p>
+<p>Build a program with:</p>
+<pre><code class="language-sh">Minimal-OS-SDK/build.sh Minimal-OS-SDK/examples/hello.c
+</code></pre>
+<p>The output is a <code>.run</code> bundle. Import it into MinimaFS, normally under
+<code>0:/programs</code>, and run it with:</p>
+<pre><code class="language-text">run 0:/programs/hello.run
+</code></pre>
+<h2><code>.run</code> Bundles</h2>
+<p>A <code>.run</code> contains a <code>MINIRUN1</code> header, an entry table, <code>main.elf</code>, and optional
+resource files. The kernel extracts <code>main.elf</code>, loads its PT_LOAD segments, and
+applies supported <code>R_X86_64_RELATIVE</code> relocations.</p>
+<p>The loader validates:</p>
+<ul>
+<li>ELF64 little-endian format;</li>
+<li>x86_64 machine type;</li>
+<li><code>ET_EXEC</code> or <code>ET_DYN</code> image type;</li>
+<li>program-header bounds;</li>
+<li>segment file-size and memory-size relationships;</li>
+<li>maximum file and image sizes.</li>
+</ul>
+<p>The SDK linker script keeps the image base-relative. External symbols are not
+available because there is no dynamic linker or libc at runtime.</p>
+<h2>Arguments And Exit</h2>
+<p>The first argument is the program path. Extra arguments follow it. The SDK
+runtime calls <code>mos_exit(code)</code> to terminate, passing the low 8 bits of <code>code</code>
+back to the kernel. Returning from <code>main()</code> passes its return value as the exit
+code. A user-mode CPU fault terminates the program with code <code>0xff</code> and prints
+a crash reason, such as <code>Program crashed! Code 0xff: Memory page fault.</code></p>
+<p>Use <code>mos_register_cleanup()</code> when a user program needs a chance to save state
+before Ctrl+C or a requested termination. The kernel gives the cleanup callback
+a bounded period before force termination.</p>
+<p>Heap allocations made through the SDK are tracked by their owning process.
+Explicitly free allocations when practical; any remaining allocations are
+reclaimed when the process exits or is terminated. Invalid or cross-process
+heap pointers are rejected by the heap syscalls. This is exit-time reclamation,
+not tracing garbage collection, so it does not collect unreachable objects
+while a process is still running.</p>
+<h2>SDK Runtime</h2>
+<p>The SDK provides freestanding headers and small wrappers rather than a normal
+libc. Common facilities include:</p>
+<ul>
+<li><code>stdio.h</code>: terminal output helpers;</li>
+<li><code>stdlib.h</code>: heap, random bytes, and integer conversion;</li>
+<li><code>string.h</code>: memory and string operations;</li>
+<li><code>minimalos.h</code>: core syscalls and package/file wrappers;</li>
+<li><code>net.h</code>: TCP, UDP, DNS, and polling;</li>
+<li><code>graphics.h</code>: graphics operations;</li>
+<li><code>x86_64/user_sysinfo.h</code>: system and memory statistics.</li>
+</ul>
+<p>The runtime is built with freestanding flags, no stack protector, no exceptions,
+no RTTI, and no dynamic linker. See <a href="#/docs/user-sdk-syscalls">SDK syscalls</a> for
+API contracts and examples.</p>
+<h2><code>.slib</code> Bundles</h2>
+<p>The SDK can build a shared-library bundle:</p>
+<pre><code class="language-sh">Minimal-OS-SDK/build.sh --slib Minimal-OS-SDK/libraries/minimaSSL
+</code></pre>
+<p>A <code>.slib</code> contains:</p>
+<ul>
+<li><code>library.elf</code>;</li>
+<li><code>exports.txt</code> with global symbols;</li>
+<li>public headers under <code>include/</code>.</li>
+</ul>
+<p>The bundle format is <code>MINISLIB1</code>. It is package metadata for a future/runtime
+loader; Minimal-OS does not currently dynamically load <code>.slib</code> code. The current
+kernel TLS path statically links the freestanding minimaSSL implementation and
+also installs the <code>.slib</code> at <code>0:/etc/minimaSSL.slib</code> for distribution.</p>
+<h2>Writing A Program</h2>
+<p>A minimal program should include the SDK headers, perform work, and terminate:</p>
+<pre><code class="language-c">#include &quot;minimalos.h&quot;
+#include &quot;stdio.h&quot;
+
+int main(int argc, char** argv) {
+    (void)argc;
+    (void)argv;
+    puts(&quot;hello from user space&quot;);
+    mos_exit(0);
+    return 0;
+}
+</code></pre>
+<p>For long-running programs, sleep or poll rather than busy-looping. Network
+programs must call <code>mos_net_poll()</code> or use the deadline helpers so the kernel
+network stack can process incoming frames.</p>
+<h2>Security And Capability Notes</h2>
+<p>User programs can access only syscall operations permitted by the kernel's
+privilege table. DHCP is privileged. File, network, process, graphics, USB,
+heap, random, and package operations have individual validation paths.</p>
+<p>Do not pass kernel pointers through the ABI. Use the public request structures,
+user buffers, and returned handles. Always close file, TCP, UDP, and TLS handles.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/user-programs.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="user-sdk-syscalls" hidden><h1>User SDK Syscalls</h1>
+<p>This is the user-space ABI reference for <code>.run</code> programs. The canonical
+numbers and request structures are in <code>Minimal-OS-SDK/include/syscall.h</code>; the
+inline wrappers are in <code>minimalos.h</code>, <code>net.h</code>, <code>stdlib.h</code>,
+<code>x86_64/user_syscalls.h</code>, and related headers.</p>
+<h2>Calling Convention</h2>
+<p>The SDK invokes the kernel with <code>int 0x80</code>:</p>
+<ul>
+<li><code>rax</code>: syscall number;</li>
+<li><code>rdi</code>, <code>rsi</code>, <code>rdx</code>: the first three arguments;</li>
+<li><code>rax</code> on return: result value.</li>
+</ul>
+<p>Pointer arguments must point to user-readable or user-writable memory as
+required by the operation. Request-structure syscalls pass a pointer in <code>rdi</code>.
+Do not pass kernel-internal structures or pointers through the ABI.</p>
+<p>Most wrappers return <code>long</code>. Success is usually non-negative; failures are
+negative values represented in the unsigned syscall type. Use the constants
+rather than comparing against a raw magic number.</p>
+<h2>Result Codes</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SYS_SUCCESS</code></td>
+<td>operation succeeded</td>
+</tr>
+<tr>
+<td><code>SYS_ERR_GENERIC</code></td>
+<td>unspecified failure</td>
+</tr>
+<tr>
+<td><code>SYS_ERR_BADFD</code></td>
+<td>invalid or closed handle</td>
+</tr>
+<tr>
+<td><code>SYS_ERR_NOTFOUND</code></td>
+<td>path, peer, or resource not found/closed</td>
+</tr>
+<tr>
+<td><code>SYS_ERR_INVAL</code></td>
+<td>invalid argument or request</td>
+</tr>
+<tr>
+<td><code>SYS_ERR_PERM</code></td>
+<td>operation is not allowed for this process</td>
+</tr>
+<tr>
+<td><code>SYS_ERR_BUSY</code></td>
+<td>shared non-reentrant subsystem is busy; retry</td>
+</tr>
+<tr>
+<td><code>SYS_ERR_AGAIN</code></td>
+<td>non-blocking operation has no result yet</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Core Process And Console Calls</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Wrapper</th>
+<th>Syscall</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mos_write(fd, buf, len)</code></td>
+<td><code>SYS_WRITE</code></td>
+<td>writes to terminal output; SDK programs normally use fd 1 or 2</td>
+</tr>
+<tr>
+<td><code>mos_puts(text)</code></td>
+<td><code>SYS_WRITE</code></td>
+<td>convenience wrapper for a NUL-terminated string</td>
+</tr>
+<tr>
+<td><code>mos_getpid()</code></td>
+<td><code>SYS_GETPID</code></td>
+<td>returns the current process ID</td>
+</tr>
+<tr>
+<td><code>mos_exit(code)</code></td>
+<td><code>SYS_EXIT</code></td>
+<td>terminates and reports the low 8 bits of <code>code</code>; does not return</td>
+</tr>
+<tr>
+<td><code>mos_sleep(ms)</code></td>
+<td><code>SYS_SLEEP</code></td>
+<td>yields/sleeps for approximately the requested interval</td>
+</tr>
+<tr>
+<td><code>mos_uptime()</code></td>
+<td><code>SYS_UPTIME</code></td>
+<td>returns uptime in milliseconds</td>
+</tr>
+<tr>
+<td><code>mos_gettime()</code></td>
+<td><code>SYS_GETTIME</code></td>
+<td>returns the current kernel time representation</td>
+</tr>
+<tr>
+<td><code>mos_register_cleanup(fn)</code></td>
+<td><code>SYS_REGISTER_CLEANUP</code></td>
+<td>registers a bounded cleanup callback for termination</td>
+</tr>
+<tr>
+<td><code>mos_exec(path, argv, argc)</code></td>
+<td><code>SYS_EXEC</code></td>
+<td>launches another <code>.run</code>, returning its PID</td>
+</tr>
+<tr>
+<td><code>mos_pslist(entries, max)</code></td>
+<td><code>SYS_PSLIST</code></td>
+<td>lists visible process information</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>mos_exec()</code> treats <code>argv</code> as extra arguments. The launched program receives
+the path as <code>argv[0]</code> and the supplied values starting at <code>argv[1]</code>.</p>
+<h2>Filesystem Calls</h2>
+<p>MinimaFS paths are strings such as <code>0:/etc/System.conf</code>. <code>SYS_OPEN</code> opens an
+existing file; use <code>mos_create()</code> before opening a new file for writing.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Wrapper</th>
+<th>Syscall</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mos_open(path, flags)</code></td>
+<td><code>SYS_OPEN</code></td>
+<td>returns an open handle; <code>SYS_O_RDONLY</code> is read-only and <code>SYS_O_RDWR</code> is writable</td>
+</tr>
+<tr>
+<td><code>mos_create(path, type, format)</code></td>
+<td><code>SYS_CREATE</code></td>
+<td>creates an empty file; NULL type/format defaults to binary/bin</td>
+</tr>
+<tr>
+<td><code>mos_read(fd, buf, len)</code></td>
+<td><code>SYS_READ</code></td>
+<td>reads from an open handle</td>
+</tr>
+<tr>
+<td><code>mos_fwrite(fd, buf, len)</code></td>
+<td><code>SYS_FWRITE</code></td>
+<td>writes to an open writable handle</td>
+</tr>
+<tr>
+<td><code>mos_close(fd)</code></td>
+<td><code>SYS_CLOSE</code></td>
+<td>closes the handle</td>
+</tr>
+<tr>
+<td><code>mos_seek(fd, offset)</code></td>
+<td><code>SYS_SEEK</code></td>
+<td>changes the current file position</td>
+</tr>
+<tr>
+<td><code>mos_tell(fd)</code></td>
+<td><code>SYS_TELL</code></td>
+<td>returns the current position</td>
+</tr>
+<tr>
+<td><code>mos_size(fd)</code></td>
+<td><code>SYS_SIZE</code></td>
+<td>returns file data size</td>
+</tr>
+<tr>
+<td><code>mos_feof(fd)</code></td>
+<td><code>SYS_EOF</code></td>
+<td>reports whether the handle is at EOF</td>
+</tr>
+<tr>
+<td><code>mos_exists(path)</code></td>
+<td><code>SYS_EXISTS</code></td>
+<td>tests path existence</td>
+</tr>
+<tr>
+<td><code>mos_is_dir(path)</code></td>
+<td><code>SYS_IS_DIR</code></td>
+<td>tests whether a path is a directory</td>
+</tr>
+<tr>
+<td><code>mos_mkdir(path)</code></td>
+<td><code>SYS_MKDIR</code></td>
+<td>creates a directory</td>
+</tr>
+<tr>
+<td><code>mos_listdir(path, entries, max)</code></td>
+<td><code>SYS_LISTDIR</code></td>
+<td>writes directory entries to a caller buffer</td>
+</tr>
+<tr>
+<td><code>mos_delete(path)</code></td>
+<td><code>SYS_DELETE</code></td>
+<td>deletes a file</td>
+</tr>
+<tr>
+<td><code>mos_rmdir(path)</code></td>
+<td><code>SYS_RMDIR</code></td>
+<td>removes an empty directory</td>
+</tr>
+<tr>
+<td><code>mos_get_metadata(path, out)</code></td>
+<td><code>SYS_GET_METADATA</code></td>
+<td>fills stable file metadata</td>
+</tr>
+</tbody>
+</table></div>
+<p>Example:</p>
+<pre><code class="language-c">int fd = mos_open(&quot;0:/etc/config.txt&quot;, SYS_O_RDONLY);
+if (fd &gt;= 0) {
+    char buf[128];
+    long got = mos_read(fd, buf, sizeof buf - 1);
+    if (got &gt; 0) {
+        buf[got] = '\0';
+        mos_puts(buf);
+    }
+    mos_close(fd);
+}
+</code></pre>
+<p>Open handles belong to the process and should always be closed. The public
+metadata structure is intentionally separate from the kernel's internal
+<code>minimafs_file_metadata_t</code> so kernel structure growth does not change the ABI.</p>
+<h2>Heap And Randomness</h2>
+<p><code>stdlib.h</code> maps the standard allocation names to <code>SYS_HEAP</code>:</p>
+<pre><code class="language-c">char* data = malloc(4096);
+if (!data) mos_exit(1);
+/* use data */
+free(data);
+</code></pre>
+<p>Available operations are <code>malloc</code>, <code>calloc</code>, <code>realloc</code>, and <code>free</code>. Allocation
+failure becomes NULL. <code>realloc()</code> leaves the original allocation valid when it
+fails. <code>mos_random_bytes()</code> uses the kernel random source and returns a byte
+count; <code>mos_random_u64()</code> is a convenience wrapper.</p>
+<p>The current implementation backs user heap allocations with the kernel heap.
+That is an implementation detail and should not be used to infer unrestricted
+kernel access.</p>
+<h2>Graphics</h2>
+<p><code>SYS_GRAPHICS</code> receives a <code>syscall_graphics_request_t</code>. The SDK headers provide
+wrappers for:</p>
+<ul>
+<li>width and height queries;</li>
+<li>clear, pixel, line, rectangle, circle, triangle, and ellipse drawing;</li>
+<li>text output and text measurement;</li>
+<li>resolution changes;</li>
+<li>terminal clear.</li>
+</ul>
+<p>Use <code>graphics.h</code> for the shorter API or <code>x86_64/user_graphics.h</code> for raw-style
+wrappers. Coordinates and sizes are passed in the request's integer argument
+array; strings and output dimensions use validated pointers.</p>
+<h2>Device Managers And USB</h2>
+<p><code>SYS_MANAGER</code> selects a manager and operation. The SDK exposes manager IDs for
+GPU, audio, storage, and USB, with operations such as init, update, start,
+has-data, and sample-rate configuration.</p>
+<p><code>SYS_USB</code> supports:</p>
+<ul>
+<li><code>mos_usb_init()</code>;</li>
+<li><code>mos_usb_poll()</code>;</li>
+<li>keyboard presence checks;</li>
+<li>scancode/modifier to ASCII translation;</li>
+<li>pressed-key queries;</li>
+<li>keyboard device metadata.</li>
+</ul>
+<p><code>SYS_MOUSE</code> provides mouse initialization, polling, presence, and accumulated
+relative state (<code>dx</code>, <code>dy</code>, wheel, and button bitmask).</p>
+<h2>Packages</h2>
+<p><code>SYS_PKG</code> uses a <code>syscall_pkg_request_t</code> structure:</p>
+<pre><code class="language-c">uint32_t installed = 0, failed = 0;
+long rc = mos_pkg_unzip(&quot;0:/packages/app.mpkg&quot;, &quot;0:/programs&quot;,
+                        &amp;installed, &amp;failed);
+</code></pre>
+<p>Wrappers:</p>
+<ul>
+<li><code>mos_pkg_unzip(archive, target, installed, failed)</code>;</li>
+<li><code>mos_pkg_zip(source, algorithm, output, output_size)</code>;</li>
+<li><code>mos_pkg_info(archive, entry_count)</code>.</li>
+</ul>
+<p>Algorithms are <code>"lzss"</code> or <code>"store"</code>; NULL selects the default. Package
+extraction validates archive names and reports individual entry failures
+separately from whole-archive failures.</p>
+<h2>System Information And Processes</h2>
+<p><code>user_sysinfo.h</code> exposes statistics through <code>SYS_SYSINFO</code>:</p>
+<ul>
+<li>CPU usage;</li>
+<li>total, used, and free RAM;</li>
+<li>uptime;</li>
+<li>process and online-core counts;</li>
+<li>heap used/free bytes;</li>
+<li>physical page used/free counts;</li>
+<li>per-core usage using <code>SYS_SYSINFO_CORE_USAGE_BASE + core_id</code>.</li>
+</ul>
+<p><code>mos_pslist()</code> writes process records containing PID, name, state, privilege,
+CPU assignment, and scheduler level. Its buffer belongs to the caller.</p>
+<h2>Networking</h2>
+<p><code>SYS_NET</code> uses a <code>syscall_net_request_t</code> pointer. IPv4 addresses and ports are
+host-order values. <code>net.h</code> provides wrappers for status, resolve, polling, TCP,
+UDP, and the experimental TLS handle namespace.</p>
+<h3>Status And DNS</h3>
+<pre><code class="language-c">syscall_net_status_t status;
+mos_net_status(&amp;status);
+uint32_t ip;
+mos_net_resolve(&quot;example.com&quot;, &amp;ip, 5000);
+</code></pre>
+<p><code>mos_net_dhcp()</code> is privileged and returns <code>SYS_ERR_PERM</code> from ordinary user
+programs. Run <code>dhcp</code> in the terminal first.</p>
+<h3>TCP Client</h3>
+<pre><code class="language-c">long conn = mos_tcp_connect(ip, 80, 5000);
+if (conn &gt; 0) {
+    mos_tcp_send(conn, request, request_len);
+    while (mos_net_poll() == 0) mos_sleep(10);
+    long got = mos_tcp_recv(conn, buffer, sizeof buffer);
+    mos_tcp_close(conn);
+}
+</code></pre>
+<p><code>mos_tcp_recv()</code> returns zero when no data is ready and a negative error when
+the handle is invalid or the peer is closed. Deadline helpers in <code>net.h</code> pump
+polling and sleep between attempts.</p>
+<h3>TCP Server And Ownership</h3>
+<p><code>mos_tcp_listen()</code> creates a listener handle. <code>mos_tcp_accept()</code> is
+non-blocking and returns zero when no client is queued. After starting a child,
+<code>mos_tcp_handoff(connection, child_pid)</code> transfers ownership so the child can
+use the accepted handle. The handle number is normally passed as an argument.</p>
+<h3>UDP</h3>
+<p><code>mos_udp_bind()</code> creates a handle. <code>mos_udp_recv()</code> returns a datagram and fills
+source address/port outputs. <code>mos_udp_send()</code> sends to a host-order destination;
+<code>SYSCALL_NET_IP_BROADCAST</code> is the broadcast address.</p>
+<h3>TLS Handles</h3>
+<p>The ABI defines separate TLS connect, accept, state, send, receive, and close
+operations. TLS handshakes advance when <code>SYS_NET_TLS_STATE</code> or other TLS calls
+pump the session. <code>SYS_ERR_AGAIN</code> means the session is still progressing.
+The terminal <code>wget</code> command currently uses the kernel's dedicated TLS client;
+user TLS handles and certificate policy should be treated as evolving APIs.</p>
+<h2>ABI Rules And Lifecycle</h2>
+<ul>
+<li>Check every return value, especially handle allocation and network operations.</li>
+<li>Retry <code>SYS_ERR_BUSY</code> and non-blocking <code>SYS_ERR_AGAIN</code> where documented.</li>
+<li>Close every file, TCP, UDP, and TLS handle before exit.</li>
+<li>Keep request structures alive until the syscall returns.</li>
+<li>Keep input/output buffers valid for the entire call.</li>
+<li>Do not call privileged operations from an ordinary <code>.run</code> process.</li>
+<li>Use <code>mos_sleep()</code> between polling attempts to yield CPU time.</li>
+<li>Do not assume kernel structure layouts match SDK structures.</li>
+</ul><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/user-sdk-syscalls.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article></div></main>
+
+  <footer>
+    <span>© 2026 Xlabs</span>
+    <span>
+      <a href="#/docs">Docs</a>
+      <a href="https://github.com/fsminecrafter/Minimal-OS">Minimal-OS</a>
+      <a href="https://github.com/fsminecrafter/Minimal-OS-SDK">SDK</a>
+      <a href="https://github.com/fsminecrafter/Minimal-OS/releases">Releases</a>
+    </span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var out=document.getElementById('out');
+  var lines=[
+    ['cmd','info'],['d','x86_64 · 1024 MB'],
+    ['cmd','mount 0'],['d','MinimaFS mounted at 0:/'],
+    ['cmd','services'],['d','2 services running'],
+    ['cmd','run 0:/programs/hello.run'],['d','Hello from Xlabs.']
+  ];
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+  function render(n,partial){
+    var h='';
+    for(var i=0;i<n;i++){
+      h+= lines[i][0]==='cmd' ? '<div><span class="p">&gt;</span> '+esc(lines[i][1])+'</div>' : '<div class="d">'+esc(lines[i][1])+'</div>';
+    }
+    if(partial!==undefined) h+='<div><span class="p">&gt;</span> '+esc(partial)+'<span class="cursor"></span></div>';
+    else h+='<div><span class="p">&gt;</span> <span class="cursor"></span></div>';
+    out.innerHTML=h;
+  }
+  if(reduce){render(lines.length);return}
+  var i=0;
+  function step(){
+    if(i>=lines.length){render(lines.length);return}
+    if(lines[i][0]==='cmd'){
+      var t=lines[i][1],c=0;
+      (function type(){
+        render(i,t.slice(0,c));
+        if(c++<t.length) setTimeout(type,55);
+        else setTimeout(function(){i++;step()},300);
+      })();
+    } else {i++;setTimeout(step,260)}
+  }
+  render(0,'');
+  setTimeout(step,500);
+})();
+</script>
+<script>
+(function(){
+  var home=document.getElementById('home'),docs=document.getElementById('docs');
+  var arts=docs.querySelectorAll('.doc'),links=docs.querySelectorAll('[data-nav]'),top=document.querySelectorAll('[data-top]');
+  function route(){
+    var h=location.hash,m=h.match(/^#\/docs(?:\/([\w-]+))?/);
+    if(m){
+      var s=m[1]||'system-overview';
+      home.hidden=true;docs.hidden=false;
+      arts.forEach(function(a){a.hidden=a.dataset.doc!==s});
+      links.forEach(function(l){l.dataset.nav===s?l.setAttribute('aria-current','page'):l.removeAttribute('aria-current')});
+      var a=docs.querySelector('.doc:not([hidden])');
+      document.title=(a?a.querySelector('h1').textContent:'Docs')+' · Xlabs';
+      top.forEach(function(t){t.setAttribute('aria-current','page')});
+      window.scrollTo(0,0);
+    }else{
+      docs.hidden=true;home.hidden=false;document.title='Xlabs';
+      top.forEach(function(t){t.removeAttribute('aria-current')});
+      var el=h.length>1&&document.getElementById(h.slice(1));
+      el?el.scrollIntoView():window.scrollTo(0,0);
+    }
+  }
+  window.addEventListener('hashchange',route);route();
+})();
+</script>
+</body>
+</html>
