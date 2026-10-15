@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Run Studio · Xlabs</title>
+<meta name="description" content="Write Minimal-OS .run apps in the browser, try them in a live mosWM desktop, and build a real x86_64 .run and .mpkg.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vendor/codemirror.css">
+<style>
+:root{
+  --bg:#EEEFF1;--ink:#17191C;--muted:#62666D;--line:#D2D4D9;--panel:#17191C;--panel-ink:#E6E8EB;--panel-dim:#8A8F98;--panel-line:#2A2D32;--accent:#2845F5;
+  --ok:#15803D;--bad:#C2410C;--surface:#F7F8F9;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111214;--ink:#ECEDEF;--muted:#8E939B;--line:#2A2D32;--panel:#1A1C20;--panel-ink:#E6E8EB;--panel-dim:#80858E;--panel-line:#2E3238;--accent:#7C90FF;--ok:#4ADE80;--bad:#FB923C;--surface:#17191C}}
+:root[data-theme="dark"]{--bg:#111214;--ink:#ECEDEF;--muted:#8E939B;--line:#2A2D32;--panel:#1A1C20;--panel-ink:#E6E8EB;--panel-dim:#80858E;--panel-line:#2E3238;--accent:#7C90FF;--ok:#4ADE80;--bad:#FB923C;--surface:#17191C}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;min-height:100vh}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--line);gap:16px}
+.logo{font-weight:600;font-size:20px;letter-spacing:-.02em;text-decoration:none}
+.logo span{color:var(--muted);font-weight:500}
+nav{display:flex;gap:24px;font-size:15px}
+nav a{text-decoration:none;color:var(--muted)}
+nav a:hover,nav a[aria-current="page"]{color:var(--ink)}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 24px;border-bottom:1px solid var(--line)}
+.name{display:flex;align-items:center;border:1px solid var(--line);border-radius:6px;background:var(--surface);font:500 14px "JetBrains Mono",ui-monospace,monospace}
+.name input{border:0;background:none;color:inherit;font:inherit;width:9.5em;padding:8px 0 8px 10px}
+.name input:focus{outline:none}
+.name span{color:var(--muted);padding-right:10px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:6px;font:500 14px "Instrument Sans",system-ui,sans-serif;border:1px solid var(--ink);background:none;color:var(--ink);cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--ink);color:var(--bg)}
+.btn.primary:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:disabled{opacity:.45;cursor:default;border-color:var(--line)}
+.btn .k{font:400 12px "JetBrains Mono",monospace;opacity:.6}
+.sep{flex:1}
+select,.field input{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 8px}
+.field{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+.status{font-size:13px;color:var(--muted);min-width:8em}
+.status.ok{color:var(--ok)}.status.bad{color:var(--bad)}
+.menu{position:relative}
+.menu [role=menu]{position:absolute;right:0;top:calc(100% + 6px);z-index:20;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px;min-width:280px;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.menu [role=menu] button{display:block;width:100%;text-align:left;border:0;background:none;color:var(--ink);font:inherit;padding:8px 10px;border-radius:5px;cursor:pointer}
+.menu [role=menu] button:hover,.menu [role=menu] button:focus-visible{background:var(--line)}
+.menu [role=menu] small{display:block;color:var(--muted);font-size:12px}
+main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);min-height:0}
+.pane{display:flex;flex-direction:column;min-height:0;min-width:0}
+.editor{border-right:1px solid var(--line);background:var(--panel)}
+.tabs{display:flex;align-items:stretch;gap:0;overflow-x:auto;background:var(--panel);border-bottom:1px solid var(--panel-line);scrollbar-width:thin}
+.tab{display:flex;align-items:center;gap:6px;padding:9px 12px 8px;color:var(--panel-dim);font:400 13px "JetBrains Mono",monospace;border:0;border-right:1px solid var(--panel-line);background:none;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent}
+.tab[aria-selected="true"]{color:var(--panel-ink);border-bottom-color:var(--accent);background:rgba(255,255,255,.03)}
+.tab .x{opacity:0;padding:0 2px;border-radius:3px;font-size:12px}
+.tab:hover .x,.tab[aria-selected="true"] .x{opacity:.6}
+.tab .x:hover{opacity:1;background:rgba(255,255,255,.1)}
+.tab.add{color:var(--panel-dim);font-size:16px;padding:6px 12px}
+.code{flex:1;min-height:0;position:relative}
+.code .CodeMirror,.code textarea{position:absolute;inset:0;height:100%;width:100%}
+.code textarea{background:var(--panel);color:var(--panel-ink);border:0;padding:12px;font:400 13.5px/1.6 "JetBrains Mono",monospace;resize:none}
+.binary{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--panel-dim);font:400 13px "JetBrains Mono",monospace;padding:24px;text-align:center}
+.cm-s-xlabs.CodeMirror{background:var(--panel);color:var(--panel-ink);font:400 13.5px/1.6 "JetBrains Mono",ui-monospace,Menlo,monospace;font-variant-ligatures:none}
+.cm-s-xlabs .CodeMirror-gutters{background:var(--panel);border-right:1px solid var(--panel-line)}
+.cm-s-xlabs .CodeMirror-linenumber{color:#5A5F68}
+.cm-s-xlabs .CodeMirror-cursor{border-left:2px solid #A8B4FF}
+.cm-s-xlabs .CodeMirror-activeline-background{background:rgba(255,255,255,.035)}
+.cm-s-xlabs .CodeMirror-selected,.cm-s-xlabs.CodeMirror-focused .CodeMirror-selected{background:rgba(124,144,255,.28)}
+.cm-s-xlabs .CodeMirror-matchingbracket{color:#FFF !important;outline:1px solid rgba(255,255,255,.35)}
+.cm-s-xlabs .cm-keyword{color:#9DA9FF}.cm-s-xlabs .cm-type{color:#7FD1C7}.cm-s-xlabs .cm-builtin{color:#7FD1C7}
+.cm-s-xlabs .cm-string{color:#E6C07B}.cm-s-xlabs .cm-number{color:#F0A27A}.cm-s-xlabs .cm-comment{color:#6B717C;font-style:italic}
+.cm-s-xlabs .cm-meta{color:#C792EA}.cm-s-xlabs .cm-atom{color:#F0A27A}.cm-s-xlabs .cm-def{color:#82AAFF}.cm-s-xlabs .cm-variable-3{color:#7FD1C7}
+.cm-s-xlabs .cm-operator{color:#B9C0CA}
+.cm-s-xlabs .CodeMirror-line,.cm-s-xlabs .CodeMirror-line-like{font-variant-ligatures:none!important}
+.err-line{background:rgba(251,146,60,.14)}
+.err-mark{color:#FB923C;font-size:12px;padding-left:4px;cursor:default}
+.preview{background:var(--bg)}
+.screen{flex:1.4;min-height:0;display:flex;align-items:center;justify-content:center;padding:16px;background:repeating-linear-gradient(45deg,transparent 0 10px,rgba(127,127,127,.04) 10px 20px)}
+.screen canvas{max-width:100%;max-height:100%;aspect-ratio:16/9;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.25);background:#0E2A38;outline:none;touch-action:none}
+.screen canvas:focus-visible{box-shadow:0 0 0 2px var(--accent),0 10px 30px rgba(0,0,0,.25)}
+.console{flex:1;min-height:150px;display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.ctabs{display:flex;gap:2px;padding:0 12px;border-bottom:1px solid var(--line)}
+.ctab{border:0;background:none;color:var(--muted);font:500 13px "Instrument Sans",system-ui,sans-serif;padding:9px 10px 8px;cursor:pointer;border-bottom:2px solid transparent}
+.ctab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.ctab .n{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;line-height:18px;text-align:center}
+.cpanel{flex:1;overflow:auto;padding:10px 16px;font:400 13px/1.55 "JetBrains Mono",ui-monospace,monospace;white-space:pre-wrap;word-break:break-word}
+.cpanel .sys{color:var(--muted)}.cpanel .ok{color:var(--ok)}.cpanel .bad{color:var(--bad)}
+.problem{display:block;width:100%;text-align:left;border:0;background:none;color:inherit;font:inherit;padding:4px 6px;border-radius:4px;cursor:pointer}
+.problem:hover{background:var(--line)}
+.problem b{color:var(--bad);font-weight:500}
+.report{width:100%;border-collapse:collapse;font-size:13px}
+.report td{padding:5px 12px 5px 0;border-bottom:1px solid var(--line)}
+.report td:first-child{color:var(--muted)}
+.dl{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px;font-family:"Instrument Sans",system-ui,sans-serif}
+.help{font-family:"Instrument Sans",system-ui,sans-serif;white-space:normal;font-size:14px;max-width:72ch}
+.help h3{font-size:14px;margin:14px 0 4px}.help p{margin:4px 0;color:var(--muted)}
+.help code{font:400 12.5px "JetBrains Mono",monospace;background:var(--line);padding:1px 4px;border-radius:3px;color:var(--ink)}
+.help ul{margin:4px 0;padding-left:18px;color:var(--muted)}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);padding:20px;max-width:min(560px,calc(100vw - 32px));box-shadow:0 20px 50px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+dialog h2{margin:0 0 6px;font-size:18px;font-weight:600}
+dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
+.tpls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.tpl{text-align:left;border:1px solid var(--line);background:none;color:inherit;border-radius:8px;padding:10px 12px;cursor:pointer;font:inherit}
+.tpl:hover{border-color:var(--accent)}
+.tpl b{display:block;font-weight:600;font-size:14px}
+.tpl i{font-style:normal;font:400 11px "JetBrains Mono",monospace;color:var(--accent)}
+.tpl span{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.drop{outline:2px dashed var(--accent);outline-offset:-6px}
+@media (max-width:980px){
+  main{grid-template-columns:1fr;grid-template-rows:minmax(420px,55vh) auto}
+  .editor{border-right:0;border-bottom:1px solid var(--line)}
+  .screen{min-height:240px}
+  .console{min-height:220px}
+}
+@media (max-width:640px){
+  header{padding:14px 16px}nav{gap:14px;font-size:14px}nav .opt{display:none}
+  .bar{padding:10px 16px}.bar .field{display:none}
+  .tpls{grid-template-columns:1fr}
+}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="../">Xlabs <span>/ Run Studio</span></a>
+  <nav>
+    <a href="../#projects" class="opt">Projects</a>
+    <a href="../#/red-sandbox" class="opt">Red Sandbox</a>
+    <a href="./" aria-current="page">Studio</a>
+    <a href="../#/docs">Docs</a>
+  </nav>
+</header>
+
+<div class="bar">
+  <label class="name" title="Program name: the build produces NAME.run"><input id="name" spellcheck="false" autocomplete="off" aria-label="Program name"><span>.run</span></label>
+  <button class="btn" id="new" title="Start from a sample project">New…</button>
+  <button class="btn primary" id="run" title="Compile and run in the preview (Ctrl+Enter)">▶ Run <span class="k">Ctrl+↵</span></button>
+  <button class="btn" id="stop" title="Stop the program (Ctrl+.)" disabled>■ Stop</button>
+  <div class="menu">
+    <button class="btn" id="build" aria-haspopup="menu" aria-expanded="false">⬇ Build</button>
+    <div role="menu" id="buildMenu" hidden>
+      <button role="menuitem" data-build="run">NAME.run<small>The program bundle: import it and type run 0:/programs/NAME.run</small></button>
+      <button role="menuitem" data-build="mpkg">NAME.mpkg<small>Installable package with a desktop shortcut in mosWM</small></button>
+      <button role="menuitem" data-build="elf">main.elf<small>The x86_64 executable inside the .run</small></button>
+      <button role="menuitem" data-build="zip">Project source (.zip)<small>All files, ready for the SDK's build.sh</small></button>
+    </div>
+  </div>
+  <span class="status" id="status" role="status" aria-live="polite"></span>
+  <span class="sep"></span>
+  <label class="field">Args <input id="args" placeholder="argv[1] …" spellcheck="false" style="width:9em"></label>
+  <label class="field">Screen
+    <select id="res"><option value="1024x576">1024×576</option><option value="1280x720" selected>1280×720</option><option value="1600x900">1600×900</option><option value="1920x1080">1920×1080</option></select>
+  </label>
+</div>
+
+<main>
+  <section class="pane editor" aria-label="Code editor">
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="code" id="code"></div>
+    <input type="file" id="upload" multiple hidden>
+  </section>
+  <section class="pane preview" aria-label="Preview">
+    <div class="screen"><canvas id="screen" width="1280" height="720" aria-label="Minimal-OS desktop preview. Click it to give it keyboard focus."></canvas></div>
+    <div class="console">
+      <div class="ctabs" role="tablist">
+        <button class="ctab" role="tab" data-ctab="out" aria-selected="true">Output</button>
+        <button class="ctab" role="tab" data-ctab="problems" aria-selected="false">Problems<span class="n" id="pcount" hidden>0</span></button>
+        <button class="ctab" role="tab" data-ctab="build" aria-selected="false">Build</button>
+        <button class="ctab" role="tab" data-ctab="help" aria-selected="false">Help</button>
+      </div>
+      <div class="cpanel" id="out" role="log" aria-live="polite"></div>
+      <div class="cpanel" id="problems" hidden></div>
+      <div class="cpanel" id="buildPanel" hidden><p class="help" style="margin:0">Build turns the project into a real x86_64 <code>main.elf</code>, packs it into a <code>MINIRUN1</code> .run bundle, and can wrap that in an installable <code>.mpkg</code>. Everything happens in your browser.</p></div>
+      <div class="cpanel help" id="help" hidden>
+        <h3>How it works</h3>
+        <p>Studio compiles your C or C++ with <b>mcc</b>, a small C11 and C++ compiler written for this page. <code>.c</code> files are C and <code>.cpp</code> files are C++; a project can mix them, and the program starts at <code>main</code> in <code>main.cpp</code> or <code>main.c</code>. For the preview it emits JavaScript that runs against an emulation of the Minimal-OS kernel (the real syscall numbers and structures from the SDK's <code>syscall.h</code>) with mosWM drawn on the canvas. For Build it emits x86_64 machine code and links a position-independent ELF the way the SDK's <code>link.ld</code> does.</p>
+        <h3>Writing apps</h3>
+        <ul>
+          <li>Window apps include <code>window.h</code>: create a window, draw ARGB8888 pixels (use <code>0xFF</code> alpha), present, and poll <code>mos_window_next_event</code>.</li>
+          <li>Key events carry USB HID codes: arrows 79–82, space 44, enter 40, letters 4–29. Click the preview first so it has keyboard focus.</li>
+          <li>Terminal programs use <code>stdio.h</code>; their output appears in the Terminal window and the Output tab.</li>
+          <li><code>graphics.h</code> draws straight to the framebuffer. It works together with <code>minimalos.h</code>, <code>stdio.h</code> and the other headers.</li>
+          <li>C++ programs can use <code>std::cout</code> from <code>&lt;iostream&gt;</code> as well as every C header.</li>
+          <li>Files other than <code>.c</code>/<code>.cpp</code>/<code>.h</code> are resources: they are packed into the .run and appear under <code>0:/programs/NAME/</code> in the preview. A root <code>icon.bmp</code> becomes the desktop icon in mosWM.</li>
+        </ul>
+        <h3>Compiler limits</h3>
+        <ul>
+          <li>No <code>goto</code>, bit-fields, variable-length arrays, inline assembly or statement expressions; <code>long double</code> is <code>double</code>; <code>case</code> labels must sit directly in the switch block.</li>
+          <li>C++: classes, single inheritance, virtual functions, constructors and destructors, operator overloading, references, <code>new</code>/<code>delete</code>, namespaces, function and class templates, <code>auto</code>, range-based <code>for</code>, <code>enum class</code>. Not supported: exceptions and RTTI (the SDK builds without them), lambdas, rvalue references, multiple inheritance, member templates and class template specialization.</li>
+          <li>The preview is not cycle-accurate and has no network card; <code>SYS_PKG</code> and <code>SYS_EXEC</code> report errors there.</li>
+        </ul>
+        <h3>Keys</h3>
+        <p><code>Ctrl+Enter</code> run · <code>Ctrl+.</code> stop · <code>Ctrl+S</code> save · <code>Ctrl+/</code> comment. Projects are saved in this browser.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog id="newDialog" aria-labelledby="newTitle">
+  <h2 id="newTitle">Start a project</h2>
+  <p>Replaces the files in the editor. Export the current project first if you want to keep it.</p>
+  <div class="tpls" id="tpls"></div>
+  <div class="row"><button class="btn" id="newCancel">Cancel</button></div>
+</dialog>
+
+<script src="vendor/codemirror.min.js"></script>
+<script src="mcc-front.js"></script>
+<script src="mcc-cpp.js"></script>
+<script src="sdk.js"></script>
+<script src="mcc-x64.js"></script>
+<script src="templates.js"></script>
+<script src="desktop.js"></script>
+<script src="studio.js"></script>
+</body>
+</html>

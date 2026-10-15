@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xlabs</title>
+<meta name="description" content="Xlabs builds small low-level software: Minimal-OS, its SDK, MinimaSSL, the MOSdesk desktop and mosWM, plus Run Studio for building .run apps in the browser.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -92,12 +93,70 @@ footer a{margin-left:20px}
 .doc .src{margin-top:56px;font-size:14px}
 .docs-top{display:none}
 @media (max-width:820px){
- .docs{grid-template-columns:1fr;gap:24px}
+ .docs{grid-template-columns:minmax(0,1fr);gap:24px}
  .side{position:static;flex-direction:row;flex-wrap:wrap;gap:6px}
  .side a{border:1px solid var(--line);border-radius:6px;padding:6px 10px}
  .side a[aria-current="page"]{border-color:var(--accent)}
  .side .h{display:none}
 }
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 40px}
+.card{display:flex;flex-direction:column;gap:8px;padding:22px 0 30px;border-top:1px solid var(--line);text-decoration:none}
+.card .tag,.eyebrow,.poster .tag{font:500 12px/1.4 "JetBrains Mono",ui-monospace,monospace;color:var(--muted);letter-spacing:.01em}
+.card h3{font-size:24px;letter-spacing:-.025em;font-weight:500;margin:0}
+.card p{margin:0;color:var(--muted);font-size:16px;flex:1}
+.card .more{font-size:15px;font-weight:500}
+.card:hover h3,.card:hover .more{color:var(--accent)}
+code{font:400 .88em "JetBrains Mono",ui-monospace,Menlo,monospace}
+.stack{list-style:none;margin:0;padding:0;counter-reset:s}
+.stack li{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;padding:14px 0 14px 18px;border-bottom:1px solid var(--line);position:relative;color:var(--muted)}
+.stack li:first-child{border-top:1px solid var(--line)}
+.stack li::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:2px;background:var(--accent);opacity:calc(1 - var(--i,0) * .17)}
+.stack li:nth-child(2){--i:1}.stack li:nth-child(3){--i:2}.stack li:nth-child(4){--i:3}.stack li:nth-child(5){--i:4}
+.stack .layer{color:var(--ink);font-weight:600}
+.split{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.25fr);gap:56px;align-items:center}
+.split.rev{grid-template-columns:minmax(0,.8fr) minmax(0,1.35fr)}
+.split p{color:var(--muted);margin:0 0 20px}
+h3.big{font-size:clamp(26px,3vw,34px);letter-spacing:-.03em;font-weight:500;margin:0 0 14px;line-height:1.15}
+.checks{list-style:none;margin:0 0 28px;padding:0}
+.checks li{padding:7px 0 7px 26px;position:relative;border-bottom:1px solid var(--line);font-size:16px}
+.checks li::before{content:"✓";position:absolute;left:2px;color:var(--accent)}
+.shot{display:block;border-radius:8px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 40px rgba(0,0,0,.12)}
+.shot img{display:block;width:100%;height:auto}
+.embed{position:relative;aspect-ratio:16/10;border-radius:8px;overflow:hidden;background:var(--panel);border:1px solid var(--line)}
+.embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.embed.tall{aspect-ratio:auto;height:min(78vh,820px);min-height:420px}
+.poster{position:absolute;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:8px;padding:28px;color:var(--panel-ink);background:radial-gradient(120% 90% at 85% 10%,rgba(212,56,42,.55),transparent 60%),repeating-linear-gradient(0deg,transparent 0 39px,rgba(255,255,255,.05) 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,rgba(255,255,255,.05) 39px 40px),var(--panel)}
+.poster strong{font-size:30px;font-weight:500;letter-spacing:-.03em}
+.poster span:not(.tag){color:var(--panel-dim);font-size:15px;margin-bottom:8px}
+.poster .tag{color:var(--panel-dim)}
+.poster .btn.primary{background:#E6E8EB;color:#17191C;border-color:#E6E8EB}
+.poster .btn.primary:hover{background:#D4382A;border-color:#D4382A;color:#fff}
+.tick.done{color:var(--accent)}
+.cols{row-gap:36px}
+.eyebrow{margin:0 0 8px}
+.doc .intro{font-size:19px;line-height:1.5;color:var(--muted);margin:0 0 24px}
+.doc .btns{margin-bottom:8px}
+.doc .btn{color:var(--ink)}
+.doc .btn.primary{color:var(--bg)}
+.doc .btn:hover{text-decoration:none}
+.page-title{font-size:clamp(32px,4.4vw,44px);margin:0}
+.sandbox-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;padding:24px 0 28px}
+.sandbox-info{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;padding:40px 0 72px}
+.sandbox-info h2{color:var(--ink);font-size:17px;margin:0 0 8px}
+.sandbox-info p{margin:0;color:var(--muted);font-size:16px}
+kbd{font:500 12px "JetBrains Mono",monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--ink)}
+@media (max-width:820px){
+  .cards{grid-template-columns:1fr}
+  .split,.split.rev{grid-template-columns:1fr;gap:32px}
+  .stack li{grid-template-columns:1fr;gap:2px}
+  .sandbox-info{grid-template-columns:1fr;gap:24px}
+  .embed.tall{height:70vh}
+  header{flex-wrap:wrap;gap:12px}
+  nav{flex-wrap:wrap;gap:14px 18px}
+}
+@media (min-width:821px) and (max-width:1060px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){nav .opt{display:none}}
+code,pre,kbd,.term{font-variant-ligatures:none}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -106,10 +165,11 @@ footer a{margin-left:20px}
   <header>
     <a class="logo" href="#/">Xlabs</a>
     <nav>
-      <a href="#about">About</a>
-      <a href="#minimal-os">Minimal-OS</a>
-      <a href="#roadmap">Roadmap</a>
-      <a href="#/docs" data-top>Docs</a>
+      <a href="#projects" data-route="projects">Projects</a>
+      <a href="#/red-sandbox" data-route="sandbox">Red Sandbox</a>
+      <a href="studio/">Studio</a>
+      <a href="#roadmap" class="opt">Roadmap</a>
+      <a href="#/docs" data-route="docs">Docs</a>
     </nav>
   </header>
 
@@ -117,10 +177,10 @@ footer a{margin-left:20px}
     <div class="hero">
       <div>
         <h1>Small software, built from the ground up.</h1>
-        <p class="lede">Xlabs makes low-level software with as little in the way as possible. Our current project is Minimal-OS, an operating system for x86_64.</p>
+        <p class="lede">Xlabs makes low-level software with as little in the way as possible: Minimal-OS, an operating system for x86_64, and everything around it — an SDK, a TLS library, a desktop and a window manager. And now a studio that builds apps for it in your browser.</p>
         <div class="btns">
-          <a class="btn primary" href="https://github.com/fsminecrafter/Minimal-OS">View Minimal-OS on GitHub</a>
-          <a class="btn" href="https://github.com/fsminecrafter/Minimal-OS/releases">Download an ISO</a>
+          <a class="btn primary" href="studio/">Open Run Studio</a>
+          <a class="btn" href="https://github.com/fsminecrafter/Minimal-OS">Minimal-OS on GitHub</a>
         </div>
       </div>
       <div class="term" aria-label="Minimal-OS terminal example">
@@ -131,33 +191,103 @@ footer a{margin-left:20px}
 
     <section id="about">
       <h2>About</h2>
-      <p class="about">We write C and assembly, keep the codebase readable, and publish everything as open source under GPL-3.0.</p>
+      <p class="about">We write C and assembly, keep the codebase readable, and publish everything as open source under GPL-3.0. Each piece is small enough to read in an afternoon.</p>
+    </section>
+
+    <section id="projects">
+      <h2>Projects</h2>
+      <div class="cards">
+        <a class="card" href="#/p/minimal-os"><span class="tag">Operating system · C, Assembly</span><h3>Minimal-OS</h3><p>A multicore x86_64 kernel with its own file system, drivers, networking with TLS 1.3, services and user programs.</p><span class="more">Overview →</span></a>
+        <a class="card" href="#/p/sdk"><span class="tag">Toolchain · C, C++</span><h3>Minimal-OS SDK</h3><p>Headers, a freestanding runtime and build scripts that turn C or C++ into <code>.run</code> programs and <code>.slib</code> bundles.</p><span class="more">Read more →</span></a>
+        <a class="card" href="#/p/minimassl"><span class="tag">Library · C</span><h3>MinimaSSL</h3><p>A tiny, freestanding, OpenSSL-shaped crypto library: SHA-256, AES-GCM and randomness. It secures <code>wget</code> and the package client.</p><span class="more">Read more →</span></a>
+        <a class="card" href="#/p/mosdesk"><span class="tag">Desktop · C</span><h3>MOSdesk</h3><p>The Minimal-OS desktop: themes, photo wallpapers, a Settings app, pixel-art icons and anti-aliased Inter text.</p><span class="more">Read more →</span></a>
+        <a class="card" href="#/p/moswm"><span class="tag">Window manager · C</span><h3>mosWM</h3><p>Composites application windows with damage tracking, tiles them to edges, and gives apps a protected window API.</p><span class="more">Read more →</span></a>
+        <a class="card" href="studio/"><span class="tag">Web tool · new</span><h3>Run Studio</h3><p>Write a <code>.run</code> app, try it in a live mosWM desktop, then build the real x86_64 program — all in the browser.</p><span class="more">Open the studio →</span></a>
+        <a class="card" href="#/red-sandbox"><span class="tag">Web · JavaScript, WebAssembly</span><h3>Red Sandbox</h3><p>A 3D physics workbench: glue, gears, axles, springs, engines with real gas combustion, and wired signals.</p><span class="more">Play it here →</span></a>
+      </div>
     </section>
 
     <section id="minimal-os">
-      <h2>Project</h2>
+      <h2>Flagship</h2>
       <div class="proj">
         <div>
           <h3>Minimal-OS</h3>
-          <p>An operating system written in C and Assembly for x86_64 processors. It boots from an ISO, runs in QEMU, and currently needs 1024 MB of memory.</p>
-          <div class="btns"><a class="btn primary" href="#/docs">Read the docs</a><a class="btn" href="https://github.com/fsminecrafter/Minimal-OS">Source</a></div>
+          <p>An operating system written in C and Assembly for x86_64 processors. It boots from an ISO, runs in QEMU, and currently needs 1024 MB of memory. Install the MOSdesk package and it boots to a desktop.</p>
+          <div class="btns"><a class="btn primary" href="#/docs">Read the docs</a><a class="btn" href="https://github.com/fsminecrafter/Minimal-OS/releases">Download an ISO</a></div>
         </div>
         <ul class="facts">
           <li><span>Languages</span><span>C, x86 Assembly</span></li>
-          <li><span>Architecture</span><span>x86_64</span></li>
+          <li><span>Architecture</span><span>x86_64, SMP</span></li>
           <li><span>File system</span><span>MinimaFS</span></li>
-          <li><span>Programs</span><span>.run executables</span></li>
+          <li><span>Programs</span><span>.run executables, .mpkg packages</span></li>
+          <li><span>Desktop</span><span>MOSdesk on mosWM</span></li>
           <li><span>License</span><span>GPL-3.0</span></li>
         </ul>
       </div>
     </section>
 
+    <section id="stack">
+      <h2>How the pieces fit</h2>
+      <ol class="stack">
+        <li><span class="layer">Your app</span><span>A <code>.run</code> bundle: one PIE executable plus its resources, written in C or C++.</span></li>
+        <li><span class="layer">SDK</span><span><code>window.h</code>, <code>net.h</code>, <code>stdio.h</code> and friends — thin wrappers over <code>int 0x80</code>.</span></li>
+        <li><span class="layer">MOSdesk · mosWM</span><span>A user-space desktop. mosWM owns the framebuffer and composites every window.</span></li>
+        <li><span class="layer">Minimal-OS</span><span>Scheduler, MinimaFS, drivers, TCP/IP, and the window and input syscalls apps rely on.</span></li>
+        <li><span class="layer">MinimaSSL</span><span>Linked into the kernel for TLS 1.3, and shipped as <code>0:/etc/minimaSSL.slib</code>.</span></li>
+      </ol>
+    </section>
+
+    <section id="studio">
+      <h2>New: Run Studio</h2>
+      <div class="split">
+        <div>
+          <h3 class="big">Build Minimal-OS apps in the browser.</h3>
+          <p>Write C or C++ on the left. Press Run and the app starts inside a live mosWM desktop on the right: drag its window, resize it, click and type into it. When it works, Build gives you the real thing — an x86_64 <code>main.elf</code> packed into a <code>.run</code>, or an installable <code>.mpkg</code> that puts it on the MOSdesk desktop.</p>
+          <ul class="checks">
+            <li>Its own C and C++ compiler, with the SDK headers built in</li>
+            <li>Preview of mosWM windows, terminal output and framebuffer graphics</li>
+            <li>Downloads <code>.run</code>, <code>.mpkg</code>, <code>main.elf</code> or the source</li>
+            <li>Seven sample apps: Paint, Snake, Clock, Bubbles in C++, and more</li>
+          </ul>
+          <div class="btns"><a class="btn primary" href="studio/">Open Run Studio</a><a class="btn" href="#/p/studio">How it works</a></div>
+        </div>
+        <a class="shot" href="studio/" aria-label="Open Run Studio">
+          <picture>
+            <source srcset="assets/studio-dark.webp" media="(prefers-color-scheme: dark)">
+            <img src="assets/studio-light.webp" width="1360" height="820" alt="Run Studio with the Paint sample: C code on the left, the app running in a mosWM window on the right" loading="lazy">
+          </picture>
+        </a>
+      </div>
+    </section>
+
+    <section id="red-sandbox">
+      <h2>Play: Red Sandbox</h2>
+      <div class="split rev">
+        <div>
+          <h3 class="big">A physics workbench that runs right here.</h3>
+          <p>Glue parts together, drive them with gears, belts and motors, wire buttons to igniters, and build engines whose fuel really burns. Pause, slow time down, or rewind to the moment you pressed Play.</p>
+          <div class="btns"><a class="btn" href="#/red-sandbox">Open full page</a><a class="btn" href="https://github.com/fsminecrafter/Red-Sandbox">Source</a></div>
+        </div>
+        <div class="embed" data-sandbox>
+          <div class="poster">
+            <span class="tag">3D · WebGL</span>
+            <strong>Red Sandbox</strong>
+            <span>Loads about 1 MB and uses your GPU.</span>
+            <button class="btn primary" type="button" data-launch>Launch the sandbox</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section>
-      <h2>What it does today</h2>
+      <h2>What Minimal-OS does today</h2>
       <div class="cols">
-        <div><h4>Runs on several cores</h4><p>Multithreading and multicore support, with a process manager and time scheduler.</p></div>
-        <div><h4>Runs your programs</h4><p>Syscalls, a user layer and a service manager. Build apps with the Minimal-OS SDK.</p></div>
-        <div><h4>Talks to hardware</h4><p>Graphics, USB keyboard, audio and AHCI disk storage.</p></div>
+        <div><h4>Runs on several cores</h4><p>SMP with per-CPU run queues, a three-level scheduler, threads and a services manager.</p></div>
+        <div><h4>Runs your programs</h4><p>Ring-3 <code>.run</code> programs with a heap, files, packages and a validated syscall boundary.</p></div>
+        <div><h4>Talks to hardware</h4><p>Framebuffer graphics, USB keyboard and mouse, AC'97 audio and AHCI disks.</p></div>
+        <div><h4>Gets online</h4><p>Ethernet, ARP, IPv4, UDP, DHCP, DNS, TCP, and a TLS 1.3 client behind <code>wget</code>.</p></div>
+        <div><h4>Has a desktop</h4><p>MOSdesk and mosWM: windows, a taskbar, a file browser, themes and sign-in.</p></div>
+        <div><h4>Installs software</h4><p><code>.mpkg</code> archives with LZSS compression, and the <code>dlr</code> package client.</p></div>
       </div>
     </section>
 
@@ -171,15 +301,17 @@ footer a{margin-left:20px}
             <li><span class="tick">✓</span>MinimaFS file system</li>
             <li><span class="tick">✓</span>Multicore and services manager</li>
             <li><span class="tick">✓</span>Syscalls and .run executables</li>
+            <li><span class="tick">✓</span>Networking and TLS 1.3 (MinimaSSL)</li>
           </ul>
         </div>
         <div class="todo">
-          <span class="k">Next, planned for 0.4.5x</span>
+          <span class="k">0.4.5x, in progress</span>
           <ul>
-            <li><span class="tick">○</span>Simple desktop</li>
-            <li><span class="tick">○</span>Window manager</li>
-            <li><span class="tick">○</span>File browser</li>
+            <li><span class="tick done">✓</span>Simple desktop — MOSdesk</li>
+            <li><span class="tick done">✓</span>Window manager — mosWM</li>
+            <li><span class="tick done">✓</span>File browser — the mosWM Files window</li>
             <li><span class="tick">○</span>Text editor</li>
+            <li><span class="tick done">✓</span>App development in the browser — Run Studio</li>
           </ul>
         </div>
       </div>
@@ -1286,13 +1418,274 @@ user TLS handles and certificate policy should be treated as evolving APIs.</p>
 <li>Use <code>mos_sleep()</code> between polling attempts to yield CPU time.</li>
 <li>Do not assume kernel structure layouts match SDK structures.</li>
 </ul><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/user-sdk-syscalls.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article></div></main>
+<main id="pages" class="docs" hidden>
+<nav class="side" aria-label="Projects"><span class="h">Projects</span><a href="#/p/minimal-os" data-page-nav="minimal-os">Minimal-OS</a><a href="#/p/sdk" data-page-nav="sdk">Minimal-OS SDK</a><a href="#/p/minimassl" data-page-nav="minimassl">MinimaSSL</a><a href="#/p/mosdesk" data-page-nav="mosdesk">MOSdesk</a><a href="#/p/moswm" data-page-nav="moswm">mosWM</a><a href="#/p/studio" data-page-nav="studio">Run Studio</a><a href="#/red-sandbox" data-page-nav="red-sandbox">Red Sandbox</a></nav>
+<div>
+
+<article class="doc" data-page="minimal-os" hidden>
+<p class="eyebrow">Operating system · C, x86 Assembly · GPL-3.0</p>
+<h1>Minimal-OS</h1>
+<p class="intro">An operating system for x86_64 written from scratch in C and assembly. It boots from an ISO through GRUB, brings up every CPU core, mounts its own file system, starts services, and runs user programs in ring 3.</p>
+<div class="btns"><a class="btn primary" href="https://github.com/fsminecrafter/Minimal-OS">Source</a><a class="btn" href="https://github.com/fsminecrafter/Minimal-OS/releases">Download an ISO</a><a class="btn" href="#/docs">Documentation</a></div>
+<h2>What is inside</h2>
+<div class="tw"><table>
+<thead><tr><th>Layer</th><th>Highlights</th></tr></thead>
+<tbody>
+<tr><td>Boot</td><td>Multiboot2, long-mode transition, a memory tester and a no-disk boot entry in the GRUB menu</td></tr>
+<tr><td>Kernel</td><td>Page and heap allocators, processes and threads, per-CPU run queues with three priority levels, SMP spinlocks</td></tr>
+<tr><td>Storage</td><td>AHCI, MinimaFS with 4 KiB blocks, <code>.mpkg</code> packages with LZSS compression</td></tr>
+<tr><td>Hardware</td><td>PCI, framebuffer graphics, UHCI/OHCI USB keyboard and mouse, PS/2, AC'97 audio, RTL8139</td></tr>
+<tr><td>Network</td><td>Ethernet, ARP, IPv4, UDP, DHCP, DNS, TCP, and a TLS 1.3 client (<code>TLS_AES_128_GCM_SHA256</code>, X25519)</td></tr>
+<tr><td>User space</td><td><code>.run</code> programs, a syscall ABI with a privilege table, <code>.service</code> files, the window and input syscalls mosWM uses</td></tr>
+</tbody></table></div>
+<h2>Try it</h2>
+<p>Download an ISO from the releases page, create a disk image, and start QEMU:</p>
+<pre><code>fallocate -l 256M sata256.img
+qemu-system-x86_64 -cdrom kernel.iso -m 1024M -boot d -usb -device usb-kbd \
+  -device ahci,id=ahci -drive id=disk0,file=sata256.img,if=none,format=raw \
+  -device ide-hd,drive=disk0,bus=ahci.0</code></pre>
+<p>At the terminal, <code>initdisk</code>, <code>format</code> and <code>mount</code> prepare the disk; <code>help</code> lists every command. The <a href="#/docs/build-and-debugging">build guide</a> covers compiling from source.</p>
+<h2>Terminal commands</h2>
+<div class="tw"><table>
+<thead><tr><th>Area</th><th>Commands</th></tr></thead>
+<tbody>
+<tr><td>General</td><td><code>help</code> <code>echo</code> <code>clear</code> <code>sleep</code> <code>systime</code></td></tr>
+<tr><td>System</td><td><code>info</code> <code>cpu</code> <code>gpu</code> <code>memsize</code> <code>usage</code> <code>chgres</code></td></tr>
+<tr><td>Files</td><td><code>ls</code> <code>cd</code> <code>mdr</code> <code>insert</code> <code>read</code> <code>rm</code> <code>meta</code></td></tr>
+<tr><td>Storage</td><td><code>initdisk</code> <code>format</code> <code>mount</code> <code>pkg zip|unzip</code> <code>pkginfo</code> <code>installpkg</code></td></tr>
+<tr><td>Audio</td><td><code>play</code> <code>stop</code> <code>pause</code> <code>volume</code></td></tr>
+<tr><td>Programs</td><td><code>run</code> <code>services</code> <code>kbrlayout</code> <code>dhcp</code> <code>wget</code></td></tr>
+</tbody></table></div>
+</article>
+
+<article class="doc" data-page="sdk" hidden>
+<p class="eyebrow">Toolchain · C, C++ · v1.1</p>
+<h1>Minimal-OS SDK</h1>
+<p class="intro">Everything needed to write programs for Minimal-OS on a Linux machine: freestanding headers, a tiny C runtime, a linker script, and scripts that build a <code>.run</code> program or a <code>.slib</code> library bundle.</p>
+<div class="btns"><a class="btn primary" href="https://github.com/fsminecrafter/Minimal-OS-SDK">Source</a><a class="btn" href="studio/">Try it in Run Studio</a><a class="btn" href="#/docs/user-sdk-syscalls">Syscall reference</a></div>
+<h2>Install</h2>
+<pre><code>./install-toolchain.sh     # compiler and linker (Debian/Ubuntu)
+./install.sh               # puts MSDK / msdk on your PATH</code></pre>
+<h2>Build a program</h2>
+<pre><code>msdk examples/hello.c              # -&gt; hello.run
+msdk examples/hello.cpp            # C++ works the same way
+msdk programs --main main.cpp      # a project folder
+msdk --slib libraries/math         # a shared-library bundle</code></pre>
+<p>Import the <code>.run</code> into MinimaFS and start it from the terminal with <code>run 0:/programs/hello.run</code>.</p>
+<h2>A first program</h2>
+<pre><code>#include "minimalos.h"
+#include "stdio.h"
+
+int main(int argc, char** argv) {
+    printf("hello from user space, %d argument(s)\n", argc);
+    return 0;
+}</code></pre>
+<h2>Headers</h2>
+<div class="tw"><table>
+<thead><tr><th>Header</th><th>Provides</th></tr></thead>
+<tbody>
+<tr><td><code>minimalos.h</code></td><td>Core syscalls: write, exit, sleep, uptime, files, directories, packages, <code>mos_exec</code>, cleanup callbacks</td></tr>
+<tr><td><code>stdio.h</code> / <code>iostream</code></td><td><code>printf</code> (<code>%s %c %d %i %u %x %X %ld %lu %%</code>) and <code>std::cout</code>, both header-only</td></tr>
+<tr><td><code>stdlib.h</code></td><td><code>malloc</code>, <code>calloc</code>, <code>realloc</code>, <code>free</code>, <code>mos_random_bytes</code>, <code>atoi</code></td></tr>
+<tr><td><code>string.h</code></td><td><code>strlen</code>, <code>strcmp</code>, <code>strstr</code>, … and constant-time <code>mos_memeq_ct</code></td></tr>
+<tr><td><code>window.h</code></td><td>The mosWM window API: create, present, events, styles, flags</td></tr>
+<tr><td><code>net.h</code></td><td>TCP, UDP, DNS, status, polling, and TLS handles</td></tr>
+<tr><td><code>graphics.h</code></td><td>Framebuffer drawing: shapes, text, blits</td></tr>
+</tbody></table></div>
+<h2>The .run format</h2>
+<p>A <code>.run</code> is a single file, so copying it into MinimaFS never needs a directory tree. It holds a <code>MINIRUN1</code> header, an entry table and the payloads:</p>
+<div class="tw"><table>
+<thead><tr><th>Field</th><th>Layout</th></tr></thead>
+<tbody>
+<tr><td>Header</td><td><code>char magic[8] = "MINIRUN1"</code>, <code>u32 version = 1</code>, <code>u32 count</code></td></tr>
+<tr><td>Entry × count</td><td><code>char name[64]</code>, <code>u32 offset</code>, <code>u32 size</code></td></tr>
+<tr><td>Payloads</td><td><code>main.elf</code>, then every file under <code>Resources/</code></td></tr>
+</tbody></table></div>
+<p><code>main.elf</code> must be an x86_64 ELF64 position-independent executable linked at address 0 with no external symbols; the loader applies only <code>R_X86_64_RELATIVE</code> relocations. The SDK's <code>link.ld</code> and <code>crt0.c</code> take care of that.</p>
+<h2>.slib bundles</h2>
+<p><code>--slib</code> produces a <code>MINISLIB1</code> bundle with <code>library.elf</code>, an <code>exports.txt</code> of global symbols, and the public headers. Minimal-OS does not load shared libraries at run time yet; bundles are distribution artifacts, like <code>0:/etc/minimaSSL.slib</code>.</p>
+</article>
+
+<article class="doc" data-page="minimassl" hidden>
+<p class="eyebrow">Library · C · freestanding</p>
+<h1>MinimaSSL</h1>
+<p class="intro">A deliberately small cryptography library with an OpenSSL-shaped API. It needs no libc on Minimal-OS, so the same sources link into the kernel's TLS 1.3 client and into user programs such as the <code>dlr</code> package manager.</p>
+<div class="btns"><a class="btn primary" href="https://github.com/fsminecrafter/minimaSSL">Source</a><a class="btn" href="#/docs/networking">TLS in Minimal-OS</a></div>
+<h2>What it implements</h2>
+<div class="tw"><table>
+<thead><tr><th>Header</th><th>API</th></tr></thead>
+<tbody>
+<tr><td><code>openssl/sha.h</code></td><td><code>SHA256_Init</code>, <code>SHA256_Update</code>, <code>SHA256_Final</code>, one-shot <code>SHA256</code></td></tr>
+<tr><td><code>openssl/evp.h</code></td><td><code>EVP_aes_256_gcm</code> with the usual <code>EVP_Encrypt*</code> / <code>EVP_Decrypt*</code> calls and the GCM IV and tag controls</td></tr>
+<tr><td><code>openssl/rand.h</code></td><td><code>RAND_bytes</code>, from the kernel's random source on Minimal-OS (RDRAND where the CPU has it) and <code>getrandom</code> on Linux</td></tr>
+<tr><td><code>minimaSSL/tls_gcm.h</code></td><td>AES-128-GCM with associated data, the record protection TLS 1.3 needs (SDK edition)</td></tr>
+</tbody></table></div>
+<p>Return values follow OpenSSL's convention: 1 for success, 0 for failure. Contexts are wiped with a cleanse the optimiser cannot remove, and a failed GCM tag check means the plaintext must be thrown away.</p>
+<h2>Seal and open with AES-256-GCM</h2>
+<pre><code>#include &lt;openssl/evp.h&gt;
+
+EVP_CIPHER_CTX* c = EVP_CIPHER_CTX_new();
+int len, total;
+EVP_EncryptInit_ex(c, EVP_aes_256_gcm(), NULL, NULL, NULL);
+EVP_CIPHER_CTX_ctrl(c, EVP_CTRL_GCM_SET_IVLEN, 12, NULL);
+EVP_EncryptInit_ex(c, NULL, NULL, key, iv);
+EVP_EncryptUpdate(c, NULL, &amp;len, aad, aad_len);          /* out == NULL: AAD */
+EVP_EncryptUpdate(c, ciphertext, &amp;len, plaintext, n);
+total = len;
+EVP_EncryptFinal_ex(c, ciphertext + total, &amp;len);
+EVP_CIPHER_CTX_ctrl(c, EVP_CTRL_GCM_GET_TAG, 16, tag);
+EVP_CIPHER_CTX_free(c);                                   /* NULL-safe, zeroizes */</code></pre>
+<h2>Where it runs</h2>
+<ul>
+<li>The kernel links the freestanding sources statically for <code>wget https://…</code> (TLS 1.3 with <code>TLS_AES_128_GCM_SHA256</code>).</li>
+<li><code>make minimaSSL-slib</code> builds <code>minimaSSL.slib</code>; formatting a disk installs it as <code>0:/etc/minimaSSL.slib</code>.</li>
+<li>The <code>dlr</code> / Deliver package client uses the same SHA-256 and AES-256-GCM code for its transport.</li>
+</ul>
+<h2>Testing</h2>
+<pre><code>./test.sh     # builds tests/selftest.c against the library and runs the known-answer tests</code></pre>
+<p>The Minimal-OS tree also carries a TLS GCM known-answer test and an end-to-end HTTPS test against <code>openssl s_server -tls1_3</code>; see <a href="#/docs/build-and-debugging">Build and debugging</a>.</p>
+</article>
+
+<article class="doc" data-page="mosdesk" hidden>
+<p class="eyebrow">Desktop environment · C</p>
+<h1>MOSdesk</h1>
+<p class="intro">The Minimal-OS desktop. It renders layered ARGB8888 surfaces with dirty-region updates, keeps your icon layout between boots, and brings themes, wallpapers, settings and smooth text to an OS that started with a text terminal.</p>
+<div class="btns"><a class="btn primary" href="https://github.com/fsminecrafter/MOSdesk">Source</a><a class="btn" href="#/p/moswm">mosWM, its window manager</a></div>
+<h2>Features</h2>
+<ul>
+<li>Six coordinated colour themes and eight photo wallpapers, with fill, crop, stretch and rotation.</li>
+<li>Smooth OpenType text: <code>ttrend_outline</code> rasterises Inter with exact-area coverage in integer fixed point (no floating point, no libm, no malloc while drawing), with the bitmap font as fallback.</li>
+<li>A 16-icon, 64×64 pixel-art set compiled into a compact run-length encoded header.</li>
+<li>Settings for appearance, mouse, cursor packs, sign-in, desktop grid and debug overlays.</li>
+<li>Optional password sign-in on first launch (a desktop gate, not an OS account).</li>
+<li>Packaged as a Deliver <code>.mpkg</code>, installed by the package manager.</li>
+</ul>
+<h2>Build</h2>
+<pre><code>git submodule update --init --recursive
+cd Minimal-OS-SDK &amp;&amp; ./install-toolchain.sh &amp;&amp; ./install.sh
+./mosdesk/build.sh      # -&gt; mosdesk/dist/mosdesk.mpkg and mosWM/dist/mosWM.mpkg</code></pre>
+<h2>What gets built</h2>
+<div class="tw"><table>
+<thead><tr><th>Artifact</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>mosdesk.run</code></td><td>The MOSdesk Settings client</td></tr>
+<tr><td><code>ttrend_raster.slib</code></td><td>Bitmap text renderer bundle</td></tr>
+<tr><td><code>ttrend_outline.slib</code></td><td>OpenType/TrueType (CFF and glyf) anti-aliased text renderer bundle</td></tr>
+<tr><td><code>mosdesk.mpkg</code></td><td>The package that installs it</td></tr>
+</tbody></table></div>
+<h2>See it without booting</h2>
+<pre><code>./mosdesk/preview.sh                       # the layout in a browser
+./mosdesk/tools/host_preview/anim.sh       # scripted session: PNG stills, mp4 and gif
+./mosdesk/tools/host_preview/cursors.sh    # every Posy cursor state</code></pre>
+<p>The scripted session drives the real mosWM compositor and Settings client on the host with recorded keyboard and mouse input.</p>
+</article>
+
+<article class="doc" data-page="moswm" hidden>
+<p class="eyebrow">Window manager · C</p>
+<h1>mosWM</h1>
+<p class="intro">The user-space window manager behind MOSdesk. It owns the display, draws the desktop and taskbar, and composites the windows applications create through the SDK's <code>window.h</code>. The kernel enforces who may touch which window.</p>
+<div class="btns"><a class="btn primary" href="https://github.com/fsminecrafter/MOSdesk/tree/main/mosWM">Source</a><a class="btn" href="studio/">Write a mosWM app in Run Studio</a></div>
+<h2>Windows</h2>
+<ul>
+<li>Rounded, themed chrome with per-window colours for the title bar, text, buttons, border and content.</li>
+<li>Move from the title bar, resize from the lower-right corner; drag to a side, the top or a corner to tile.</li>
+<li>Minimise, maximise, restore and fullscreen, with an app switcher on the taskbar.</li>
+<li>Keyboard input goes to the focused window and pointer events to the window under the cursor.</li>
+<li>A built-in Files window with copy, rename, delete and a right-click menu everywhere.</li>
+</ul>
+<h2>Rendering</h2>
+<p>mosWM repaints only what changed. The pointer is a small patch over the finished scene, so moving the mouse updates two small rectangles and an idle desktop draws nothing. Window moves, presents, hover highlights and the clock each damage only the rectangle they cover; <code>damage_test.sh</code> checks every partial repaint against a full one. Settings › Debug shows an FPS meter and a per-stage frame profiler — a healthy desktop reads 62.5 fps, mostly asleep.</p>
+<h2>The application API</h2>
+<pre><code>#include "window.h"
+#include "stdlib.h"
+
+int main(void) {
+    uint32_t id = mos_window_create(0, 80, 64, 640, 360, "Example");
+    uint32_t* pixels = calloc(640 * 360, sizeof(uint32_t));
+    for (;;) {
+        syscall_window_event_t ev;
+        while (mos_window_next_event(id, &amp;ev) == SYS_SUCCESS)
+            if (ev.type == SYSCALL_WINDOW_EVENT_CLOSE_REQUEST) { mos_window_close(id); return 0; }
+        /* draw ARGB8888 pixels, then */
+        mos_window_present(id, pixels, 640 * 4, 0, 0, 640, 360);
+        mos_sleep(16);
+    }
+}</code></pre>
+<p>Events cover resize, close requests, minimise, maximise, focus, keys (USB HID codes), mouse and wheel. <code>mos_window_dispatch_events</code> maps the window events to callbacks, and <code>mos_window_set_style</code>, <code>mos_window_set_resizable</code> and <code>mos_window_set_fullscreen</code> change how a window behaves.</p>
+<h2>Security model</h2>
+<p>Applications render into their own buffer; the kernel copies those pixels into the window surface, so no app ever holds another app's surface. Only a window's owner (or the process that launched it) can change it, and only the focused window's owner may change the pointer. The window-server role is granted only to the installed <code>mosWM.run</code> launched by the OS, and only after it owns the framebuffer.</p>
+<h2>Install and run</h2>
+<pre><code>./mosWM/build.sh                        # -&gt; mosWM/dist/mosWM.run and mosWM.mpkg
+run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal</code></pre>
+<p>The package installs <code>0:/services/mosWM.service</code>, so the service manager starts the desktop after the boot disk is mounted. Remove that file to boot to the terminal again.</p>
+</article>
+
+<article class="doc" data-page="studio" hidden>
+<p class="eyebrow">Web tool · JavaScript</p>
+<h1>Run Studio</h1>
+<p class="intro">A complete little toolchain in a web page: an editor, a C and C++ compiler, a preview of Minimal-OS with mosWM, and a linker that writes real <code>.run</code> and <code>.mpkg</code> files. Nothing is uploaded; it all runs in your browser.</p>
+<div class="btns"><a class="btn primary" href="studio/">Open Run Studio</a></div>
+<h2>The compiler</h2>
+<p>Studio includes <b>mcc</b>, a C11 and C++ compiler written for it. C++ is lowered to the same syntax tree as C — methods take an explicit <code>this</code>, constructors and destructors become calls at the right places, virtual calls go through a vtable, templates are instantiated per use — so both back ends handle it unchanged. It preprocesses and type-checks your code against the real SDK headers (only the three inline-assembly syscall stubs are swapped for a <code>__syscall</code> builtin) and has two back ends:</p>
+<ul>
+<li><b>Preview:</b> JavaScript that runs in a Web Worker against an emulated memory with the same LP64 layout as the device. Every syscall goes to a small emulation of the Minimal-OS kernel that reads the same request structures the real kernel does.</li>
+<li><b>Build:</b> x86_64 machine code, linked into a position-independent ELF at base 0 with only <code>R_X86_64_RELATIVE</code> relocations, packed as <code>MINIRUN1</code>, optionally wrapped in an <code>MPKG0001</code> package.</li>
+</ul>
+<p>Both back ends are checked against GCC and G++ on the same test programs, which print identical output — for C++ that includes the exact order of constructor, copy and destructor calls.</p>
+<h2>The preview</h2>
+<p>The preview recreates mosWM: window chrome with the kernel's default style or your own, moving, resizing, edge tiling, minimise and maximise, a taskbar, and a terminal for programs that print. Mouse and keyboard input arrive as the same window events mosWM posts, with USB HID key codes. Programs that use <code>graphics.h</code> draw to a full-screen framebuffer with the kernel's 8×8 font.</p>
+<h2>Limits</h2>
+<ul>
+<li>No <code>goto</code>, bit-fields, variable-length arrays, inline assembly or statement expressions; <code>long double</code> is <code>double</code>.</li>
+<li>C++ without exceptions or RTTI (like the SDK), lambdas, rvalue references, multiple inheritance, member templates or class template specialization.</li>
+<li>The preview has no network card and cannot run <code>SYS_EXEC</code> or <code>SYS_PKG</code>.</li>
+</ul>
+</article>
+
+</div>
+</main>
+
+<main id="sandbox" hidden>
+  <div class="sandbox-head">
+    <div>
+      <p class="eyebrow">Web · JavaScript, WebAssembly · Three.js</p>
+      <h1 class="page-title">Red Sandbox</h1>
+    </div>
+    <div class="btns"><a class="btn" href="red-sandbox/" target="_blank" rel="noopener">Open in its own tab</a><a class="btn" href="https://github.com/fsminecrafter/Red-Sandbox">Source</a></div>
+  </div>
+  <div class="embed tall" data-sandbox>
+    <div class="poster">
+      <span class="tag">3D · WebGL</span>
+      <strong>Red Sandbox</strong>
+      <span>Loads about 1 MB and uses your GPU.</span>
+      <button class="btn primary" type="button" data-launch>Launch the sandbox</button>
+    </div>
+  </div>
+  <div class="sandbox-info">
+    <div>
+      <h2>Build</h2>
+      <p>Parts stay loose until you glue them. Pause with Space, place parts, and drop a glue ball where they touch — everything it touches becomes one rigid piece. Turn on Auto glue (T) to stick each new part to the one under it.</p>
+    </div>
+    <div>
+      <h2>Make it move</h2>
+      <p>Bearings, axles, gears, belts, clutches and gearboxes make drivetrains. Wire buttons and sensors to motors, solenoids and igniters with the Wire tool (C). Injectors, turbos and igniters make engines whose fuel and air really burn; water, oil and gasoline pour and float things.</p>
+    </div>
+    <div>
+      <h2>Controls</h2>
+      <p><kbd>Space</kbd> play or pause · <kbd>[</kbd> <kbd>]</kbd> slower or faster · <kbd>R</kbd> rewind · <kbd>W A S D</kbd> move · drag to orbit, right-drag to pan · <kbd>1</kbd>–<kbd>6</kbd> tools · <kbd>?</kbd> full help.</p>
+    </div>
+  </div>
+</main>
+
 
   <footer>
     <span>© 2026 Xlabs</span>
-    <span>
+    <span class="flinks">
       <a href="#/docs">Docs</a>
+      <a href="studio/">Run Studio</a>
       <a href="https://github.com/fsminecrafter/Minimal-OS">Minimal-OS</a>
       <a href="https://github.com/fsminecrafter/Minimal-OS-SDK">SDK</a>
+      <a href="https://github.com/fsminecrafter/MOSdesk">MOSdesk</a>
       <a href="https://github.com/fsminecrafter/Minimal-OS/releases">Releases</a>
     </span>
   </footer>
@@ -1302,9 +1695,9 @@ user TLS handles and certificate policy should be treated as evolving APIs.</p>
 (function(){
   var out=document.getElementById('out');
   var lines=[
-    ['cmd','info'],['d','x86_64 · 1024 MB'],
+    ['cmd','info'],['d','x86_64 · 4 cores · 1024 MB'],
     ['cmd','mount 0'],['d','MinimaFS mounted at 0:/'],
-    ['cmd','services'],['d','2 services running'],
+    ['cmd','wget https://example.com/'],['d','TLS 1.3 handshake ok · 200 OK'],
     ['cmd','run 0:/programs/hello.run'],['d','Hello from Xlabs.']
   ];
   var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1337,26 +1730,56 @@ user TLS handles and certificate policy should be treated as evolving APIs.</p>
 </script>
 <script>
 (function(){
-  var home=document.getElementById('home'),docs=document.getElementById('docs');
-  var arts=docs.querySelectorAll('.doc'),links=docs.querySelectorAll('[data-nav]'),top=document.querySelectorAll('[data-top]');
+  var home=document.getElementById('home'),docs=document.getElementById('docs'),pages=document.getElementById('pages'),sandbox=document.getElementById('sandbox');
+  var mains=[home,docs,pages,sandbox];
+  var arts=docs.querySelectorAll('.doc'),links=docs.querySelectorAll('[data-nav]');
+  var parts=pages.querySelectorAll('[data-page]'),plinks=pages.querySelectorAll('[data-page-nav]');
+  var top=document.querySelectorAll('header nav [data-route]');
+  function show(m){
+    mains.forEach(function(x){
+      if(x!==m&&!x.hidden) x.querySelectorAll('[data-sandbox]').forEach(unload);
+      x.hidden=x!==m;
+    });
+  }
+  function mark(r){top.forEach(function(a){a.dataset.route===r?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current')})}
   function route(){
-    var h=location.hash,m=h.match(/^#\/docs(?:\/([\w-]+))?/);
-    if(m){
+    var h=location.hash,m;
+    if((m=h.match(/^#\/docs(?:\/([\w-]+))?/))){
       var s=m[1]||'system-overview';
-      home.hidden=true;docs.hidden=false;
+      show(docs);
       arts.forEach(function(a){a.hidden=a.dataset.doc!==s});
       links.forEach(function(l){l.dataset.nav===s?l.setAttribute('aria-current','page'):l.removeAttribute('aria-current')});
       var a=docs.querySelector('.doc:not([hidden])');
       document.title=(a?a.querySelector('h1').textContent:'Docs')+' · Xlabs';
-      top.forEach(function(t){t.setAttribute('aria-current','page')});
-      window.scrollTo(0,0);
+      mark('docs');window.scrollTo(0,0);
+    }else if((m=h.match(/^#\/p\/([\w-]+)/))){
+      var id=pages.querySelector('[data-page="'+m[1]+'"]')?m[1]:'minimal-os';
+      show(pages);
+      parts.forEach(function(a){a.hidden=a.dataset.page!==id});
+      plinks.forEach(function(l){l.dataset.pageNav===id?l.setAttribute('aria-current','page'):l.removeAttribute('aria-current')});
+      document.title=pages.querySelector('[data-page="'+id+'"] h1').textContent+' · Xlabs';
+      mark('projects');window.scrollTo(0,0);
+    }else if(/^#\/red-sandbox/.test(h)){
+      show(sandbox);document.title='Red Sandbox · Xlabs';mark('sandbox');window.scrollTo(0,0);
     }else{
-      docs.hidden=true;home.hidden=false;document.title='Xlabs';
-      top.forEach(function(t){t.removeAttribute('aria-current')});
+      show(home);document.title='Xlabs';mark(h==='#projects'?'projects':'');
       var el=h.length>1&&document.getElementById(h.slice(1));
       el?el.scrollIntoView():window.scrollTo(0,0);
     }
   }
+  // Red Sandbox loads only when asked to, and unloads when you leave the page it is on
+  function unload(box){
+    var f=box.querySelector('iframe');
+    if(!f)return;
+    f.remove();box.querySelector('.poster').hidden=false;
+  }
+  document.querySelectorAll('[data-sandbox]').forEach(function(box){
+    box.querySelector('[data-launch]').addEventListener('click',function(){
+      var f=document.createElement('iframe');
+      f.src='red-sandbox/index.html';f.title='Red Sandbox';f.allow='fullscreen';
+      box.querySelector('.poster').hidden=true;box.appendChild(f);f.focus();
+    });
+  });
   window.addEventListener('hashchange',route);route();
 })();
 </script>

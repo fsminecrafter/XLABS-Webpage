@@ -1,0 +1,4 @@
+[submodule "red-sandbox"]
+	path = red-sandbox
+	url = https://github.com/fsminecrafter/Red-Sandbox.git
+	branch = main
