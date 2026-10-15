@@ -1776,7 +1776,7 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
   document.querySelectorAll('[data-sandbox]').forEach(function(box){
     box.querySelector('[data-launch]').addEventListener('click',function(){
       var f=document.createElement('iframe');
-      f.src='red-sandbox/index.html';f.title='Red Sandbox';f.allow='fullscreen';
+      f.src='https://fsminecrafter.github.io/Red-Sandbox/';f.title='Red Sandbox';f.allow='fullscreen';
       box.querySelector('.poster').hidden=true;box.appendChild(f);f.focus();
     });
   });
