@@ -71,11 +71,21 @@ footer a{margin-left:20px}
 @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
 
 .docs{display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px;padding:24px 0 96px}
-.side{position:sticky;top:24px;align-self:start;display:flex;flex-direction:column;gap:2px;font-size:15px}
+.side{position:sticky;top:24px;align-self:start;display:flex;flex-direction:column;gap:2px;font-size:15px;max-height:calc(100vh - 48px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
 .side a{text-decoration:none;color:var(--muted);padding:6px 10px;border-left:2px solid var(--line)}
 .side a:hover{color:var(--ink)}
 .side a[aria-current="page"]{color:var(--ink);border-left-color:var(--accent);font-weight:500}
 .side .h{font-size:13px;color:var(--muted);margin:0 0 10px 12px}
+.side .h~.h{margin-top:24px}
+.doc h2.fn{font:500 19px/1.35 "JetBrains Mono",ui-monospace,Menlo,monospace;letter-spacing:0;margin:56px 0 12px;padding-top:28px;border-top:1px solid var(--line);scroll-margin-top:16px}
+.doc h2.fn code{background:none;padding:0;font-size:inherit}
+.doc h2.fn+pre{margin-top:0}
+.doc h2,.doc h3{scroll-margin-top:16px}
+.fn-index{display:flex;flex-wrap:wrap;gap:6px;margin:24px 0 8px;padding:14px 16px;border:1px solid var(--line);border-radius:8px}
+.fn-index span{width:100%;font-size:13px;color:var(--muted);margin-bottom:2px}
+.fn-index a{text-decoration:none}
+.fn-index a:hover code{color:var(--accent)}
+.doc .fn-index code{font-size:13px}
 .doc{max-width:720px;min-width:0}
 .doc h1{font-size:clamp(32px,4.4vw,44px);margin:0 0 24px}
 .doc h2{font-size:24px;letter-spacing:-.02em;font-weight:600;color:var(--ink);margin:48px 0 14px}
@@ -97,7 +107,9 @@ footer a{margin-left:20px}
  .side{position:static;flex-direction:row;flex-wrap:wrap;gap:6px}
  .side a{border:1px solid var(--line);border-radius:6px;padding:6px 10px}
  .side a[aria-current="page"]{border-color:var(--accent)}
- .side .h{display:none}
+ .side .h{width:100%;margin:6px 0 0 2px}
+ .side .h~.h{margin-top:14px}
+ .side{max-height:none;overflow:visible}
 }
 .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 40px}
 .card{display:flex;flex-direction:column;gap:8px;padding:22px 0 30px;border-top:1px solid var(--line);text-decoration:none}
@@ -318,7 +330,7 @@ code,pre,kbd,.term{font-variant-ligatures:none}
     </section>
   </main>
 <main id="docs" class="docs" hidden>
-<nav class="side" aria-label="Documentation"><span class="h">Minimal-OS docs</span><a href="#/docs/system-overview" data-nav="system-overview">Overview</a><a href="#/docs/build-and-debugging" data-nav="build-and-debugging">Build and debugging</a><a href="#/docs/boot-and-kernel" data-nav="boot-and-kernel">Boot and kernel</a><a href="#/docs/hardware-and-drivers" data-nav="hardware-and-drivers">Hardware and drivers</a><a href="#/docs/storage-and-packages" data-nav="storage-and-packages">Storage and packages</a><a href="#/docs/networking" data-nav="networking">Networking</a><a href="#/docs/services" data-nav="services">Services</a><a href="#/docs/install-and-services" data-nav="install-and-services">Install and services</a><a href="#/docs/user-programs" data-nav="user-programs">User programs</a><a href="#/docs/user-sdk-syscalls" data-nav="user-sdk-syscalls">SDK and syscalls</a></nav>
+<nav class="side" aria-label="Documentation"><span class="h">Minimal-OS docs</span><a href="#/docs/system-overview" data-nav="system-overview">Overview</a><a href="#/docs/build-and-debugging" data-nav="build-and-debugging">Build and debugging</a><a href="#/docs/boot-and-kernel" data-nav="boot-and-kernel">Boot and kernel</a><a href="#/docs/hardware-and-drivers" data-nav="hardware-and-drivers">Hardware and drivers</a><a href="#/docs/storage-and-packages" data-nav="storage-and-packages">Storage and packages</a><a href="#/docs/networking" data-nav="networking">Networking</a><a href="#/docs/services" data-nav="services">Services</a><a href="#/docs/install-and-services" data-nav="install-and-services">Install and services</a><a href="#/docs/user-programs" data-nav="user-programs">User programs</a><a href="#/docs/user-sdk-syscalls" data-nav="user-sdk-syscalls">SDK and syscalls</a><!-- sdk-docs:nav --><span class="h">SDK functions</span><a href="#/docs/sdk-functions" data-nav="sdk-functions">Overview</a><a href="#/docs/sdk-conventions" data-nav="sdk-conventions">Conventions and errors</a><a href="#/docs/sdk-process" data-nav="sdk-process">Process and terminal</a><a href="#/docs/sdk-files" data-nav="sdk-files">Files</a><a href="#/docs/sdk-memory" data-nav="sdk-memory">Memory and randomness</a><a href="#/docs/sdk-strings" data-nav="sdk-strings">Strings and memory</a><a href="#/docs/sdk-output" data-nav="sdk-output">Formatted output</a><a href="#/docs/sdk-windows" data-nav="sdk-windows">Windows</a><a href="#/docs/sdk-graphics" data-nav="sdk-graphics">Graphics</a><a href="#/docs/sdk-input" data-nav="sdk-input">Input</a><a href="#/docs/sdk-network" data-nav="sdk-network">Networking</a><a href="#/docs/sdk-sysinfo" data-nav="sdk-sysinfo">System information</a><a href="#/docs/sdk-packages" data-nav="sdk-packages">Packages</a><a href="#/docs/sdk-managers" data-nav="sdk-managers">Device managers</a><!-- /sdk-docs:nav --></nav>
 <div><article class="doc" data-doc="system-overview" hidden><h1>Minimal-OS Documentation Index</h1>
 <p>This directory contains the system documentation. Start with the guide that
 matches the layer you are changing.</p>
@@ -1417,7 +1429,1190 @@ user TLS handles and certificate policy should be treated as evolving APIs.</p>
 <li>Do not call privileged operations from an ordinary <code>.run</code> process.</li>
 <li>Use <code>mos_sleep()</code> between polling attempts to yield CPU time.</li>
 <li>Do not assume kernel structure layouts match SDK structures.</li>
-</ul><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/user-sdk-syscalls.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article></div></main>
+</ul><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/user-sdk-syscalls.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article><!-- sdk-docs:pages -->
+<article class="doc" data-doc="sdk-functions" hidden><h1>Minimal-OS SDK function reference</h1>
+<p>Every function the SDK headers give a <code>.run</code> program, one entry per function: its signature, what each parameter means, what it returns, the errors to expect, and a short example. The headers are the source of truth; these pages describe them as of SDK v1.1 and the kernel's <code>syscall.c</code>.</p>
+<div class="tw"><table><thead><tr><th>Page</th><th>Header</th><th>What is in it</th></tr></thead><tbody><tr><td><a href="#/docs/sdk-conventions">Conventions and errors</a></td><td><code>syscall.h</code></td><td>Calling convention, result codes, privilege rules, which header to include</td></tr><tr><td><a href="#/docs/sdk-process">Process and terminal</a></td><td><code>minimalos.h</code></td><td>Output to the terminal, exit, sleep, time, PIDs, launching programs, cleanup on Ctrl+C</td></tr><tr><td><a href="#/docs/sdk-files">Files</a></td><td><code>minimalos.h</code></td><td>MinimaFS: open, create, read, write, seek, list, delete, metadata</td></tr><tr><td><a href="#/docs/sdk-memory">Memory and randomness</a></td><td><code>stdlib.h</code></td><td><code>malloc</code>, <code>calloc</code>, <code>realloc</code>, <code>free</code>, random bytes, <code>atoi</code></td></tr><tr><td><a href="#/docs/sdk-strings">Strings and memory</a></td><td><code>string.h</code></td><td><code>strlen</code>, <code>strcmp</code>, <code>strstr</code>, <code>memcpy</code>, constant-time compare …</td></tr><tr><td><a href="#/docs/sdk-output">Formatted output</a></td><td><code>stdio.h</code>, <code>iostream</code></td><td><code>printf</code> and <code>std::cout</code></td></tr><tr><td><a href="#/docs/sdk-windows">Windows</a></td><td><code>window.h</code></td><td>mosWM windows: create, draw, present, events</td></tr><tr><td><a href="#/docs/sdk-graphics">Graphics</a></td><td><code>graphics.h</code>, <code>x86_64/user_graphics.h</code></td><td>Full-screen framebuffer: acquire, blit, present, primitives</td></tr><tr><td><a href="#/docs/sdk-input">Input</a></td><td><code>x86_64/user_syscalls.h</code>, <code>user_mouse.h</code>, <code>user_usb.h</code></td><td>Raw keyboard and mouse events for full-screen programs</td></tr><tr><td><a href="#/docs/sdk-network">Networking</a></td><td><code>net.h</code></td><td>DNS, TCP client and server, UDP, the ktls transport</td></tr><tr><td><a href="#/docs/sdk-sysinfo">System information</a></td><td><code>user_sysinfo.h</code></td><td>CPU, RAM, heap, cores, uptime, processes</td></tr><tr><td><a href="#/docs/sdk-packages">Packages</a></td><td><code>minimalos.h</code></td><td><code>.mpkg</code> archives: unzip, zip, inspect</td></tr><tr><td><a href="#/docs/sdk-managers">Device managers</a></td><td><code>x86_64/user_managers.h</code></td><td>GPU, audio, storage and USB manager calls</td></tr></tbody></table></div>
+<h2 id="sdk-functions--reading-an-entry">Reading an entry</h2>
+<p>Each function has the same parts:</p>
+<ul><li><strong>Signature</strong> - the declaration exactly as the header has it. Every wrapper is <code>static inline</code>, so including a header never adds a symbol to your program.</li><li><strong>Parameters</strong> - one row per argument.</li><li><strong>Returns</strong> - the success value and the <code>SYS_ERR_*</code> values the kernel can return for that call.</li><li><strong>Notes</strong> - limits, ownership rules and anything surprising.</li><li><strong>Example</strong> - a minimal fragment. Examples assume the headers named at the top of the page are included.</li></ul>
+<h2 id="sdk-functions--a-complete-program">A complete program</h2>
+<pre><code class="lang-c">#include "minimalos.h"
+#include "stdio.h"
+
+int main(int argc, char** argv) {
+    printf("hello from pid %ld, %d argument(s)\n", mos_getpid(), argc);
+    for (int i = 0; i &lt; argc; i++) printf("argv[%d] = %s\n", i, argv[i]);
+    mos_exit(0);
+}</code></pre>
+<p>Build it with <code>./build.sh hello.c</code> and run it inside Minimal-OS with <code>run 0:/programs/hello.run</code>. Returning from <code>main</code> also ends the program; <code>crt0.c</code> calls <code>mos_exit()</code> with the return value.</p>
+<h2 id="sdk-functions--all-functions">All functions</h2>
+<p>178 functions, alphabetically, ignoring the <code>mos_</code> prefix.</p>
+<div class="tw"><table><thead><tr><th>Function</th><th>Page</th></tr></thead><tbody><tr><td><a href="#/docs/sdk-memory/atoi"><code>atoi</code></a></td><td>Memory and randomness</td></tr><tr><td><a href="#/docs/sdk-managers/mos_audio_has_data"><code>mos_audio_has_data</code></a></td><td>Device managers</td></tr><tr><td><a href="#/docs/sdk-managers/mos_audio_init"><code>mos_audio_init</code></a></td><td>Device managers</td></tr><tr><td><a href="#/docs/sdk-managers/mos_audio_set_sample_rate"><code>mos_audio_set_sample_rate</code></a></td><td>Device managers</td></tr><tr><td><a href="#/docs/sdk-managers/mos_audio_start"><code>mos_audio_start</code></a></td><td>Device managers</td></tr><tr><td><a href="#/docs/sdk-managers/mos_audio_update"><code>mos_audio_update</code></a></td><td>Device managers</td></tr><tr><td><a href="#/docs/sdk-memory/calloc"><code>calloc</code></a></td><td>Memory and randomness</td></tr><tr><td><a href="#/docs/sdk-files/mos_close"><code>mos_close</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-files/mos_create"><code>mos_create</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-files/mos_delete"><code>mos_delete</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-process/mos_exec"><code>mos_exec</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-files/mos_exists"><code>mos_exists</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-process/mos_exit"><code>mos_exit</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-process/mos_exit_code"><code>mos_exit_code</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-process/mos_exit_with"><code>mos_exit_with</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-files/mos_feof"><code>mos_feof</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-memory/free"><code>free</code></a></td><td>Memory and randomness</td></tr><tr><td><a href="#/docs/sdk-files/mos_fwrite"><code>mos_fwrite</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-files/mos_get_metadata"><code>mos_get_metadata</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-process/mos_getcwd"><code>mos_getcwd</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-process/mos_getpid"><code>mos_getpid</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-process/mos_gettime"><code>mos_gettime</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-managers/mos_gpu_init"><code>mos_gpu_init</code></a></td><td>Device managers</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics"><code>mos_graphics</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_acquire"><code>mos_graphics_acquire</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_blit_surface"><code>mos_graphics_blit_surface</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_call"><code>mos_graphics_call</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_circle"><code>mos_graphics_circle</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_clear"><code>mos_graphics_clear</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_ellipse"><code>mos_graphics_ellipse</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_fill_circle"><code>mos_graphics_fill_circle</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_fill_rectangle"><code>mos_graphics_fill_rectangle</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_fill_triangle"><code>mos_graphics_fill_triangle</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_get_height"><code>mos_graphics_get_height</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_get_width"><code>mos_graphics_get_width</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_info"><code>mos_graphics_info</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_line"><code>mos_graphics_line</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_measure_text"><code>mos_graphics_measure_text</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_owner"><code>mos_graphics_owner</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_pixel"><code>mos_graphics_pixel</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_present"><code>mos_graphics_present</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_rectangle"><code>mos_graphics_rectangle</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_release"><code>mos_graphics_release</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_set_resolution"><code>mos_graphics_set_resolution</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_text"><code>mos_graphics_text</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-graphics/mos_graphics_triangle"><code>mos_graphics_triangle</code></a></td><td>Graphics</td></tr><tr><td><a href="#/docs/sdk-memory/mos_heap_failed"><code>mos_heap_failed</code></a></td><td>Memory and randomness</td></tr><tr><td><a href="#/docs/sdk-network/mos_htonl"><code>mos_htonl</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_htons"><code>mos_htons</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-input/mos_input_read"><code>mos_input_read</code></a></td><td>Input</td></tr><tr><td><a href="#/docs/sdk-network/mos_ip_parse"><code>mos_ip_parse</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_ip_to_string"><code>mos_ip_to_string</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-files/mos_is_dir"><code>mos_is_dir</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-files/mos_listdir"><code>mos_listdir</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-memory/malloc"><code>malloc</code></a></td><td>Memory and randomness</td></tr><tr><td><a href="#/docs/sdk-managers/mos_manager"><code>mos_manager</code></a></td><td>Device managers</td></tr><tr><td><a href="#/docs/sdk-strings/memcmp"><code>memcmp</code></a></td><td>Strings and memory</td></tr><tr><td><a href="#/docs/sdk-strings/mos_memcmp"><code>mos_memcmp</code></a></td><td>Strings and memory</td></tr><tr><td><a href="#/docs/sdk-strings/memcpy"><code>memcpy</code></a></td><td>Strings and memory</td></tr><tr><td><a href="#/docs/sdk-strings/mos_memeq_ct"><code>mos_memeq_ct</code></a></td><td>Strings and memory</td></tr><tr><td><a href="#/docs/sdk-strings/memmove"><code>memmove</code></a></td><td>Strings and memory</td></tr><tr><td><a href="#/docs/sdk-strings/memset"><code>memset</code></a></td><td>Strings and memory</td></tr><tr><td><a href="#/docs/sdk-files/mos_mkdir"><code>mos_mkdir</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-input/mos_mouse"><code>mos_mouse</code></a></td><td>Input</td></tr><tr><td><a href="#/docs/sdk-input/mos_mouse_call"><code>mos_mouse_call</code></a></td><td>Input</td></tr><tr><td><a href="#/docs/sdk-input/mos_mouse_get_state"><code>mos_mouse_get_state</code></a></td><td>Input</td></tr><tr><td><a href="#/docs/sdk-input/mos_mouse_has_mouse"><code>mos_mouse_has_mouse</code></a></td><td>Input</td></tr><tr><td><a href="#/docs/sdk-input/mos_mouse_init"><code>mos_mouse_init</code></a></td><td>Input</td></tr><tr><td><a href="#/docs/sdk-input/mos_mouse_poll"><code>mos_mouse_poll</code></a></td><td>Input</td></tr><tr><td><a href="#/docs/sdk-network/mos_net_call"><code>mos_net_call</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_net_dhcp"><code>mos_net_dhcp</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_net_is_up"><code>mos_net_is_up</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_net_lookup"><code>mos_net_lookup</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_net_poll"><code>mos_net_poll</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_net_resolve"><code>mos_net_resolve</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_net_status"><code>mos_net_status</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-files/mos_open"><code>mos_open</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-packages/mos_pkg_info"><code>mos_pkg_info</code></a></td><td>Packages</td></tr><tr><td><a href="#/docs/sdk-packages/mos_pkg_unzip"><code>mos_pkg_unzip</code></a></td><td>Packages</td></tr><tr><td><a href="#/docs/sdk-packages/mos_pkg_zip"><code>mos_pkg_zip</code></a></td><td>Packages</td></tr><tr><td><a href="#/docs/sdk-output/printf"><code>printf</code></a></td><td>Formatted output</td></tr><tr><td><a href="#/docs/sdk-process/mos_pslist"><code>mos_pslist</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-process/mos_puts"><code>mos_puts</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-memory/mos_random"><code>mos_random</code></a></td><td>Memory and randomness</td></tr><tr><td><a href="#/docs/sdk-memory/mos_random_bytes"><code>mos_random_bytes</code></a></td><td>Memory and randomness</td></tr><tr><td><a href="#/docs/sdk-memory/mos_random_u64"><code>mos_random_u64</code></a></td><td>Memory and randomness</td></tr><tr><td><a href="#/docs/sdk-files/mos_read"><code>mos_read</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-memory/realloc"><code>realloc</code></a></td><td>Memory and randomness</td></tr><tr><td><a href="#/docs/sdk-process/mos_register_cleanup"><code>mos_register_cleanup</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-files/mos_rmdir"><code>mos_rmdir</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-files/mos_seek"><code>mos_seek</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-files/mos_size"><code>mos_size</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-process/mos_sleep"><code>mos_sleep</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-output/std-cout"><code>std::cout</code></a></td><td>Formatted output</td></tr><tr><td><a href="#/docs/sdk-managers/mos_storage_init"><code>mos_storage_init</code></a></td><td>Device managers</td></tr><tr><td><a href="#/docs/sdk-strings/strchr"><code>strchr</code></a></td><td>Strings and memory</td></tr><tr><td><a href="#/docs/sdk-strings/strcmp"><code>strcmp</code></a></td><td>Strings and memory</td></tr><tr><td><a href="#/docs/sdk-strings/strcpy"><code>strcpy</code></a></td><td>Strings and memory</td></tr><tr><td><a href="#/docs/sdk-strings/strlcpy_safe"><code>strlcpy_safe</code></a></td><td>Strings and memory</td></tr><tr><td><a href="#/docs/sdk-strings/strlen"><code>strlen</code></a></td><td>Strings and memory</td></tr><tr><td><a href="#/docs/sdk-strings/strncmp"><code>strncmp</code></a></td><td>Strings and memory</td></tr><tr><td><a href="#/docs/sdk-strings/strrchr"><code>strrchr</code></a></td><td>Strings and memory</td></tr><tr><td><a href="#/docs/sdk-strings/strstr"><code>strstr</code></a></td><td>Strings and memory</td></tr><tr><td><a href="#/docs/sdk-process/mos_syscall"><code>mos_syscall</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-process/mos_syscall1"><code>mos_syscall1</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-process/mos_syscall3"><code>mos_syscall3</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-sysinfo/mos_sysinfo"><code>mos_sysinfo</code></a></td><td>System information</td></tr><tr><td><a href="#/docs/sdk-sysinfo/mos_sysinfo_core_count"><code>mos_sysinfo_core_count</code></a></td><td>System information</td></tr><tr><td><a href="#/docs/sdk-sysinfo/mos_sysinfo_core_usage"><code>mos_sysinfo_core_usage</code></a></td><td>System information</td></tr><tr><td><a href="#/docs/sdk-sysinfo/mos_sysinfo_cpu_usage"><code>mos_sysinfo_cpu_usage</code></a></td><td>System information</td></tr><tr><td><a href="#/docs/sdk-sysinfo/mos_sysinfo_heap_free"><code>mos_sysinfo_heap_free</code></a></td><td>System information</td></tr><tr><td><a href="#/docs/sdk-sysinfo/mos_sysinfo_heap_used"><code>mos_sysinfo_heap_used</code></a></td><td>System information</td></tr><tr><td><a href="#/docs/sdk-sysinfo/mos_sysinfo_pmm_free_pages"><code>mos_sysinfo_pmm_free_pages</code></a></td><td>System information</td></tr><tr><td><a href="#/docs/sdk-sysinfo/mos_sysinfo_pmm_used_pages"><code>mos_sysinfo_pmm_used_pages</code></a></td><td>System information</td></tr><tr><td><a href="#/docs/sdk-sysinfo/mos_sysinfo_process_count"><code>mos_sysinfo_process_count</code></a></td><td>System information</td></tr><tr><td><a href="#/docs/sdk-sysinfo/mos_sysinfo_ram_free"><code>mos_sysinfo_ram_free</code></a></td><td>System information</td></tr><tr><td><a href="#/docs/sdk-sysinfo/mos_sysinfo_ram_total"><code>mos_sysinfo_ram_total</code></a></td><td>System information</td></tr><tr><td><a href="#/docs/sdk-sysinfo/mos_sysinfo_ram_used"><code>mos_sysinfo_ram_used</code></a></td><td>System information</td></tr><tr><td><a href="#/docs/sdk-sysinfo/mos_sysinfo_uptime_ms"><code>mos_sysinfo_uptime_ms</code></a></td><td>System information</td></tr><tr><td><a href="#/docs/sdk-network/mos_tcp_accept"><code>mos_tcp_accept</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tcp_close"><code>mos_tcp_close</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tcp_connect"><code>mos_tcp_connect</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tcp_handoff"><code>mos_tcp_handoff</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tcp_listen"><code>mos_tcp_listen</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tcp_recv"><code>mos_tcp_recv</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tcp_recv_exact"><code>mos_tcp_recv_exact</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tcp_send"><code>mos_tcp_send</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tcp_send_all"><code>mos_tcp_send_all</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tcp_state"><code>mos_tcp_state</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tcp_unlisten"><code>mos_tcp_unlisten</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-files/mos_tell"><code>mos_tell</code></a></td><td>Files</td></tr><tr><td><a href="#/docs/sdk-network/mos_tls_accept"><code>mos_tls_accept</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tls_close"><code>mos_tls_close</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tls_connect"><code>mos_tls_connect</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tls_recv"><code>mos_tls_recv</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tls_send"><code>mos_tls_send</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tls_state"><code>mos_tls_state</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_tls_wait_established"><code>mos_tls_wait_established</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_udp_bind"><code>mos_udp_bind</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_udp_recv"><code>mos_udp_recv</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_udp_recv_timeout"><code>mos_udp_recv_timeout</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_udp_send"><code>mos_udp_send</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-network/mos_udp_unbind"><code>mos_udp_unbind</code></a></td><td>Networking</td></tr><tr><td><a href="#/docs/sdk-process/mos_uptime"><code>mos_uptime</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-input/mos_usb"><code>mos_usb</code></a></td><td>Input</td></tr><tr><td><a href="#/docs/sdk-input/mos_usb_has_keyboard"><code>mos_usb_has_keyboard</code></a></td><td>Input</td></tr><tr><td><a href="#/docs/sdk-input/mos_usb_init"><code>mos_usb_init</code></a></td><td>Input</td></tr><tr><td><a href="#/docs/sdk-input/mos_usb_key_is_pressed"><code>mos_usb_key_is_pressed</code></a></td><td>Input</td></tr><tr><td><a href="#/docs/sdk-input/mos_usb_key_to_ascii"><code>mos_usb_key_to_ascii</code></a></td><td>Input</td></tr><tr><td><a href="#/docs/sdk-input/mos_usb_keyboard_info"><code>mos_usb_keyboard_info</code></a></td><td>Input</td></tr><tr><td><a href="#/docs/sdk-managers/mos_usb_manager_init"><code>mos_usb_manager_init</code></a></td><td>Device managers</td></tr><tr><td><a href="#/docs/sdk-input/mos_usb_poll"><code>mos_usb_poll</code></a></td><td>Input</td></tr><tr><td><a href="#/docs/sdk-output/mos_vprintf"><code>mos_vprintf</code></a></td><td>Formatted output</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_call"><code>mos_window_call</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_close"><code>mos_window_close</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_create"><code>mos_window_create</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_dispatch_events"><code>mos_window_dispatch_events</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_get_frame"><code>mos_window_get_frame</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_get_info"><code>mos_window_get_info</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_list"><code>mos_window_list</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_maximize"><code>mos_window_maximize</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_minimize"><code>mos_window_minimize</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_next_event"><code>mos_window_next_event</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_post_event"><code>mos_window_post_event</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_present"><code>mos_window_present</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_register_manager"><code>mos_window_register_manager</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_request"><code>mos_window_request</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_restore"><code>mos_window_restore</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_set_bounds"><code>mos_window_set_bounds</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_set_flags"><code>mos_window_set_flags</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_set_fullscreen"><code>mos_window_set_fullscreen</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_set_resizable"><code>mos_window_set_resizable</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_set_style"><code>mos_window_set_style</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_set_title"><code>mos_window_set_title</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-windows/mos_window_set_visible"><code>mos_window_set_visible</code></a></td><td>Windows</td></tr><tr><td><a href="#/docs/sdk-process/mos_write"><code>mos_write</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-process/mos_write_fd"><code>mos_write_fd</code></a></td><td>Process and terminal</td></tr><tr><td><a href="#/docs/sdk-process/mos_write_text"><code>mos_write_text</code></a></td><td>Process and terminal</td></tr></tbody></table></div><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/README.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="sdk-conventions" hidden><h1>Conventions and errors</h1>
+<p>How SDK calls reach the kernel, what they return, and which calls an ordinary <code>.run</code> program is allowed to make.</p>
+<h2 id="sdk-conventions--calling-convention">Calling convention</h2>
+<p>Every wrapper ends in one <code>int 0x80</code>:</p>
+<div class="tw"><table><thead><tr><th>Register</th><th>In</th><th>Out</th></tr></thead><tbody><tr><td><code>rax</code></td><td>syscall number (<code>SYS_*</code>)</td><td>result</td></tr><tr><td><code>rdi</code></td><td>first argument</td><td></td></tr><tr><td><code>rsi</code></td><td>second argument</td><td></td></tr><tr><td><code>rdx</code></td><td>third argument</td><td></td></tr></tbody></table></div>
+<p>Calls with more data than three registers (graphics, windows, network, packages, input) pass one pointer to a request structure in <code>rdi</code>. Keep the structure and every buffer it points to alive until the call returns. Versioned structures (<code>syscall_graphics_info_t</code>, <code>syscall_blit_request_t</code>, <code>syscall_input_read_request_t</code>, <code>syscall_window_request_t</code>) must have their <code>size</code> and <code>version</code> fields set and their <code>reserved</code> fields zero; the SDK wrappers do this for you.</p>
+<h2 id="sdk-conventions--result-codes">Result codes</h2>
+<p>Results come back in <code>rax</code> as a 64-bit value. Failures are small negative numbers, which as unsigned values sit at the very top of the range:</p>
+<div class="tw"><table><thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>SYS_SUCCESS</code></td><td><code>0</code></td><td>The operation succeeded</td></tr><tr><td><code>SYS_ERR_GENERIC</code></td><td><code>-1</code></td><td>Unspecified failure (out of memory, the driver refused, the file system said no)</td></tr><tr><td><code>SYS_ERR_BADFD</code></td><td><code>-2</code></td><td>Invalid or closed handle; <code>mos_write</code> to an fd other than 1 or 2</td></tr><tr><td><code>SYS_ERR_NOTFOUND</code></td><td><code>-3</code></td><td>Path, window, peer or resource not found, or a connection that has closed</td></tr><tr><td><code>SYS_ERR_INVAL</code></td><td><code>-4</code></td><td>Invalid argument: NULL pointer, out-of-range value, bad structure size or version</td></tr><tr><td><code>SYS_ERR_PERM</code></td><td><code>-5</code></td><td>The calling process may not do this (see <a href="#/docs/sdk-conventions/privilege">privilege</a>)</td></tr><tr><td><code>SYS_ERR_BUSY</code></td><td><code>-6</code></td><td>A shared subsystem (the network stack, a full event queue) is in use: retry</td></tr><tr><td><code>SYS_ERR_AGAIN</code></td><td><code>-7</code></td><td>Non-blocking call with nothing to report yet: call again later</td></tr></tbody></table></div>
+<p>The constants are defined as <code>((uint64_t)-N)</code>. Compare against them directly, or cast to <code>long</code> and test for a negative value:</p>
+<pre><code class="lang-c">long r = mos_mkdir("0:/data");
+if (r == (long)SYS_ERR_INVAL) printf("bad path\n");
+else if (r &lt; 0)               printf("mkdir failed: %ld\n", r);</code></pre>
+<p>Some wrappers fold errors into a friendlier value (<code>malloc</code> returns <code>NULL</code>, <code>mos_window_create</code> returns <code>0</code>, <code>mos_tcp_accept</code> returns <code>0</code> for "nobody waiting"); each entry says so.</p>
+<h2 id="sdk-conventions--privilege">Privilege</h2>
+<p><code>.run</code> programs start as <code>PROC_PRIVILEGE_USER</code> processes. Before dispatching, the kernel checks the call against a deny list (<code>syscall_user_may_call()</code> in <code>syscall.c</code>); a denied call returns <code>SYS_ERR_PERM</code> and does nothing.</p>
+<div class="tw"><table><thead><tr><th>Denied to <code>.run</code> programs</th><th>Why</th></tr></thead><tbody><tr><td><code>SYS_GRAPHICS</code> drawing primitives (clear, pixel, line, rectangle, circle, triangle, ellipse, text, measure text, set resolution, terminal clear)</td><td>User programs draw into their own surface and use <code>mos_graphics_blit_surface</code> + <code>mos_graphics_present</code></td></tr><tr><td><code>SYS_MANAGER</code> init, update, start, set sample rate</td><td>They reconfigure hardware every process shares</td></tr><tr><td><code>SYS_USB_INIT</code>, <code>SYS_MOUSE_INIT</code></td><td>They re-enumerate devices the whole system uses</td></tr><tr><td><code>SYS_NET_DHCP</code></td><td>It rewrites the address of the shared interface</td></tr><tr><td><code>SYS_USB_KEY_IS_PRESSED</code>, <code>SYS_MOUSE_GET_STATE</code>, <code>SYS_INPUT_READ</code></td><td>Allowed only to the process that owns the screen</td></tr></tbody></table></div>
+<p>Everything else - files, heap, network connections, windows, packages, sysinfo, process list - is open to user programs. The table is not a memory-protection boundary; it closes the specific hole of a program reconfiguring shared hardware through the syscall gate.</p>
+<h2 id="sdk-conventions--which-header">Which header</h2>
+<div class="tw"><table><thead><tr><th>Include</th><th>You get</th></tr></thead><tbody><tr><td><code>minimalos.h</code></td><td>Core calls: terminal output, exit, time, files, packages, exec, process list, framebuffer ownership and blit</td></tr><tr><td><code>stdio.h</code></td><td><code>printf</code> (includes <code>minimalos.h</code>)</td></tr><tr><td><code>stdlib.h</code></td><td><code>malloc</code> and friends, random bytes, <code>atoi</code> (includes <code>minimalos.h</code>)</td></tr><tr><td><code>string.h</code></td><td>String and memory helpers (no syscalls)</td></tr><tr><td><code>window.h</code></td><td>mosWM windows and their events</td></tr><tr><td><code>graphics.h</code></td><td>Short <code>graphics_*</code> names for the framebuffer API</td></tr><tr><td><code>net.h</code></td><td>Networking (includes <code>minimalos.h</code>)</td></tr><tr><td><code>user_sysinfo.h</code></td><td>System statistics</td></tr><tr><td><code>iostream</code></td><td><code>std::cout</code> for C++</td></tr><tr><td><code>x86_64/user_syscalls.h</code></td><td>Raw <code>uint64_t</code> wrappers: <code>mos_syscall3</code>, <code>mos_graphics</code>, <code>mos_mouse</code>, <code>mos_usb</code>, <code>mos_manager</code>, <code>mos_sysinfo</code>, <code>mos_input_read</code></td></tr><tr><td><code>x86_64/user_mouse.h</code>, <code>x86_64/user_usb.h</code>, <code>x86_64/user_managers.h</code></td><td>Mouse, USB keyboard and manager wrappers</td></tr></tbody></table></div>
+<p>Both header families include <code>x86_64/user_common.h</code>, so every wrapper is defined exactly once and any combination of headers can be included together.</p>
+<h2 id="sdk-conventions--units">Units</h2>
+<ul><li>Time: milliseconds. <code>mos_uptime()</code> and <code>mos_sleep()</code> both use milliseconds; so do every <code>timeout_ms</code> argument.</li><li>Colours: <code>window.h</code> and <code>mos_graphics_blit_surface</code> take ARGB8888 pixels, <code>0xAARRGGBB</code>. Use <code>0xFF</code> alpha for opaque pixels. The <code>mos_graphics_*</code> primitives take separate <code>r</code>, <code>g</code>, <code>b</code> bytes.</li><li>IPv4 addresses and ports in <code>net.h</code> are host order: <code>192.168.1.10</code> is <code>0xC0A8010A</code>.</li><li>Paths are MinimaFS paths such as <code>0:/programs/app.run</code>. Relative paths are resolved against the terminal's current directory.</li></ul>
+<h2 id="sdk-conventions--memory">Memory</h2>
+<p>There is no libc and no dynamic linker. Everything a program uses is either an inline wrapper from these headers or code compiled into the program. <code>crt0.c</code> supplies <code>_start</code>, runs global constructors (<code>.init_array</code>), calls <code>main(argc, argv)</code> and then <code>mos_exit()</code> with its return value. It also defines out-of-line <code>memcpy</code>, <code>memmove</code>, <code>memset</code> and <code>memcmp</code>, which the compiler may call on its own.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/conventions.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="sdk-process" hidden><h1>Process and terminal</h1>
+<p>Terminal output, ending the program, time, sleeping, process IDs, launching other programs and the Ctrl+C cleanup hook. Include <code>minimalos.h</code>.</p>
+<nav class="fn-index" aria-label="Functions on this page"><span>Functions</span><a href="#/docs/sdk-process/mos_write"><code>mos_write</code></a><a href="#/docs/sdk-process/mos_write_fd"><code>mos_write_fd</code></a><a href="#/docs/sdk-process/mos_write_text"><code>mos_write_text</code></a><a href="#/docs/sdk-process/mos_puts"><code>mos_puts</code></a><a href="#/docs/sdk-process/mos_exit"><code>mos_exit</code></a><a href="#/docs/sdk-process/mos_exit_with"><code>mos_exit_with</code></a><a href="#/docs/sdk-process/mos_exit_code"><code>mos_exit_code</code></a><a href="#/docs/sdk-process/mos_getpid"><code>mos_getpid</code></a><a href="#/docs/sdk-process/mos_uptime"><code>mos_uptime</code></a><a href="#/docs/sdk-process/mos_sleep"><code>mos_sleep</code></a><a href="#/docs/sdk-process/mos_gettime"><code>mos_gettime</code></a><a href="#/docs/sdk-process/mos_register_cleanup"><code>mos_register_cleanup</code></a><a href="#/docs/sdk-process/mos_exec"><code>mos_exec</code></a><a href="#/docs/sdk-process/mos_pslist"><code>mos_pslist</code></a><a href="#/docs/sdk-process/mos_getcwd"><code>mos_getcwd</code></a><a href="#/docs/sdk-process/mos_syscall"><code>mos_syscall</code></a><a href="#/docs/sdk-process/mos_syscall3"><code>mos_syscall3</code></a><a href="#/docs/sdk-process/mos_syscall1"><code>mos_syscall1</code></a></nav>
+<h2 id="sdk-process--mos_write" class="fn"><code>mos_write</code></h2>
+<pre><code class="lang-c">long mos_write(int fd, const void* buf, size_t len);   /* form 1 */
+long mos_write(const char* text, uint64_t len);        /* form 2 */</code></pre>
+<p>Writes bytes to the terminal. <code>mos_write</code> is a macro that picks a form by argument count: three arguments call <code>mos_write_fd</code>, two call <code>mos_write_text</code> (always stdout).</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>fd</code></td><td><code>1</code> (stdout) or <code>2</code> (stderr). Both go to the terminal and the serial log</td></tr><tr><td><code>buf</code> / <code>text</code></td><td>Bytes to write. Not required to be NUL-terminated</td></tr><tr><td><code>len</code></td><td>Number of bytes</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>len</code> on success, <code>SYS_ERR_BADFD</code> for any other <code>fd</code>, <code>SYS_ERR_INVAL</code> if <code>buf</code> is NULL.</p>
+<p><strong>Notes</strong></p>
+<ul><li>To write to a file use <a href="#/docs/sdk-files/mos_fwrite"><code>mos_fwrite</code></a>; <code>mos_write</code> only reaches the terminal.</li><li>Inside mosWM the terminal is the Terminal window that launched the program.</li></ul>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">mos_write(1, "ready\n", 6);
+mos_write("also stdout\n", 12);</code></pre>
+<h2 id="sdk-process--mos_write_fd" class="fn"><code>mos_write_fd</code></h2>
+<pre><code class="lang-c">long mos_write_fd(int fd, const void* buf, size_t len);</code></pre>
+<p>The three-argument form of <a href="#/docs/sdk-process/mos_write"><code>mos_write</code></a>, as a function. Useful where a macro cannot go, such as taking its address.</p>
+<p><strong>Returns</strong> the same values as <code>mos_write</code>.</p>
+<h2 id="sdk-process--mos_write_text" class="fn"><code>mos_write_text</code></h2>
+<pre><code class="lang-c">long mos_write_text(const char* text, uint64_t length);</code></pre>
+<p>Writes <code>length</code> bytes of <code>text</code> to stdout. The two-argument form of <a href="#/docs/sdk-process/mos_write"><code>mos_write</code></a>.</p>
+<h2 id="sdk-process--mos_puts" class="fn"><code>mos_puts</code></h2>
+<pre><code class="lang-c">long mos_puts(const char* str);</code></pre>
+<p>Writes a NUL-terminated string to stdout. No newline is added, unlike the C library's <code>puts</code>.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>str</code></td><td>NUL-terminated string. Must not be NULL</td></tr></tbody></table></div>
+<p><strong>Returns</strong> the number of bytes written.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">mos_puts("Hello, Minimal-OS!\n");</code></pre>
+<h2 id="sdk-process--mos_exit" class="fn"><code>mos_exit</code></h2>
+<pre><code class="lang-c">void mos_exit(int code);   /* noreturn */
+void mos_exit(void);       /* exit code 0 */</code></pre>
+<p>Ends the calling process. Never returns. A macro over <a href="#/docs/sdk-process/mos_exit_with"><code>mos_exit_with</code></a>: <code>mos_exit()</code> with no argument exits with code 0.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>code</code></td><td>Exit status. Only the low 8 bits are reported; the terminal prints <code>[exited with code N]</code> for a non-zero code</td></tr></tbody></table></div>
+<p><strong>Notes</strong></p>
+<ul><li>Global destructors (<code>.fini_array</code>) do not run. Release resources yourself, or from a <a href="#/docs/sdk-process/mos_register_cleanup">cleanup callback</a>.</li><li>The kernel closes the process's windows, network handles and heap blocks when it reaps it, but files should be closed explicitly so their data is flushed.</li><li>Returning from <code>main</code> calls <code>mos_exit</code> with the return value.</li></ul>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">if (!buffer) {
+    mos_puts("out of memory\n");
+    mos_exit(1);
+}</code></pre>
+<h2 id="sdk-process--mos_exit_with" class="fn"><code>mos_exit_with</code></h2>
+<pre><code class="lang-c">__attribute__((noreturn)) void mos_exit_with(int code);</code></pre>
+<p>The function behind <a href="#/docs/sdk-process/mos_exit"><code>mos_exit</code></a>. Issues <code>SYS_EXIT</code> and never returns.</p>
+<h2 id="sdk-process--mos_exit_code" class="fn"><code>mos_exit_code</code></h2>
+<pre><code class="lang-c">void mos_exit_code(uint8_t code);</code></pre>
+<p>Older spelling from <code>x86_64/user_syscalls.h</code>. Same effect as <code>mos_exit(code)</code>.</p>
+<h2 id="sdk-process--mos_getpid" class="fn"><code>mos_getpid</code></h2>
+<pre><code class="lang-c">long mos_getpid(void);</code></pre>
+<p><strong>Returns</strong> the PID of the calling process.</p>
+<p><strong>Notes</strong> A server passes this, or a child's PID from <a href="#/docs/sdk-process/mos_exec"><code>mos_exec</code></a>, to <a href="#/docs/sdk-network/mos_tcp_handoff"><code>mos_tcp_handoff</code></a>.</p>
+<h2 id="sdk-process--mos_uptime" class="fn"><code>mos_uptime</code></h2>
+<pre><code class="lang-c">long mos_uptime(void);</code></pre>
+<p><strong>Returns</strong> the time since boot in milliseconds.</p>
+<p><strong>Notes</strong> Use it to measure intervals and frame times. For wall-clock time see <a href="#/docs/sdk-process/mos_gettime"><code>mos_gettime</code></a>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">long start = mos_uptime();
+do_work();
+printf("took %ld ms\n", mos_uptime() - start);</code></pre>
+<h2 id="sdk-process--mos_sleep" class="fn"><code>mos_sleep</code></h2>
+<pre><code class="lang-c">long mos_sleep(long ms);</code></pre>
+<p>Puts the process to sleep for at least <code>ms</code> milliseconds and lets other processes run.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>ms</code></td><td>Milliseconds to sleep. <code>0</code> returns at once</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>.</p>
+<p><strong>Notes</strong></p>
+<ul><li>Call it in every polling loop (window events, network receive, accept) so the program does not spin a core at 100%.</li><li>A frame loop typically sleeps 10-16 ms per frame.</li></ul>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">for (;;) {
+    handle_events();
+    draw_frame();
+    mos_sleep(16);   /* about 60 frames per second */
+}</code></pre>
+<h2 id="sdk-process--mos_gettime" class="fn"><code>mos_gettime</code></h2>
+<pre><code class="lang-c">long mos_gettime(void);</code></pre>
+<p>Wrapper for <code>SYS_GETTIME</code>, the real-time clock.</p>
+<p><strong>Returns</strong> <code>SYS_ERR_INVAL</code> with the current kernel: <code>SYS_GETTIME</code> expects a pointer to a <code>datetime_t</code> in <code>rdi</code>, and this wrapper passes none.</p>
+<p><strong>Notes</strong> Until the wrapper takes a buffer, call the syscall directly with a structure laid out like the kernel's <code>datetime_t</code>:</p>
+<pre><code class="lang-c">typedef struct {
+    uint16_t year;
+    uint8_t month, day;           /* 1-12, 1-31 */
+    uint8_t hour, minute, second; /* 0-23, 0-59, 0-59 */
+} mos_datetime_t;
+
+mos_datetime_t now;
+if (mos_syscall(SYS_GETTIME, (long)(uintptr_t)&amp;now, 0, 0) == 0)
+    printf("%d-%d-%d %d:%d\n", now.year, now.month, now.day, now.hour, now.minute);</code></pre>
+<h2 id="sdk-process--mos_register_cleanup" class="fn"><code>mos_register_cleanup</code></h2>
+<pre><code class="lang-c">long mos_register_cleanup(void (*cleanup)(void));</code></pre>
+<p>Registers a function the kernel calls when the user presses Ctrl+C in the terminal running this program.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>cleanup</code></td><td>Function to call. Must not be NULL</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, or <code>SYS_ERR_INVAL</code> for a NULL callback.</p>
+<p><strong>Notes</strong></p>
+<ul><li>The callback runs on the program's next syscall after Ctrl+C. It should save what it needs and call <code>mos_exit()</code>.</li><li>If the program has not exited one second after Ctrl+C, the kernel terminates it. A second Ctrl+C within 800 ms terminates it at once.</li><li>Without a callback, Ctrl+C terminates the program immediately.</li><li>Registering again replaces the previous callback.</li></ul>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">static long log_fd;
+
+static void on_ctrl_c(void) {
+    mos_fwrite(log_fd, "interrupted\n", 12);
+    mos_close(log_fd);
+    mos_exit(130);
+}
+
+int main(void) {
+    log_fd = mos_open("0:/tmp/log.txt", SYS_O_RDWR);
+    mos_register_cleanup(on_ctrl_c);
+    for (;;) mos_sleep(100);
+}</code></pre>
+<h2 id="sdk-process--mos_exec" class="fn"><code>mos_exec</code></h2>
+<pre><code class="lang-c">long mos_exec(const char* path, const char** argv, long argc);</code></pre>
+<p>Starts another <code>.run</code> bundle as a new process, the way the terminal's <code>run</code> command does. Does not wait for it.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>path</code></td><td>Path of the <code>.run</code> file</td></tr><tr><td><code>argv</code></td><td>Extra arguments. The child sees <code>path</code> as <code>argv[0]</code> and these from <code>argv[1]</code> on. May be NULL when <code>argc</code> is 0</td></tr><tr><td><code>argc</code></td><td>Number of entries in <code>argv</code>, at most 16</td></tr></tbody></table></div>
+<p><strong>Returns</strong> the new process's PID, <code>SYS_ERR_INVAL</code> for a NULL or invalid path or more than 16 arguments, <code>SYS_ERR_GENERIC</code> if the program could not be loaded.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">const char* args[] = { "--port", "8080" };
+long pid = mos_exec("0:/programs/server.run", args, 2);
+if (pid &lt; 0) printf("could not start server (%ld)\n", pid);</code></pre>
+<h2 id="sdk-process--mos_pslist" class="fn"><code>mos_pslist</code></h2>
+<pre><code class="lang-c">long mos_pslist(syscall_process_info_t* entries, size_t max_entries);</code></pre>
+<p>Copies a snapshot of the process list into a caller buffer.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>entries</code></td><td>Array to fill</td></tr><tr><td><code>max_entries</code></td><td>Capacity of <code>entries</code></td></tr></tbody></table></div>
+<p><strong>Returns</strong> the number of entries written (0 if <code>entries</code> is NULL or <code>max_entries</code> is 0).</p>
+<p>Each <code>syscall_process_info_t</code> holds:</p>
+<div class="tw"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>pid</code></td><td>Process ID</td></tr><tr><td><code>name[128]</code></td><td>Process name, NUL-terminated</td></tr><tr><td><code>state</code></td><td><code>SYSCALL_PROC_STATE_READY</code>, <code>_RUNNING</code>, <code>_WAITING</code>, <code>_PAUSED</code>, <code>_ZOMBIE</code> or <code>_TERMINATED</code></td></tr><tr><td><code>privilege</code></td><td><code>SYSCALL_PROC_PRIV_KERNEL</code> or <code>SYSCALL_PROC_PRIV_USER</code></td></tr><tr><td><code>sched_cpu</code></td><td>Core the scheduler assigned</td></tr><tr><td><code>sched_level</code></td><td>Scheduler queue level</td></tr></tbody></table></div>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">syscall_process_info_t procs[32];
+long n = mos_pslist(procs, 32);
+for (long i = 0; i &lt; n; i++)
+    printf("%lu %s\n", (unsigned long)procs[i].pid, procs[i].name);</code></pre>
+<h2 id="sdk-process--mos_getcwd" class="fn"><code>mos_getcwd</code></h2>
+<pre><code class="lang-c">long mos_getcwd(char* path, size_t path_size);</code></pre>
+<p>Copies the terminal's current directory, which relative paths are resolved against.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>path</code></td><td>Output buffer</td></tr><tr><td><code>path_size</code></td><td>Size of <code>path</code> in bytes, including room for the NUL</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, or <code>SYS_ERR_INVAL</code> if the buffer is NULL or too small.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">char cwd[256];
+if (mos_getcwd(cwd, sizeof cwd) == 0) printf("in %s\n", cwd);</code></pre>
+<h2 id="sdk-process--mos_syscall" class="fn"><code>mos_syscall</code></h2>
+<pre><code class="lang-c">long mos_syscall(long num, long a1, long a2, long a3);</code></pre>
+<p>Issues syscall <code>num</code> with up to three arguments. Every other wrapper is built on this (or on <code>mos_syscall3</code>). Use it for calls that have no wrapper yet.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>num</code></td><td>A <code>SYS_*</code> number from <code>syscall.h</code></td></tr><tr><td><code>a1</code>, <code>a2</code>, <code>a3</code></td><td>Arguments for <code>rdi</code>, <code>rsi</code>, <code>rdx</code>; pass 0 for unused ones</td></tr></tbody></table></div>
+<p><strong>Returns</strong> the raw <code>rax</code> value.</p>
+<h2 id="sdk-process--mos_syscall3" class="fn"><code>mos_syscall3</code></h2>
+<pre><code class="lang-c">uint64_t mos_syscall3(uint64_t number, uint64_t arg1, uint64_t arg2, uint64_t arg3);</code></pre>
+<p>Same as <a href="#/docs/sdk-process/mos_syscall"><code>mos_syscall</code></a> with unsigned types, from <code>x86_64/user_syscalls.h</code>.</p>
+<h2 id="sdk-process--mos_syscall1" class="fn"><code>mos_syscall1</code></h2>
+<pre><code class="lang-c">uint64_t mos_syscall1(uint64_t number, uint64_t arg1);</code></pre>
+<p><code>mos_syscall3(number, arg1, 0, 0)</code>.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/process.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="sdk-files" hidden><h1>Files</h1>
+<p>MinimaFS file and directory calls. Include <code>minimalos.h</code>.</p>
+<p>Paths look like <code>0:/etc/System.conf</code>: a drive number, a colon, then an absolute path. A path without a drive prefix is resolved against the terminal's current directory (see <a href="#/docs/sdk-process/mos_getcwd"><code>mos_getcwd</code></a>).</p>
+<p>A file handle is a <code>long</code>. Keep it in a <code>long</code>: it is a 64-bit value, and truncating it to <code>int</code> can corrupt it. Valid handles are positive; errors are negative.</p>
+<nav class="fn-index" aria-label="Functions on this page"><span>Functions</span><a href="#/docs/sdk-files/mos_open"><code>mos_open</code></a><a href="#/docs/sdk-files/mos_create"><code>mos_create</code></a><a href="#/docs/sdk-files/mos_read"><code>mos_read</code></a><a href="#/docs/sdk-files/mos_fwrite"><code>mos_fwrite</code></a><a href="#/docs/sdk-files/mos_close"><code>mos_close</code></a><a href="#/docs/sdk-files/mos_seek"><code>mos_seek</code></a><a href="#/docs/sdk-files/mos_tell"><code>mos_tell</code></a><a href="#/docs/sdk-files/mos_size"><code>mos_size</code></a><a href="#/docs/sdk-files/mos_feof"><code>mos_feof</code></a><a href="#/docs/sdk-files/mos_exists"><code>mos_exists</code></a><a href="#/docs/sdk-files/mos_is_dir"><code>mos_is_dir</code></a><a href="#/docs/sdk-files/mos_mkdir"><code>mos_mkdir</code></a><a href="#/docs/sdk-files/mos_listdir"><code>mos_listdir</code></a><a href="#/docs/sdk-files/mos_delete"><code>mos_delete</code></a><a href="#/docs/sdk-files/mos_rmdir"><code>mos_rmdir</code></a><a href="#/docs/sdk-files/mos_get_metadata"><code>mos_get_metadata</code></a></nav>
+<h2 id="sdk-files--mos_open" class="fn"><code>mos_open</code></h2>
+<pre><code class="lang-c">long mos_open(const char* path, long flags);</code></pre>
+<p>Opens an existing file.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>path</code></td><td>File to open</td></tr><tr><td><code>flags</code></td><td><code>SYS_O_RDONLY</code> (0) for read-only; <code>SYS_O_RDWR</code> (or any non-zero value) for read and write</td></tr></tbody></table></div>
+<p><strong>Returns</strong> a handle (positive), <code>SYS_ERR_NOTFOUND</code> if the file does not exist or cannot be opened, <code>SYS_ERR_INVAL</code> for a NULL or invalid path.</p>
+<p><strong>Notes</strong></p>
+<ul><li><code>mos_open</code> never creates a file. Call <a href="#/docs/sdk-files/mos_create"><code>mos_create</code></a> first.</li><li>The position starts at 0. Writing at position 0 overwrites the start of the file; to append, <a href="#/docs/sdk-files/mos_seek"><code>mos_seek</code></a> to <a href="#/docs/sdk-files/mos_size"><code>mos_size</code></a> first.</li><li>Writes are kept in memory and saved to disk by <a href="#/docs/sdk-files/mos_close"><code>mos_close</code></a>. Always close a handle you wrote to.</li></ul>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">long fd = mos_open("0:/etc/motd.txt", SYS_O_RDONLY);
+if (fd &lt; 0) { printf("no motd (%ld)\n", fd); mos_exit(1); }
+char buf[256];
+long n = mos_read(fd, buf, sizeof buf - 1);
+if (n &gt; 0) { buf[n] = '\0'; mos_puts(buf); }
+mos_close(fd);</code></pre>
+<h2 id="sdk-files--mos_create" class="fn"><code>mos_create</code></h2>
+<pre><code class="lang-c">long mos_create(const char* path, const char* filetype, const char* fileformat);</code></pre>
+<p>Creates a new, empty file. Open it afterwards with <code>SYS_O_RDWR</code> to write to it.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>path</code></td><td>File to create. The parent directory must exist</td></tr><tr><td><code>filetype</code></td><td>MinimaFS file type such as <code>"text"</code> or <code>"binary"</code>. NULL means <code>"binary"</code></td></tr><tr><td><code>fileformat</code></td><td>Format tag such as <code>"txt"</code> or <code>"bin"</code>. NULL means <code>"bin"</code></td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_INVAL</code> for a NULL or invalid path, <code>SYS_ERR_GENERIC</code> if the file system refused (missing parent, no space).</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">const char* path = "0:/data/notes.txt";
+if (!mos_exists(path)) mos_create(path, "text", "txt");
+long fd = mos_open(path, SYS_O_RDWR);
+mos_seek(fd, mos_size(fd));          /* append */
+mos_fwrite(fd, "new line\n", 9);
+mos_close(fd);</code></pre>
+<h2 id="sdk-files--mos_read" class="fn"><code>mos_read</code></h2>
+<pre><code class="lang-c">long mos_read(long fd, void* buf, size_t len);</code></pre>
+<p>Reads up to <code>len</code> bytes from the current position and advances it.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>fd</code></td><td>Handle from <code>mos_open</code></td></tr><tr><td><code>buf</code></td><td>Destination buffer</td></tr><tr><td><code>len</code></td><td>Maximum number of bytes</td></tr></tbody></table></div>
+<p><strong>Returns</strong> the number of bytes read; <code>0</code> at end of file. <code>SYS_ERR_INVAL</code> for a NULL handle or buffer.</p>
+<p><strong>Notes</strong> The result is not NUL-terminated. Leave a byte free when reading text.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">/* read a whole file into the heap */
+long fd = mos_open(path, SYS_O_RDONLY);
+long size = mos_size(fd);
+char* data = malloc((size_t)size + 1);
+long got = 0, n;
+while ((n = mos_read(fd, data + got, (size_t)(size - got))) &gt; 0) got += n;
+data[got] = '\0';
+mos_close(fd);</code></pre>
+<h2 id="sdk-files--mos_fwrite" class="fn"><code>mos_fwrite</code></h2>
+<pre><code class="lang-c">long mos_fwrite(long fd, const void* buf, size_t len);</code></pre>
+<p>Writes <code>len</code> bytes at the current position and advances it, growing the file if needed.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>fd</code></td><td>Handle opened with <code>SYS_O_RDWR</code></td></tr><tr><td><code>buf</code></td><td>Bytes to write</td></tr><tr><td><code>len</code></td><td>Number of bytes</td></tr></tbody></table></div>
+<p><strong>Returns</strong> the number of bytes written, <code>0</code> if the handle is read-only or memory ran out, <code>SYS_ERR_INVAL</code> for a NULL handle or buffer.</p>
+<p><strong>Notes</strong></p>
+<ul><li>Writing never shortens a file. To replace a file's contents, delete it, create it again and write.</li><li>The data reaches disk when the handle is closed.</li></ul>
+<h2 id="sdk-files--mos_close" class="fn"><code>mos_close</code></h2>
+<pre><code class="lang-c">long mos_close(long fd);</code></pre>
+<p>Closes a handle and saves anything written to it.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, or <code>SYS_ERR_INVAL</code> for a NULL handle.</p>
+<p><strong>Notes</strong> Do not use the handle afterwards. Closing twice is undefined.</p>
+<h2 id="sdk-files--mos_seek" class="fn"><code>mos_seek</code></h2>
+<pre><code class="lang-c">long mos_seek(long fd, long offset);</code></pre>
+<p>Moves the position to <code>offset</code> bytes from the start of the file.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>fd</code></td><td>Open handle</td></tr><tr><td><code>offset</code></td><td>New position. Values past the end are clamped to the file size</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, or <code>SYS_ERR_INVAL</code> for a NULL handle.</p>
+<h2 id="sdk-files--mos_tell" class="fn"><code>mos_tell</code></h2>
+<pre><code class="lang-c">long mos_tell(long fd);</code></pre>
+<p><strong>Returns</strong> the current position in bytes, or <code>SYS_ERR_INVAL</code> for a NULL handle.</p>
+<h2 id="sdk-files--mos_size" class="fn"><code>mos_size</code></h2>
+<pre><code class="lang-c">long mos_size(long fd);</code></pre>
+<p><strong>Returns</strong> the size of the open file's data in bytes, including anything written but not yet closed. <code>SYS_ERR_INVAL</code> for a NULL handle.</p>
+<h2 id="sdk-files--mos_feof" class="fn"><code>mos_feof</code></h2>
+<pre><code class="lang-c">long mos_feof(long fd);</code></pre>
+<p><strong>Returns</strong> <code>1</code> if the position is at the end of the file, <code>0</code> if not, <code>SYS_ERR_INVAL</code> for a NULL handle.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">char c;
+while (!mos_feof(fd) &amp;&amp; mos_read(fd, &amp;c, 1) == 1) count++;</code></pre>
+<h2 id="sdk-files--mos_exists" class="fn"><code>mos_exists</code></h2>
+<pre><code class="lang-c">long mos_exists(const char* path);</code></pre>
+<p><strong>Returns</strong> <code>1</code> if a file or directory exists at <code>path</code>, <code>0</code> if not, <code>SYS_ERR_INVAL</code> for an invalid path.</p>
+<h2 id="sdk-files--mos_is_dir" class="fn"><code>mos_is_dir</code></h2>
+<pre><code class="lang-c">long mos_is_dir(const char* path);</code></pre>
+<p><strong>Returns</strong> <code>1</code> if <code>path</code> is a directory, <code>0</code> if it is a file or does not exist, <code>SYS_ERR_INVAL</code> for an invalid path.</p>
+<h2 id="sdk-files--mos_mkdir" class="fn"><code>mos_mkdir</code></h2>
+<pre><code class="lang-c">long mos_mkdir(const char* path);</code></pre>
+<p>Creates one directory. The parent must already exist.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_GENERIC</code> if it could not be created (it already exists, or the parent is missing), <code>SYS_ERR_INVAL</code> for an invalid path.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">if (!mos_is_dir("0:/data")) mos_mkdir("0:/data");</code></pre>
+<h2 id="sdk-files--mos_listdir" class="fn"><code>mos_listdir</code></h2>
+<pre><code class="lang-c">long mos_listdir(const char* path, syscall_dirent_t* entries, size_t max_entries);</code></pre>
+<p>Lists a directory into a caller buffer.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>path</code></td><td>Directory to list</td></tr><tr><td><code>entries</code></td><td>Array to fill</td></tr><tr><td><code>max_entries</code></td><td>Capacity of <code>entries</code>. The kernel also caps it at the most entries one directory can hold</td></tr></tbody></table></div>
+<p><strong>Returns</strong> the number of entries written, or <code>SYS_ERR_INVAL</code> for a NULL path or buffer, an invalid path, or <code>max_entries</code> of 0.</p>
+<p>Each <code>syscall_dirent_t</code> holds:</p>
+<div class="tw"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>name[64]</code></td><td>Entry name, NUL-terminated</td></tr><tr><td><code>type</code></td><td><code>SYSCALL_DIRENT_TYPE_FILE</code>, <code>_DIR</code>, <code>_EXECUTABLE</code> or <code>_SYMLINK</code></td></tr><tr><td><code>hidden</code></td><td><code>1</code> for hidden entries</td></tr></tbody></table></div>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">syscall_dirent_t items[64];
+long n = mos_listdir("0:/programs", items, 64);
+for (long i = 0; i &lt; n; i++)
+    printf("%s%s\n", items[i].name, items[i].type == SYSCALL_DIRENT_TYPE_DIR ? "/" : "");</code></pre>
+<h2 id="sdk-files--mos_delete" class="fn"><code>mos_delete</code></h2>
+<pre><code class="lang-c">long mos_delete(const char* path);</code></pre>
+<p>Deletes a file.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_GENERIC</code> if it does not exist or could not be deleted, <code>SYS_ERR_INVAL</code> for an invalid path.</p>
+<p><strong>Notes</strong> Use <a href="#/docs/sdk-files/mos_rmdir"><code>mos_rmdir</code></a> for directories.</p>
+<h2 id="sdk-files--mos_rmdir" class="fn"><code>mos_rmdir</code></h2>
+<pre><code class="lang-c">long mos_rmdir(const char* path);</code></pre>
+<p>Removes an empty directory.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_GENERIC</code> if it is not empty, does not exist or is the drive root, <code>SYS_ERR_INVAL</code> for an invalid path.</p>
+<h2 id="sdk-files--mos_get_metadata" class="fn"><code>mos_get_metadata</code></h2>
+<pre><code class="lang-c">long mos_get_metadata(const char* path, syscall_file_metadata_t* out);</code></pre>
+<p>Reads a file's MinimaFS metadata without opening it.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>path</code></td><td>File to inspect</td></tr><tr><td><code>out</code></td><td>Structure to fill</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_NOTFOUND</code> if there is no such file, <code>SYS_ERR_INVAL</code> for a NULL argument.</p>
+<p><code>syscall_file_metadata_t</code> fields:</p>
+<div class="tw"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>filetype[64]</code></td><td>File type, such as <code>text</code> or <code>binary</code></td></tr><tr><td><code>fileformat[16]</code></td><td>Format tag, such as <code>txt</code> or <code>run</code></td></tr><tr><td><code>data_length</code></td><td>Size of the data in bytes</td></tr><tr><td><code>runnable</code></td><td><code>1</code> for executables</td></tr><tr><td><code>hidden</code></td><td><code>1</code> for hidden files</td></tr><tr><td><code>entrypoint</code></td><td>Entry point recorded for executables</td></tr><tr><td><code>created_date[32]</code></td><td>Creation date as text</td></tr><tr><td><code>last_changed[32]</code></td><td>Last-modified date as text</td></tr></tbody></table></div>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">syscall_file_metadata_t m;
+if (mos_get_metadata("0:/programs/hello.run", &amp;m) == 0)
+    printf("%s/%s, %u bytes, changed %s\n", m.filetype, m.fileformat, m.data_length, m.last_changed);</code></pre><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/files.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="sdk-memory" hidden><h1>Memory and randomness</h1>
+<p>Heap allocation over <code>SYS_HEAP</code>, random bytes over <code>SYS_RANDOM</code>, and <code>atoi</code>. Include <code>stdlib.h</code>.</p>
+<p>Heap blocks come from the kernel allocator and are tracked per process: <code>free</code> and <code>realloc</code> only accept blocks this process allocated, and any block still allocated when the process ends is reclaimed.</p>
+<nav class="fn-index" aria-label="Functions on this page"><span>Functions</span><a href="#/docs/sdk-memory/malloc"><code>malloc</code></a><a href="#/docs/sdk-memory/calloc"><code>calloc</code></a><a href="#/docs/sdk-memory/realloc"><code>realloc</code></a><a href="#/docs/sdk-memory/free"><code>free</code></a><a href="#/docs/sdk-memory/mos_heap_failed"><code>mos_heap_failed</code></a><a href="#/docs/sdk-memory/mos_random_bytes"><code>mos_random_bytes</code></a><a href="#/docs/sdk-memory/mos_random_u64"><code>mos_random_u64</code></a><a href="#/docs/sdk-memory/mos_random"><code>mos_random</code></a><a href="#/docs/sdk-memory/atoi"><code>atoi</code></a></nav>
+<h2 id="sdk-memory--malloc" class="fn"><code>malloc</code></h2>
+<pre><code class="lang-c">void* malloc(size_t size);</code></pre>
+<p>Allocates <code>size</code> bytes. The memory is not cleared.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>size</code></td><td>Number of bytes. Must be greater than 0</td></tr></tbody></table></div>
+<p><strong>Returns</strong> a pointer to the block, or <code>NULL</code> if <code>size</code> is 0 or there is not enough memory.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">uint32_t* pixels = malloc(width * height * sizeof(uint32_t));
+if (!pixels) { mos_puts("out of memory\n"); mos_exit(1); }</code></pre>
+<h2 id="sdk-memory--calloc" class="fn"><code>calloc</code></h2>
+<pre><code class="lang-c">void* calloc(size_t count, size_t size);</code></pre>
+<p>Allocates an array of <code>count</code> elements of <code>size</code> bytes, cleared to zero.</p>
+<p><strong>Returns</strong> a pointer, or <code>NULL</code> if <code>count * size</code> overflows, is 0, or memory runs out.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">int* grid = calloc(rows * cols, sizeof(int));</code></pre>
+<h2 id="sdk-memory--realloc" class="fn"><code>realloc</code></h2>
+<pre><code class="lang-c">void* realloc(void* ptr, size_t size);</code></pre>
+<p>Resizes a block, moving it if needed. The contents are kept up to the smaller of the two sizes.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>ptr</code></td><td>Block from <code>malloc</code>, <code>calloc</code> or <code>realloc</code>, or <code>NULL</code> to allocate a new one</td></tr><tr><td><code>size</code></td><td>New size. <code>0</code> frees the block</td></tr></tbody></table></div>
+<p><strong>Returns</strong> the (possibly moved) block, or <code>NULL</code> on failure. On failure the original block is unchanged and still yours, so keep the old pointer until the call succeeds. <code>realloc(ptr, 0)</code> frees <code>ptr</code> and returns <code>NULL</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">char* bigger = realloc(buf, cap * 2);
+if (!bigger) { free(buf); mos_exit(1); }
+buf = bigger; cap *= 2;</code></pre>
+<h2 id="sdk-memory--free" class="fn"><code>free</code></h2>
+<pre><code class="lang-c">void free(void* ptr);</code></pre>
+<p>Releases a block. <code>free(NULL)</code> does nothing.</p>
+<p><strong>Notes</strong> Passing a pointer this process did not allocate is rejected by the kernel (<code>SYS_ERR_INVAL</code>, ignored by <code>free</code>) rather than corrupting the heap. Using a block after freeing it is still a bug.</p>
+<h2 id="sdk-memory--mos_heap_failed" class="fn"><code>mos_heap_failed</code></h2>
+<pre><code class="lang-c">int mos_heap_failed(long value);</code></pre>
+<p>Tells whether a raw <code>SYS_HEAP</code> result is an error code rather than an address. <code>malloc</code>, <code>calloc</code> and <code>realloc</code> use it to return <code>NULL</code>; you only need it when calling <code>SYS_HEAP</code> through <code>mos_syscall</code>.</p>
+<p><strong>Returns</strong> non-zero if <code>value</code> is one of the <code>SYS_ERR_*</code> codes.</p>
+<h2 id="sdk-memory--mos_random_bytes" class="fn"><code>mos_random_bytes</code></h2>
+<pre><code class="lang-c">long mos_random_bytes(void* buf, size_t len);</code></pre>
+<p>Fills <code>buf</code> with random bytes from the kernel's entropy source.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>buf</code></td><td>Destination</td></tr><tr><td><code>len</code></td><td>Number of bytes. Must be greater than 0</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>len</code>, or <code>SYS_ERR_INVAL</code> for a NULL buffer or zero length.</p>
+<p><strong>Notes</strong> The kernel uses <code>RDRAND</code> when the CPU has it, which is suitable for keys and nonces. Without it, the bytes are derived from the TSC and RTC and must not be used for cryptography.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">uint8_t key[32];
+mos_random_bytes(key, sizeof key);</code></pre>
+<h2 id="sdk-memory--mos_random_u64" class="fn"><code>mos_random_u64</code></h2>
+<pre><code class="lang-c">uint64_t mos_random_u64(void);</code></pre>
+<p><strong>Returns</strong> 64 random bits from <a href="#/docs/sdk-memory/mos_random_bytes"><code>mos_random_bytes</code></a>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">int die = (int)(mos_random_u64() % 6) + 1;</code></pre>
+<h2 id="sdk-memory--mos_random" class="fn"><code>mos_random</code></h2>
+<pre><code class="lang-c">long mos_random(void* buf, uint32_t len);</code></pre>
+<p>The same call as <a href="#/docs/sdk-memory/mos_random_bytes"><code>mos_random_bytes</code></a>, declared in <code>net.h</code> with a 32-bit length.</p>
+<h2 id="sdk-memory--atoi" class="fn"><code>atoi</code></h2>
+<pre><code class="lang-c">int atoi(const char* s);</code></pre>
+<p>Converts a decimal string to an <code>int</code>. Skips leading spaces and tabs, accepts one <code>+</code> or <code>-</code>, then reads digits until the first non-digit.</p>
+<p><strong>Returns</strong> the value, or 0 if there are no digits. Overflow is not detected.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">int port = argc &gt; 1 ? atoi(argv[1]) : 8080;</code></pre><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/memory.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="sdk-strings" hidden><h1>Strings and memory</h1>
+<p>Freestanding string and memory helpers. Include <code>string.h</code>. None of these make a syscall.</p>
+<p><code>memcpy</code>, <code>memmove</code>, <code>memset</code> and <code>memcmp</code> are real functions defined in <code>crt0.c</code>, because the compiler emits calls to them on its own (struct assignment, <code>= {0}</code> initialisers); the rest are <code>static inline</code>.</p>
+<nav class="fn-index" aria-label="Functions on this page"><span>Functions</span><a href="#/docs/sdk-strings/strlen"><code>strlen</code></a><a href="#/docs/sdk-strings/strcmp"><code>strcmp</code></a><a href="#/docs/sdk-strings/strncmp"><code>strncmp</code></a><a href="#/docs/sdk-strings/strcpy"><code>strcpy</code></a><a href="#/docs/sdk-strings/strlcpy_safe"><code>strlcpy_safe</code></a><a href="#/docs/sdk-strings/strchr"><code>strchr</code></a><a href="#/docs/sdk-strings/strrchr"><code>strrchr</code></a><a href="#/docs/sdk-strings/strstr"><code>strstr</code></a><a href="#/docs/sdk-strings/memcpy"><code>memcpy</code></a><a href="#/docs/sdk-strings/memmove"><code>memmove</code></a><a href="#/docs/sdk-strings/memset"><code>memset</code></a><a href="#/docs/sdk-strings/memcmp"><code>memcmp</code></a><a href="#/docs/sdk-strings/mos_memcmp"><code>mos_memcmp</code></a><a href="#/docs/sdk-strings/mos_memeq_ct"><code>mos_memeq_ct</code></a></nav>
+<h2 id="sdk-strings--strlen" class="fn"><code>strlen</code></h2>
+<pre><code class="lang-c">size_t strlen(const char* s);</code></pre>
+<p><strong>Returns</strong> the number of bytes before the terminating NUL.</p>
+<h2 id="sdk-strings--strcmp" class="fn"><code>strcmp</code></h2>
+<pre><code class="lang-c">int strcmp(const char* a, const char* b);</code></pre>
+<p>Compares two strings byte by byte as <code>unsigned char</code>.</p>
+<p><strong>Returns</strong> <code>0</code> if they are equal, a negative value if <code>a</code> sorts first, a positive value if <code>b</code> does.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">if (argc &gt; 1 &amp;&amp; strcmp(argv[1], "--help") == 0) usage();</code></pre>
+<h2 id="sdk-strings--strncmp" class="fn"><code>strncmp</code></h2>
+<pre><code class="lang-c">int strncmp(const char* a, const char* b, size_t n);</code></pre>
+<p>Like <a href="#/docs/sdk-strings/strcmp"><code>strcmp</code></a> but compares at most <code>n</code> bytes.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">if (strncmp(line, "GET ", 4) == 0) handle_get(line + 4);</code></pre>
+<h2 id="sdk-strings--strcpy" class="fn"><code>strcpy</code></h2>
+<pre><code class="lang-c">char* strcpy(char* dst, const char* src);</code></pre>
+<p>Copies <code>src</code>, including its NUL, into <code>dst</code>.</p>
+<p><strong>Returns</strong> <code>dst</code>.</p>
+<p><strong>Notes</strong> Does not check the size of <code>dst</code>. Prefer <a href="#/docs/sdk-strings/strlcpy_safe"><code>strlcpy_safe</code></a>.</p>
+<h2 id="sdk-strings--strlcpy_safe" class="fn"><code>strlcpy_safe</code></h2>
+<pre><code class="lang-c">char* strlcpy_safe(char* dst, const char* src, size_t size);</code></pre>
+<p>Copies at most <code>size - 1</code> bytes of <code>src</code> and always NUL-terminates, truncating if <code>src</code> does not fit. Unlike the C library's <code>strncpy</code>, it never leaves <code>dst</code> unterminated and never pads with zeros.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>dst</code></td><td>Destination buffer</td></tr><tr><td><code>src</code></td><td>NUL-terminated source</td></tr><tr><td><code>size</code></td><td>Size of <code>dst</code> in bytes. <code>0</code> copies nothing</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>dst</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">char name[16];
+strlcpy_safe(name, argv[1], sizeof name);</code></pre>
+<h2 id="sdk-strings--strchr" class="fn"><code>strchr</code></h2>
+<pre><code class="lang-c">char* strchr(const char* s, int c);</code></pre>
+<p><strong>Returns</strong> a pointer to the first <code>c</code> in <code>s</code>, or <code>NULL</code>. Searching for <code>'\0'</code> returns a pointer to the terminator.</p>
+<h2 id="sdk-strings--strrchr" class="fn"><code>strrchr</code></h2>
+<pre><code class="lang-c">char* strrchr(const char* s, int c);</code></pre>
+<p><strong>Returns</strong> a pointer to the last <code>c</code> in <code>s</code>, or <code>NULL</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">const char* slash = strrchr(path, '/');
+const char* file = slash ? slash + 1 : path;</code></pre>
+<h2 id="sdk-strings--strstr" class="fn"><code>strstr</code></h2>
+<pre><code class="lang-c">char* strstr(const char* haystack, const char* needle);</code></pre>
+<p><strong>Returns</strong> a pointer to the first occurrence of <code>needle</code> in <code>haystack</code>, <code>haystack</code> itself if <code>needle</code> is empty, or <code>NULL</code>.</p>
+<h2 id="sdk-strings--memcpy" class="fn"><code>memcpy</code></h2>
+<pre><code class="lang-c">void* memcpy(void* dst, const void* src, size_t n);</code></pre>
+<p>Copies <code>n</code> bytes. The ranges must not overlap; use <a href="#/docs/sdk-strings/memmove"><code>memmove</code></a> if they might.</p>
+<p><strong>Returns</strong> <code>dst</code>.</p>
+<h2 id="sdk-strings--memmove" class="fn"><code>memmove</code></h2>
+<pre><code class="lang-c">void* memmove(void* dst, const void* src, size_t n);</code></pre>
+<p>Copies <code>n</code> bytes; the ranges may overlap.</p>
+<p><strong>Returns</strong> <code>dst</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">/* shift an array one slot right */
+memmove(&amp;items[1], &amp;items[0], (count - 1) * sizeof items[0]);</code></pre>
+<h2 id="sdk-strings--memset" class="fn"><code>memset</code></h2>
+<pre><code class="lang-c">void* memset(void* dst, int value, size_t n);</code></pre>
+<p>Sets <code>n</code> bytes to <code>(unsigned char)value</code>.</p>
+<p><strong>Returns</strong> <code>dst</code>.</p>
+<h2 id="sdk-strings--memcmp" class="fn"><code>memcmp</code></h2>
+<pre><code class="lang-c">int memcmp(const void* a, const void* b, size_t n);</code></pre>
+<p>Compares <code>n</code> bytes.</p>
+<p><strong>Returns</strong> <code>0</code> if equal, otherwise the difference of the first differing bytes.</p>
+<p><strong>Notes</strong> Stops at the first difference, so its timing reveals where the inputs differ. For secrets use <a href="#/docs/sdk-strings/mos_memeq_ct"><code>mos_memeq_ct</code></a>.</p>
+<h2 id="sdk-strings--mos_memcmp" class="fn"><code>mos_memcmp</code></h2>
+<pre><code class="lang-c">int mos_memcmp(const void* a, const void* b, size_t n);</code></pre>
+<p>An inline copy of <a href="#/docs/sdk-strings/memcmp"><code>memcmp</code></a> with the same result.</p>
+<h2 id="sdk-strings--mos_memeq_ct" class="fn"><code>mos_memeq_ct</code></h2>
+<pre><code class="lang-c">int mos_memeq_ct(const void* a, const void* b, size_t n);</code></pre>
+<p>Compares <code>n</code> bytes in constant time: it always reads every byte, whatever the contents.</p>
+<p><strong>Returns</strong> <code>1</code> if the ranges are equal, <code>0</code> if not. Note the sense is the opposite of <code>memcmp</code>.</p>
+<p><strong>Notes</strong> Use it for authentication tags, MACs and password hashes. An early-exit comparison leaks how many leading bytes matched, which is enough to forge a tag one byte at a time.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">if (!mos_memeq_ct(tag, expected_tag, 16)) reject();</code></pre><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/strings.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="sdk-output" hidden><h1>Formatted output</h1>
+<p><code>printf</code> from <code>stdio.h</code> and <code>std::cout</code> from <code>iostream</code>. Both are header-only and write to stdout through <a href="#/docs/sdk-process/mos_write"><code>mos_write</code></a>.</p>
+<nav class="fn-index" aria-label="Functions on this page"><span>Functions</span><a href="#/docs/sdk-output/printf"><code>printf</code></a><a href="#/docs/sdk-output/mos_vprintf"><code>mos_vprintf</code></a><a href="#/docs/sdk-output/std-cout"><code>std::cout</code></a></nav>
+<h2 id="sdk-output--printf" class="fn"><code>printf</code></h2>
+<pre><code class="lang-c">long printf(const char* format, ...);</code></pre>
+<p>Formats its arguments and writes the result to stdout.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>format</code></td><td>Format string</td></tr><tr><td><code>...</code></td><td>One argument per conversion</td></tr></tbody></table></div>
+<p>Supported conversions:</p>
+<div class="tw"><table><thead><tr><th>Conversion</th><th>Argument</th><th>Output</th></tr></thead><tbody><tr><td><code>%d</code>, <code>%i</code></td><td><code>int</code></td><td>Signed decimal</td></tr><tr><td><code>%u</code></td><td><code>unsigned int</code></td><td>Unsigned decimal</td></tr><tr><td><code>%x</code>, <code>%X</code></td><td><code>unsigned int</code></td><td>Hexadecimal, lower or upper case</td></tr><tr><td><code>%ld</code></td><td><code>long</code></td><td>Signed decimal</td></tr><tr><td><code>%lu</code></td><td><code>unsigned long</code></td><td>Unsigned decimal</td></tr><tr><td><code>%c</code></td><td><code>int</code></td><td>One character</td></tr><tr><td><code>%s</code></td><td><code>const char*</code></td><td>String; NULL prints <code>(null)</code></td></tr><tr><td><code>%%</code></td><td>none</td><td>A <code>%</code></td></tr></tbody></table></div>
+<p><strong>Returns</strong> the number of bytes written.</p>
+<p><strong>Notes</strong></p>
+<ul><li>There are no flags, widths or precisions (<code>%5d</code>, <code>%-10s</code>, <code>%02x</code>), no floating point and no <code>%p</code> or <code>%lx</code>. An unsupported conversion is printed as is.</li><li>To print a 64-bit value in hex, split it: <code>printf("%x%x", (unsigned)(v &gt;&gt; 32), (unsigned)v)</code> (pad the low half yourself), or format it into a buffer by hand.</li><li>There is no <code>sprintf</code>. Build strings by hand or with <code>string.h</code>.</li><li>Output is buffered in 128-byte chunks inside one call, so a single <code>printf</code> is one or a few <code>mos_write</code> calls.</li></ul>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">printf("%s: %d of %u done (%ld ms)\n", name, done, total, mos_uptime() - start);</code></pre>
+<h2 id="sdk-output--mos_vprintf" class="fn"><code>mos_vprintf</code></h2>
+<pre><code class="lang-c">long mos_vprintf(const char* format, va_list args);</code></pre>
+<p>The <code>va_list</code> form of <a href="#/docs/sdk-output/printf"><code>printf</code></a>, for writing your own logging functions.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">static void logf(const char* fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    mos_puts("[app] ");
+    mos_vprintf(fmt, ap);
+    va_end(ap);
+}</code></pre>
+<h2 id="sdk-output--std-cout" class="fn"><code>std::cout</code></h2>
+<pre><code class="lang-cpp">namespace std { class ostream; static ostream cout; }
+ostream&amp; operator&lt;&lt;(const char*);
+ostream&amp; operator&lt;&lt;(char);
+ostream&amp; operator&lt;&lt;(int);
+ostream&amp; operator&lt;&lt;(unsigned int);
+ostream&amp; operator&lt;&lt;(long);
+ostream&amp; operator&lt;&lt;(unsigned long);
+ostream&amp; operator&lt;&lt;(bool);</code></pre>
+<p>A minimal <code>std::cout</code> for C++ programs. Include <code>&lt;iostream&gt;</code>.</p>
+<p><strong>Notes</strong></p>
+<ul><li><code>bool</code> prints <code>true</code> or <code>false</code>; a NULL <code>const char*</code> prints <code>(null)</code>.</li><li>There is no <code>std::endl</code>, manipulators, <code>std::string</code> or <code>std::cin</code>. Write <code>"\n"</code> for a newline.</li></ul>
+<p><strong>Example</strong></p>
+<pre><code class="lang-cpp">#include &lt;iostream&gt;
+
+int main() {
+    std::cout &lt;&lt; "2 + 2 = " &lt;&lt; 2 + 2 &lt;&lt; "\n";
+    return 0;
+}</code></pre><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/output.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="sdk-windows" hidden><h1>Windows</h1>
+<p>mosWM windows over <code>SYS_WINDOW</code>. Include <code>window.h</code>.</p>
+<p>A window is a kernel-owned ARGB8888 frame buffer plus a title, bounds, flags, a style and an event queue. Your program draws into its own pixel buffer and copies it into the window with <a href="#/docs/sdk-windows/mos_window_present"><code>mos_window_present</code></a>; mosWM, the window manager, composites every window onto the screen and turns mouse and keyboard input into window events.</p>
+<p>Windows belong to the process that created them (and its descendants). They are closed automatically when that process exits.</p>
+<nav class="fn-index" aria-label="Functions on this page"><span>Functions</span><a href="#/docs/sdk-windows/mos_window_create"><code>mos_window_create</code></a><a href="#/docs/sdk-windows/mos_window_close"><code>mos_window_close</code></a><a href="#/docs/sdk-windows/mos_window_present"><code>mos_window_present</code></a><a href="#/docs/sdk-windows/mos_window_next_event"><code>mos_window_next_event</code></a><a href="#/docs/sdk-windows/mos_window_dispatch_events"><code>mos_window_dispatch_events</code></a><a href="#/docs/sdk-windows/mos_window_set_bounds"><code>mos_window_set_bounds</code></a><a href="#/docs/sdk-windows/mos_window_set_title"><code>mos_window_set_title</code></a><a href="#/docs/sdk-windows/mos_window_set_flags"><code>mos_window_set_flags</code></a><a href="#/docs/sdk-windows/mos_window_set_fullscreen"><code>mos_window_set_fullscreen</code></a><a href="#/docs/sdk-windows/mos_window_minimize"><code>mos_window_minimize</code></a><a href="#/docs/sdk-windows/mos_window_maximize"><code>mos_window_maximize</code></a><a href="#/docs/sdk-windows/mos_window_restore"><code>mos_window_restore</code></a><a href="#/docs/sdk-windows/mos_window_set_resizable"><code>mos_window_set_resizable</code></a><a href="#/docs/sdk-windows/mos_window_set_visible"><code>mos_window_set_visible</code></a><a href="#/docs/sdk-windows/mos_window_set_style"><code>mos_window_set_style</code></a><a href="#/docs/sdk-windows/mos_window_get_info"><code>mos_window_get_info</code></a><a href="#/docs/sdk-windows/mos_window_list"><code>mos_window_list</code></a><a href="#/docs/sdk-windows/mos_window_get_frame"><code>mos_window_get_frame</code></a><a href="#/docs/sdk-windows/mos_window_post_event"><code>mos_window_post_event</code></a><a href="#/docs/sdk-windows/mos_window_register_manager"><code>mos_window_register_manager</code></a><a href="#/docs/sdk-windows/mos_window_call"><code>mos_window_call</code></a><a href="#/docs/sdk-windows/mos_window_request"><code>mos_window_request</code></a></nav>
+<h2 id="sdk-windows--a-minimal-window-app">A minimal window app</h2>
+<pre><code class="lang-c">#include "window.h"
+#include "stdlib.h"
+
+static int running = 1;
+static void on_close(uint32_t id) { (void)id; running = 0; }
+
+int main(void) {
+    const uint32_t W = 320, H = 200;
+    uint32_t id = mos_window_create(0, 120, 80, W, H, "Hello");
+    if (!id) mos_exit(1);
+    uint32_t* px = malloc(W * H * 4);
+
+    mos_window_callbacks_t cb = { .onwindowclose = on_close };
+    while (running) {
+        for (uint32_t i = 0; i &lt; W * H; i++) px[i] = 0xFF2845F5;   /* opaque blue */
+        mos_window_present(id, px, W * 4, 0, 0, W, H);
+        mos_window_dispatch_events(id, &amp;cb);
+        mos_sleep(16);
+    }
+    mos_window_close(id);
+    mos_exit(0);
+}</code></pre>
+<h2 id="sdk-windows--limits">Limits</h2>
+<div class="tw"><table><thead><tr><th>Limit</th><th>Value</th></tr></thead><tbody><tr><td>Windows in the system</td><td><code>SYSCALL_WINDOW_MAX_WINDOWS</code> (64)</td></tr><tr><td>Minimum size</td><td>64 × 48</td></tr><tr><td>Maximum size</td><td>16384 × 16384, and at most 64 MiB of pixels</td></tr><tr><td>All windows' pixels together</td><td>64 MiB</td></tr><tr><td>Title</td><td><code>SYSCALL_WINDOW_MAX_TITLE</code> (64) bytes including the NUL</td></tr><tr><td>Queued events per window</td><td><code>SYSCALL_WINDOW_MAX_EVENTS</code> (16)</td></tr><tr><td>Position</td><td>0 … 32768 on each axis</td></tr></tbody></table></div>
+<h2 id="sdk-windows--flags">Flags</h2>
+<div class="tw"><table><thead><tr><th>Flag</th><th>Meaning</th></tr></thead><tbody><tr><td><code>SYSCALL_WINDOW_VISIBLE</code></td><td>Drawn by mosWM</td></tr><tr><td><code>SYSCALL_WINDOW_RESIZABLE</code></td><td>The user can resize it, and the program may call <code>mos_window_set_bounds</code></td></tr><tr><td><code>SYSCALL_WINDOW_FULLSCREEN</code></td><td>Covers the screen; cannot be combined with <code>MAXIMIZED</code></td></tr><tr><td><code>SYSCALL_WINDOW_MAXIMIZED</code></td><td>Fills the desktop area</td></tr><tr><td><code>SYSCALL_WINDOW_MINIMIZED</code></td><td>Hidden in the taskbar</td></tr><tr><td><code>SYSCALL_WINDOW_FOCUSED</code></td><td>Has keyboard focus. Read-only for applications: only mosWM sets it</td></tr></tbody></table></div>
+<h2 id="sdk-windows--mos_window_create" class="fn"><code>mos_window_create</code></h2>
+<pre><code class="lang-c">uint32_t mos_window_create(uint32_t parent_id, uint32_t x, uint32_t y,
+                           uint32_t width, uint32_t height, const char* title);</code></pre>
+<p>Creates a visible, resizable window. Its frame starts out as whatever the allocator returned, so present a first frame straight away.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>parent_id</code></td><td><code>0</code> for a top-level window, or the ID of a window this process controls to create a child (a dialog)</td></tr><tr><td><code>x</code>, <code>y</code></td><td>Position on the desktop</td></tr><tr><td><code>width</code>, <code>height</code></td><td>Content size in pixels, at least 64 × 48</td></tr><tr><td><code>title</code></td><td>Title bar text; truncated to 63 bytes. NULL for none</td></tr></tbody></table></div>
+<p><strong>Returns</strong> the new window ID (1 … 64), or <code>0</code> on failure. The raw call fails with <code>SYS_ERR_INVAL</code> (size out of range, bad flags), <code>SYS_ERR_NOTFOUND</code> / <code>SYS_ERR_PERM</code> (bad parent) or <code>SYS_ERR_GENERIC</code> (no free slot, out of frame memory); the wrapper turns all of these into <code>0</code>.</p>
+<p><strong>Notes</strong> To create a window with other flags (not resizable, hidden, full screen), create it and then call <a href="#/docs/sdk-windows/mos_window_set_flags"><code>mos_window_set_flags</code></a>.</p>
+<h2 id="sdk-windows--mos_window_close" class="fn"><code>mos_window_close</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_close(uint32_t id);</code></pre>
+<p>Destroys a window and frees its frame.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_NOTFOUND</code> for an unknown ID, <code>SYS_ERR_PERM</code> for a window this process does not control.</p>
+<p><strong>Notes</strong> Clicking the close button does not close the window; it queues a <code>SYSCALL_WINDOW_EVENT_CLOSE_REQUEST</code>. The program decides whether to call <code>mos_window_close</code>.</p>
+<h2 id="sdk-windows--mos_window_present" class="fn"><code>mos_window_present</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_present(uint32_t id, const uint32_t* pixels, uint32_t pitch,
+                            uint32_t x, uint32_t y, uint32_t width, uint32_t height);</code></pre>
+<p>Copies a rectangle of your pixel buffer into the window's frame. mosWM shows the new frame on its next composite.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>id</code></td><td>Window</td></tr><tr><td><code>pixels</code></td><td>Your buffer, the same size as the window, ARGB8888 (<code>0xAARRGGBB</code>). Use <code>0xFF</code> alpha</td></tr><tr><td><code>pitch</code></td><td>Bytes per row of <code>pixels</code>, at least <code>window width × 4</code></td></tr><tr><td><code>x</code>, <code>y</code>, <code>width</code>, <code>height</code></td><td>The rectangle to copy, in window coordinates. It must lie inside the window</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_INVAL</code> for a rectangle outside the window, a short pitch or a NULL buffer, <code>SYS_ERR_NOTFOUND</code> / <code>SYS_ERR_PERM</code> for a bad window.</p>
+<p><strong>Notes</strong></p>
+<ul><li><code>pixels</code> points at the top-left of your whole buffer, not of the rectangle; the kernel offsets into it. Presenting only the part that changed is cheaper than the whole window.</li><li>After a <code>SYSCALL_WINDOW_EVENT_RESIZED</code>, reallocate the buffer at the new size before presenting again.</li><li>Each present increments the window's <code>frame_version</code>.</li></ul>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">/* redraw only a 32 x 32 cursor area */
+mos_window_present(id, px, W * 4, cx, cy, 32, 32);</code></pre>
+<h2 id="sdk-windows--mos_window_next_event" class="fn"><code>mos_window_next_event</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_next_event(uint32_t id, syscall_window_event_t* event);</code></pre>
+<p>Takes the oldest event off the window's queue. Never blocks.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>id</code></td><td>Window</td></tr><tr><td><code>event</code></td><td>Filled with the event</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code> with <code>*event</code> filled, <code>SYS_ERR_AGAIN</code> if the queue is empty, <code>SYS_ERR_NOTFOUND</code> / <code>SYS_ERR_PERM</code> for a bad window.</p>
+<p><code>syscall_window_event_t</code> fields:</p>
+<div class="tw"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>id</code></td><td>Window the event is for</td></tr><tr><td><code>type</code></td><td>One of the event types below</td></tr><tr><td><code>x</code>, <code>y</code></td><td>Pointer position in window coordinates (mouse events)</td></tr><tr><td><code>width</code>, <code>height</code></td><td>New content size (<code>RESIZED</code>)</td></tr><tr><td><code>key</code></td><td>USB HID usage code (<code>KEY</code>)</td></tr><tr><td><code>buttons</code></td><td><code>KEY</code>: 1 = pressed, 0 = released. <code>MOUSE</code>: button mask, bit 0 left, bit 1 right, bit 2 middle</td></tr><tr><td><code>wheel</code></td><td>Scroll amount (<code>MOUSE_WHEEL</code>)</td></tr><tr><td><code>mods</code></td><td><code>SYSCALL_INPUT_MOD_SHIFT</code>, <code>_CTRL</code>, <code>_ALT</code> bits</td></tr><tr><td><code>time_ms</code></td><td>Uptime when the event was queued</td></tr></tbody></table></div>
+<p>Event types:</p>
+<div class="tw"><table><thead><tr><th>Type</th><th>Sent when</th></tr></thead><tbody><tr><td><code>SYSCALL_WINDOW_EVENT_RESIZED</code></td><td>The window's size changed</td></tr><tr><td><code>SYSCALL_WINDOW_EVENT_CLOSE_REQUEST</code></td><td>The user clicked the close button</td></tr><tr><td><code>SYSCALL_WINDOW_EVENT_MINIMIZED</code></td><td>It was minimised</td></tr><tr><td><code>SYSCALL_WINDOW_EVENT_MAXIMIZED</code></td><td>It was maximised</td></tr><tr><td><code>SYSCALL_WINDOW_EVENT_RESTORED</code></td><td>It returned from minimised or maximised</td></tr><tr><td><code>SYSCALL_WINDOW_EVENT_FOCUS_GAINED</code></td><td>It got keyboard focus</td></tr><tr><td><code>SYSCALL_WINDOW_EVENT_FOCUS_LOST</code></td><td>It lost keyboard focus</td></tr><tr><td><code>SYSCALL_WINDOW_EVENT_KEY</code></td><td>A key was pressed or released while it had focus</td></tr><tr><td><code>SYSCALL_WINDOW_EVENT_MOUSE</code></td><td>The pointer moved over it, or a button changed</td></tr><tr><td><code>SYSCALL_WINDOW_EVENT_MOUSE_WHEEL</code></td><td>The wheel turned over it</td></tr></tbody></table></div>
+<p><strong>Notes</strong></p>
+<ul><li>The queue holds 16 events. Window-state events of the same type are merged (only the newest resize is kept), and consecutive mouse moves with the same buttons are merged, so a slow program loses detail but not clicks. Drain the queue every frame.</li><li>Common HID codes: <code>a</code>-<code>z</code> 4-29, <code>1</code>-<code>9</code> 30-38, <code>0</code> 39, Enter 40, Escape 41, Backspace 42, Tab 43, Space 44, Right 79, Left 80, Down 81, Up 82.</li></ul>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">syscall_window_event_t ev;
+while (mos_window_next_event(id, &amp;ev) == SYS_SUCCESS) {
+    if (ev.type == SYSCALL_WINDOW_EVENT_CLOSE_REQUEST) running = 0;
+    else if (ev.type == SYSCALL_WINDOW_EVENT_KEY &amp;&amp; ev.buttons &amp;&amp; ev.key == 41) running = 0;  /* Esc */
+    else if (ev.type == SYSCALL_WINDOW_EVENT_MOUSE &amp;&amp; (ev.buttons &amp; 1)) paint(ev.x, ev.y);
+    else if (ev.type == SYSCALL_WINDOW_EVENT_RESIZED) resize_buffer(ev.width, ev.height);
+}</code></pre>
+<h2 id="sdk-windows--mos_window_dispatch_events" class="fn"><code>mos_window_dispatch_events</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_dispatch_events(uint32_t id, const mos_window_callbacks_t* callbacks);</code></pre>
+<p>Drains the window's queue and calls a callback for each window-state event.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>id</code></td><td>Window</td></tr><tr><td><code>callbacks</code></td><td>Structure of function pointers; any may be NULL</td></tr></tbody></table></div>
+<p><code>mos_window_callbacks_t</code> members:</p>
+<div class="tw"><table><thead><tr><th>Member</th><th>Called for</th></tr></thead><tbody><tr><td><code>onwindowclose(id)</code></td><td><code>CLOSE_REQUEST</code></td></tr><tr><td><code>onwindowminimize(id)</code></td><td><code>MINIMIZED</code></td></tr><tr><td><code>onwindowmaximise(id)</code></td><td><code>MAXIMIZED</code></td></tr><tr><td><code>windowsizechange_recall(id, width, height)</code></td><td><code>RESIZED</code></td></tr><tr><td><code>onwindowfocus(id, focused)</code></td><td><code>FOCUS_GAINED</code> (1) and <code>FOCUS_LOST</code> (0)</td></tr></tbody></table></div>
+<p><strong>Returns</strong> the number of events taken off the queue, <code>SYS_ERR_INVAL</code> if <code>callbacks</code> is NULL, or an error from <code>mos_window_next_event</code>.</p>
+<p><strong>Notes</strong> Key, mouse, wheel and <code>RESTORED</code> events are consumed and dropped. A program that needs input should loop over <a href="#/docs/sdk-windows/mos_window_next_event"><code>mos_window_next_event</code></a> itself.</p>
+<h2 id="sdk-windows--mos_window_set_bounds" class="fn"><code>mos_window_set_bounds</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_set_bounds(uint32_t id, uint32_t x, uint32_t y,
+                               uint32_t width, uint32_t height);</code></pre>
+<p>Moves and/or resizes a window. Resizing keeps the overlapping part of the old frame and queues a <code>RESIZED</code> event.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_PERM</code> if the window is not resizable, <code>SYS_ERR_INVAL</code> for a size or position out of range, <code>SYS_ERR_BUSY</code> if its event queue is full, <code>SYS_ERR_GENERIC</code> if frame memory runs out.</p>
+<h2 id="sdk-windows--mos_window_set_title" class="fn"><code>mos_window_set_title</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_set_title(uint32_t id, const char* title);</code></pre>
+<p>Changes the title bar text (truncated to 63 bytes).</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, or <code>SYS_ERR_NOTFOUND</code> / <code>SYS_ERR_PERM</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">mos_window_set_title(id, dirty ? "notes.txt *" : "notes.txt");</code></pre>
+<h2 id="sdk-windows--mos_window_set_flags" class="fn"><code>mos_window_set_flags</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_set_flags(uint32_t id, uint32_t flags);</code></pre>
+<p>Replaces the window's flags with <code>flags</code> (see <a href="#/docs/sdk-windows/flags">Flags</a>). The <code>FOCUSED</code> bit is kept as it is.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, or <code>SYS_ERR_INVAL</code> if <code>flags</code> has unknown bits, includes <code>FOCUSED</code>, or combines <code>FULLSCREEN</code> with <code>MAXIMIZED</code>.</p>
+<p><strong>Notes</strong> The helpers below read the current flags with <code>mos_window_get_info</code> and change one bit, which is usually what you want.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">/* a fixed-size window */
+mos_window_set_flags(id, SYSCALL_WINDOW_VISIBLE);</code></pre>
+<h2 id="sdk-windows--mos_window_set_fullscreen" class="fn"><code>mos_window_set_fullscreen</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_set_fullscreen(uint32_t id, bool enabled);</code></pre>
+<p>Turns full screen on or off. Clears <code>MAXIMIZED</code> and <code>MINIMIZED</code>.</p>
+<p><strong>Returns</strong> the result of <code>mos_window_set_flags</code>.</p>
+<h2 id="sdk-windows--mos_window_minimize" class="fn"><code>mos_window_minimize</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_minimize(uint32_t id);</code></pre>
+<p>Minimises the window. Clears <code>FULLSCREEN</code> and <code>MAXIMIZED</code>.</p>
+<h2 id="sdk-windows--mos_window_maximize" class="fn"><code>mos_window_maximize</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_maximize(uint32_t id);</code></pre>
+<p>Maximises the window. Clears <code>FULLSCREEN</code> and <code>MINIMIZED</code>.</p>
+<h2 id="sdk-windows--mos_window_restore" class="fn"><code>mos_window_restore</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_restore(uint32_t id);</code></pre>
+<p>Clears <code>FULLSCREEN</code>, <code>MAXIMIZED</code> and <code>MINIMIZED</code>, returning the window to its normal bounds.</p>
+<h2 id="sdk-windows--mos_window_set_resizable" class="fn"><code>mos_window_set_resizable</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_set_resizable(uint32_t id, bool resizable);</code></pre>
+<p>Sets or clears <code>SYSCALL_WINDOW_RESIZABLE</code>.</p>
+<h2 id="sdk-windows--mos_window_set_visible" class="fn"><code>mos_window_set_visible</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_set_visible(uint32_t id, bool visible);</code></pre>
+<p>Shows or hides the window by setting or clearing <code>SYSCALL_WINDOW_VISIBLE</code>. A hidden window keeps its frame and events.</p>
+<h2 id="sdk-windows--mos_window_set_style" class="fn"><code>mos_window_set_style</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_set_style(uint32_t id, syscall_window_style_t style);</code></pre>
+<p>Changes the colours mosWM uses for this window's decoration. All colours are ARGB8888.</p>
+<div class="tw"><table><thead><tr><th><code>syscall_window_style_t</code> member</th><th>Default</th></tr></thead><tbody><tr><td><code>title_bar</code></td><td><code>0xFF24343C</code></td></tr><tr><td><code>title_text</code></td><td><code>0xFFFFFFFF</code></td></tr><tr><td><code>close_button</code>, <code>close_icon</code></td><td><code>0xFFE35D6A</code>, <code>0xFFFFFFFF</code></td></tr><tr><td><code>minimize_button</code>, <code>minimize_icon</code></td><td><code>0xFFE8B34C</code>, <code>0xFF17262C</code></td></tr><tr><td><code>maximize_button</code>, <code>maximize_icon</code></td><td><code>0xFF4ABF8A</code>, <code>0xFF17262C</code></td></tr><tr><td><code>border</code></td><td><code>0xFF49616B</code></td></tr><tr><td><code>content_background</code></td><td><code>0xFF17232A</code></td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, or <code>SYS_ERR_NOTFOUND</code> / <code>SYS_ERR_PERM</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">syscall_window_info_t info;
+mos_window_get_info(id, &amp;info);
+syscall_window_style_t s = info.style;
+s.title_bar = 0xFF2845F5;
+mos_window_set_style(id, s);</code></pre>
+<h2 id="sdk-windows--mos_window_get_info" class="fn"><code>mos_window_get_info</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_get_info(uint32_t id, syscall_window_info_t* info);</code></pre>
+<p>Copies a window's current state.</p>
+<div class="tw"><table><thead><tr><th><code>syscall_window_info_t</code> field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>id</code>, <code>parent_id</code></td><td>The window and its parent (0 for top level)</td></tr><tr><td><code>x</code>, <code>y</code>, <code>width</code>, <code>height</code></td><td>Content bounds</td></tr><tr><td><code>flags</code></td><td>Current <a href="#/docs/sdk-windows/flags">flags</a></td></tr><tr><td><code>frame_version</code></td><td>Incremented by every present</td></tr><tr><td><code>owner_pid</code></td><td>Process that created it</td></tr><tr><td><code>title[64]</code></td><td>Title</td></tr><tr><td><code>style</code></td><td>Decoration colours</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_INVAL</code> for a NULL <code>info</code>, or <code>SYS_ERR_NOTFOUND</code> / <code>SYS_ERR_PERM</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">syscall_window_info_t info;
+if (mos_window_get_info(id, &amp;info) == 0 &amp;&amp; (info.flags &amp; SYSCALL_WINDOW_FOCUSED))
+    draw_caret();</code></pre>
+<h2 id="sdk-windows--mos_window_list" class="fn"><code>mos_window_list</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_list(syscall_window_info_t* windows, uint32_t capacity);</code></pre>
+<p>Lists the windows this process controls (all windows, for the window manager).</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>windows</code></td><td>Array to fill; may be NULL when <code>capacity</code> is 0</td></tr><tr><td><code>capacity</code></td><td>Size of the array, at most 64</td></tr></tbody></table></div>
+<p><strong>Returns</strong> the total number of matching windows, which can be larger than <code>capacity</code> (only <code>capacity</code> are copied), or <code>SYS_ERR_INVAL</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">uint64_t count = mos_window_list(NULL, 0);   /* just count */</code></pre>
+<h2 id="sdk-windows--mos_window_get_frame" class="fn"><code>mos_window_get_frame</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_get_frame(uint32_t id, syscall_window_frame_t* frame);</code></pre>
+<p>Window-manager only. Copies a window's frame into <code>frame-&gt;pixels</code>, which must match the window's size. mosWM uses it to composite.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_PERM</code> for any process other than the registered window manager, <code>SYS_ERR_INVAL</code> for a mismatched buffer.</p>
+<h2 id="sdk-windows--mos_window_post_event" class="fn"><code>mos_window_post_event</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_post_event(uint32_t id, syscall_window_event_t* event);</code></pre>
+<p>Window-manager only. Queues an event on a window; this is how mosWM delivers input and close requests.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_PERM</code> for other processes, <code>SYS_ERR_INVAL</code> for an unknown event type, <code>SYS_ERR_BUSY</code> if the queue is full.</p>
+<h2 id="sdk-windows--mos_window_register_manager" class="fn"><code>mos_window_register_manager</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_register_manager(void);</code></pre>
+<p>Makes the calling process the window manager. Only a process started as a window manager that also owns the screen (<a href="#/docs/sdk-graphics/mos_graphics_acquire"><code>mos_graphics_acquire</code></a>) may do this.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_PERM</code> if the caller is not allowed, <code>SYS_ERR_BUSY</code> if another manager is registered.</p>
+<h2 id="sdk-windows--mos_window_call" class="fn"><code>mos_window_call</code></h2>
+<pre><code class="lang-c">uint64_t mos_window_call(syscall_window_request_t* request);</code></pre>
+<p>Issues <code>SYS_WINDOW</code> with a filled request. Every wrapper above builds a request with <a href="#/docs/sdk-windows/mos_window_request"><code>mos_window_request</code></a> and calls this.</p>
+<h2 id="sdk-windows--mos_window_request" class="fn"><code>mos_window_request</code></h2>
+<pre><code class="lang-c">syscall_window_request_t mos_window_request(uint32_t op, uint32_t id);</code></pre>
+<p><strong>Returns</strong> a zeroed request with <code>size</code>, <code>version</code>, <code>op</code> and <code>id</code> filled in, ready for <code>mos_window_call</code>.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/windows.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="sdk-graphics" hidden><h1>Graphics</h1>
+<p>Full-screen framebuffer access over <code>SYS_GRAPHICS</code>, for programs that take over the whole display instead of opening a mosWM window. The ownership, info, blit and present calls are in <code>minimalos.h</code> (from <code>x86_64/user_common.h</code>); the size queries and drawing primitives are in <code>x86_64/user_graphics.h</code>. Include <code>graphics.h</code> to get all of them plus the short <code>graphics_*</code> names.</p>
+<p>Most apps should use <a href="#/docs/sdk-windows">windows</a> instead. Under MOSdesk, mosWM already owns the screen and a second program cannot acquire it.</p>
+<nav class="fn-index" aria-label="Functions on this page"><span>Functions</span><a href="#/docs/sdk-graphics/mos_graphics_acquire"><code>mos_graphics_acquire</code></a><a href="#/docs/sdk-graphics/mos_graphics_release"><code>mos_graphics_release</code></a><a href="#/docs/sdk-graphics/mos_graphics_owner"><code>mos_graphics_owner</code></a><a href="#/docs/sdk-graphics/mos_graphics_info"><code>mos_graphics_info</code></a><a href="#/docs/sdk-graphics/mos_graphics_blit_surface"><code>mos_graphics_blit_surface</code></a><a href="#/docs/sdk-graphics/mos_graphics_present"><code>mos_graphics_present</code></a><a href="#/docs/sdk-graphics/mos_graphics_get_width"><code>mos_graphics_get_width</code></a><a href="#/docs/sdk-graphics/mos_graphics_get_height"><code>mos_graphics_get_height</code></a><a href="#/docs/sdk-graphics/mos_graphics_clear"><code>mos_graphics_clear</code></a><a href="#/docs/sdk-graphics/mos_graphics_pixel"><code>mos_graphics_pixel</code></a><a href="#/docs/sdk-graphics/mos_graphics_line"><code>mos_graphics_line</code></a><a href="#/docs/sdk-graphics/mos_graphics_rectangle"><code>mos_graphics_rectangle</code></a><a href="#/docs/sdk-graphics/mos_graphics_fill_rectangle"><code>mos_graphics_fill_rectangle</code></a><a href="#/docs/sdk-graphics/mos_graphics_triangle"><code>mos_graphics_triangle</code></a><a href="#/docs/sdk-graphics/mos_graphics_fill_triangle"><code>mos_graphics_fill_triangle</code></a><a href="#/docs/sdk-graphics/mos_graphics_circle"><code>mos_graphics_circle</code></a><a href="#/docs/sdk-graphics/mos_graphics_fill_circle"><code>mos_graphics_fill_circle</code></a><a href="#/docs/sdk-graphics/mos_graphics_ellipse"><code>mos_graphics_ellipse</code></a><a href="#/docs/sdk-graphics/mos_graphics_text"><code>mos_graphics_text</code></a><a href="#/docs/sdk-graphics/mos_graphics_measure_text"><code>mos_graphics_measure_text</code></a><a href="#/docs/sdk-graphics/mos_graphics_set_resolution"><code>mos_graphics_set_resolution</code></a><a href="#/docs/sdk-graphics/mos_graphics_call"><code>mos_graphics_call</code></a><a href="#/docs/sdk-graphics/mos_graphics"><code>mos_graphics</code></a></nav>
+<h2 id="sdk-graphics--how-drawing-works">How drawing works</h2>
+<p>The kernel keeps a back buffer the size of the screen. A program:</p>
+<ol><li>takes ownership of the screen with <a href="#/docs/sdk-graphics/mos_graphics_acquire"><code>mos_graphics_acquire</code></a>;</li><li>draws into its own ARGB8888 surface (a <code>malloc</code>ed <code>uint32_t</code> array);</li><li>copies the surface into the back buffer with <a href="#/docs/sdk-graphics/mos_graphics_blit_surface"><code>mos_graphics_blit_surface</code></a>;</li><li>shows the changed rectangle with <a href="#/docs/sdk-graphics/mos_graphics_present"><code>mos_graphics_present</code></a>;</li><li>gives the screen back with <a href="#/docs/sdk-graphics/mos_graphics_release"><code>mos_graphics_release</code></a>, which redraws the terminal.</li></ol>
+<pre><code class="lang-c">#include "graphics.h"
+#include "stdlib.h"
+
+int main(void) {
+    if (mos_graphics_acquire() != SYS_SUCCESS) { mos_puts("screen busy\n"); return 1; }
+    uint32_t w = mos_graphics_get_width(), h = mos_graphics_get_height();
+    uint32_t* surf = malloc((size_t)w * h * 4);
+    for (uint32_t f = 0; f &lt; 300; f++) {
+        for (uint32_t i = 0; i &lt; w * h; i++) surf[i] = 0xFF000000 | ((i + f * 4) &amp; 0xFF);
+        mos_graphics_blit_surface(surf, w, h, w * 4, 0, 0, (int32_t)w, (int32_t)h, 0, 0,
+                                  SYS_GRAPHICS_BLIT_OPAQUE);
+        mos_graphics_present(0, 0, (int32_t)w, (int32_t)h);
+        mos_sleep(16);
+    }
+    mos_graphics_release();
+    return 0;
+}</code></pre>
+<h2 id="sdk-graphics--privilege">Privilege</h2>
+<p>On Minimal-OS a <code>.run</code> program is a user process, and the kernel only lets user processes call these graphics operations: get width, get height, owner, acquire, release, info, blit and present. The drawing primitives - clear, pixel, line, rectangle, circle, triangle, ellipse, text, measure text and set resolution - return <code>SYS_ERR_PERM</code> to a user process; they exist for kernel-privileged callers. Draw shapes and text into your own surface and blit it.</p>
+<p>The Run Studio preview runs the primitives for any program, so code that uses them works there but not on the real system.</p>
+<h2 id="sdk-graphics--mos_graphics_acquire" class="fn"><code>mos_graphics_acquire</code></h2>
+<pre><code class="lang-c">long mos_graphics_acquire(void);</code></pre>
+<p>Makes the calling process the owner of the screen. Only the owner may blit, present, draw or read raw input.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, or <code>SYS_ERR_PERM</code> if another process owns the screen.</p>
+<p><strong>Notes</strong> While a program owns the screen, keyboard and mouse input goes to the raw input queue (<a href="#/docs/sdk-input/mos_input_read"><code>mos_input_read</code></a>) instead of the terminal.</p>
+<h2 id="sdk-graphics--mos_graphics_release" class="fn"><code>mos_graphics_release</code></h2>
+<pre><code class="lang-c">long mos_graphics_release(void);</code></pre>
+<p>Gives up ownership and redraws the terminal.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, or <code>SYS_ERR_PERM</code> if the caller does not own the screen.</p>
+<h2 id="sdk-graphics--mos_graphics_owner" class="fn"><code>mos_graphics_owner</code></h2>
+<pre><code class="lang-c">uint64_t mos_graphics_owner(void);</code></pre>
+<p><strong>Returns</strong> the PID that owns the screen, or <code>SYS_ERR_NOTFOUND</code> if nobody does.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">if (mos_graphics_owner() != SYS_ERR_NOTFOUND) mos_puts("a desktop is running; open a window instead\n");</code></pre>
+<h2 id="sdk-graphics--mos_graphics_info" class="fn"><code>mos_graphics_info</code></h2>
+<pre><code class="lang-c">long mos_graphics_info(syscall_graphics_info_t* info);</code></pre>
+<p>Describes the display. The wrapper sets <code>info-&gt;size</code>, <code>info-&gt;version</code> and <code>info-&gt;reserved</code> before the call.</p>
+<div class="tw"><table><thead><tr><th><code>syscall_graphics_info_t</code> field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>width</code>, <code>height</code></td><td>Screen size in pixels</td></tr><tr><td><code>pitch</code></td><td>Framebuffer bytes per row</td></tr><tr><td><code>pixel_format</code></td><td>Back-buffer format; always <code>SYS_GRAPHICS_PIXEL_FORMAT_ARGB8888</code></td></tr><tr><td><code>bytes_per_pixel</code></td><td>Framebuffer bytes per pixel</td></tr><tr><td><code>red_position</code>, <code>red_mask_size</code>, and green/blue</td><td>Framebuffer channel layout</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_INVAL</code> for a NULL or malformed structure, <code>SYS_ERR_GENERIC</code> if there is no framebuffer.</p>
+<p><strong>Notes</strong> Surfaces you blit are always ARGB8888; the channel layout is only informative.</p>
+<h2 id="sdk-graphics--mos_graphics_blit_surface" class="fn"><code>mos_graphics_blit_surface</code></h2>
+<pre><code class="lang-c">long mos_graphics_blit_surface(const uint32_t* src, uint32_t width, uint32_t height,
+                               uint32_t pitch, int32_t sx, int32_t sy, int32_t sw, int32_t sh,
+                               int32_t dx, int32_t dy, uint32_t flags);</code></pre>
+<p>Copies a rectangle of an ARGB8888 surface into the kernel back buffer. Nothing appears until <a href="#/docs/sdk-graphics/mos_graphics_present"><code>mos_graphics_present</code></a>.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>src</code></td><td>Surface pixels, 4-byte aligned. The whole surface must be one live heap allocation of this process</td></tr><tr><td><code>width</code>, <code>height</code></td><td>Surface size, 1 … 16384 each</td></tr><tr><td><code>pitch</code></td><td>Surface bytes per row: a multiple of 4, at least <code>width × 4</code>. <code>pitch × height</code> at most 64 MiB</td></tr><tr><td><code>sx</code>, <code>sy</code>, <code>sw</code>, <code>sh</code></td><td>Source rectangle; must lie inside the surface and have positive size</td></tr><tr><td><code>dx</code>, <code>dy</code></td><td>Where its top-left lands on screen; parts off screen are clipped</td></tr><tr><td><code>flags</code></td><td><code>SYS_GRAPHICS_BLIT_OPAQUE</code> copies pixels as they are; <code>SYS_GRAPHICS_BLIT_ALPHA</code> blends them using their alpha byte</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_PERM</code> if the caller does not own the screen, <code>SYS_ERR_INVAL</code> for any argument outside the rules above, <code>SYS_ERR_GENERIC</code> if the blit failed.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">/* draw a 32x32 sprite with transparency at (x, y) */
+mos_graphics_blit_surface(sprite, 32, 32, 32 * 4, 0, 0, 32, 32, x, y, SYS_GRAPHICS_BLIT_ALPHA);
+mos_graphics_present(x, y, 32, 32);</code></pre>
+<h2 id="sdk-graphics--mos_graphics_present" class="fn"><code>mos_graphics_present</code></h2>
+<pre><code class="lang-c">long mos_graphics_present(int32_t x, int32_t y, int32_t width, int32_t height);</code></pre>
+<p>Copies a rectangle of the back buffer to the visible framebuffer. The rectangle is clipped to the screen.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_PERM</code> if the caller does not own the screen, <code>SYS_ERR_INVAL</code> for an empty rectangle or no framebuffer.</p>
+<p><strong>Notes</strong> Present only what changed: a small dirty rectangle is much cheaper than the whole screen.</p>
+<h2 id="sdk-graphics--mos_graphics_get_width" class="fn"><code>mos_graphics_get_width</code></h2>
+<pre><code class="lang-c">uint32_t mos_graphics_get_width(void);</code></pre>
+<p><strong>Returns</strong> the screen width in pixels. Allowed for any process.</p>
+<h2 id="sdk-graphics--mos_graphics_get_height" class="fn"><code>mos_graphics_get_height</code></h2>
+<pre><code class="lang-c">uint32_t mos_graphics_get_height(void);</code></pre>
+<p><strong>Returns</strong> the screen height in pixels. Allowed for any process.</p>
+<h2 id="sdk-graphics--mos_graphics_clear" class="fn"><code>mos_graphics_clear</code></h2>
+<pre><code class="lang-c">void mos_graphics_clear(uint8_t r, uint8_t g, uint8_t b);</code></pre>
+<p>Fills the screen with one colour. Kernel-privileged; see <a href="#/docs/sdk-graphics/privilege">Privilege</a>.</p>
+<h2 id="sdk-graphics--mos_graphics_pixel" class="fn"><code>mos_graphics_pixel</code></h2>
+<pre><code class="lang-c">void mos_graphics_pixel(int32_t x, int32_t y, uint8_t r, uint8_t g, uint8_t b);</code></pre>
+<p>Sets one pixel. Kernel-privileged.</p>
+<h2 id="sdk-graphics--mos_graphics_line" class="fn"><code>mos_graphics_line</code></h2>
+<pre><code class="lang-c">void mos_graphics_line(int32_t x1, int32_t y1, int32_t x2, int32_t y2,
+                       uint8_t r, uint8_t g, uint8_t b);</code></pre>
+<p>Draws a one-pixel line from <code>(x1, y1)</code> to <code>(x2, y2)</code>. Kernel-privileged.</p>
+<h2 id="sdk-graphics--mos_graphics_rectangle" class="fn"><code>mos_graphics_rectangle</code></h2>
+<pre><code class="lang-c">void mos_graphics_rectangle(int32_t x, int32_t y, uint32_t width, uint32_t height,
+                            uint8_t r, uint8_t g, uint8_t b);</code></pre>
+<p>Draws a rectangle outline with its top-left corner at <code>(x, y)</code>. Kernel-privileged.</p>
+<h2 id="sdk-graphics--mos_graphics_fill_rectangle" class="fn"><code>mos_graphics_fill_rectangle</code></h2>
+<pre><code class="lang-c">void mos_graphics_fill_rectangle(int32_t x, int32_t y, uint32_t width, uint32_t height,
+                                 uint8_t r, uint8_t g, uint8_t b);</code></pre>
+<p>Fills a rectangle. Kernel-privileged.</p>
+<h2 id="sdk-graphics--mos_graphics_triangle" class="fn"><code>mos_graphics_triangle</code></h2>
+<pre><code class="lang-c">void mos_graphics_triangle(int32_t x1, int32_t y1, int32_t x2, int32_t y2,
+                           int32_t x3, int32_t y3, uint8_t r, uint8_t g, uint8_t b);</code></pre>
+<p>Draws the outline of the triangle through three points. Kernel-privileged.</p>
+<h2 id="sdk-graphics--mos_graphics_fill_triangle" class="fn"><code>mos_graphics_fill_triangle</code></h2>
+<pre><code class="lang-c">void mos_graphics_fill_triangle(int32_t x1, int32_t y1, int32_t x2, int32_t y2,
+                                int32_t x3, int32_t y3, uint8_t r, uint8_t g, uint8_t b);</code></pre>
+<p>Fills a triangle. Kernel-privileged.</p>
+<h2 id="sdk-graphics--mos_graphics_circle" class="fn"><code>mos_graphics_circle</code></h2>
+<pre><code class="lang-c">void mos_graphics_circle(int32_t x, int32_t y, uint32_t radius,
+                         uint8_t r, uint8_t g, uint8_t b);</code></pre>
+<p>Draws a circle outline centred on <code>(x, y)</code>. Kernel-privileged.</p>
+<h2 id="sdk-graphics--mos_graphics_fill_circle" class="fn"><code>mos_graphics_fill_circle</code></h2>
+<pre><code class="lang-c">void mos_graphics_fill_circle(int32_t x, int32_t y, uint32_t radius,
+                              uint8_t r, uint8_t g, uint8_t b);</code></pre>
+<p>Fills a circle. Kernel-privileged.</p>
+<h2 id="sdk-graphics--mos_graphics_ellipse" class="fn"><code>mos_graphics_ellipse</code></h2>
+<pre><code class="lang-c">void mos_graphics_ellipse(int32_t x, int32_t y, uint32_t radius_x, uint32_t radius_y,
+                          uint8_t r, uint8_t g, uint8_t b);</code></pre>
+<p>Draws an ellipse outline centred on <code>(x, y)</code> with horizontal radius <code>radius_x</code> and vertical radius <code>radius_y</code>. Kernel-privileged.</p>
+<h2 id="sdk-graphics--mos_graphics_text" class="fn"><code>mos_graphics_text</code></h2>
+<pre><code class="lang-c">void mos_graphics_text(const char* text, int32_t x, int32_t y,
+                       uint8_t r, uint8_t g, uint8_t b);</code></pre>
+<p>Draws <code>text</code> in the kernel's terminal font with its top-left at <code>(x, y)</code>. Kernel-privileged.</p>
+<h2 id="sdk-graphics--mos_graphics_measure_text" class="fn"><code>mos_graphics_measure_text</code></h2>
+<pre><code class="lang-c">void mos_graphics_measure_text(const char* text, uint32_t* out_width, uint32_t* out_height);</code></pre>
+<p>Reports the size <code>mos_graphics_text</code> would draw <code>text</code> at. Both output pointers are required. Kernel-privileged.</p>
+<h2 id="sdk-graphics--mos_graphics_set_resolution" class="fn"><code>mos_graphics_set_resolution</code></h2>
+<pre><code class="lang-c">void mos_graphics_set_resolution(uint32_t columns, uint32_t rows);</code></pre>
+<p>Changes the terminal's text grid to <code>columns × rows</code>. Kernel-privileged.</p>
+<h2 id="sdk-graphics--mos_graphics_call" class="fn"><code>mos_graphics_call</code></h2>
+<pre><code class="lang-c">long mos_graphics_call(syscall_graphics_request_t* request);</code></pre>
+<p>Issues <code>SYS_GRAPHICS</code> with a filled <code>syscall_graphics_request_t</code>. The request has an <code>op</code> (a <code>SYS_GRAPHICS_*</code> value), an <code>args[10]</code> array of integers, and pointers for text, output sizes, blit and info. Every wrapper on this page builds one and calls this (or <code>mos_graphics</code>, its <code>uint64_t</code> twin in <code>x86_64/user_syscalls.h</code>).</p>
+<h2 id="sdk-graphics--mos_graphics" class="fn"><code>mos_graphics</code></h2>
+<pre><code class="lang-c">uint64_t mos_graphics(syscall_graphics_request_t* request);</code></pre>
+<p>Same as <a href="#/docs/sdk-graphics/mos_graphics_call"><code>mos_graphics_call</code></a>, returning <code>uint64_t</code>.</p>
+<h2 id="sdk-graphics--short-names">Short names</h2>
+<p><code>graphics.h</code> defines these aliases:</p>
+<div class="tw"><table><thead><tr><th>Short name</th><th>Function</th></tr></thead><tbody><tr><td><code>graphics_get_width</code>, <code>graphics_get_height</code></td><td><code>mos_graphics_get_width</code>, <code>mos_graphics_get_height</code></td></tr><tr><td><code>graphics_acquire</code>, <code>graphics_release</code></td><td><code>mos_graphics_acquire</code>, <code>mos_graphics_release</code></td></tr><tr><td><code>graphics_info</code></td><td><code>mos_graphics_info</code></td></tr><tr><td><code>graphics_blit_surface</code>, <code>graphics_present</code></td><td><code>mos_graphics_blit_surface</code>, <code>mos_graphics_present</code></td></tr><tr><td><code>graphics_clear</code>, <code>graphics_pixel</code>, <code>graphics_line</code></td><td><code>mos_graphics_clear</code>, <code>mos_graphics_pixel</code>, <code>mos_graphics_line</code></td></tr><tr><td><code>graphics_rectangle</code>, <code>graphics_fill_rectangle</code></td><td><code>mos_graphics_rectangle</code>, <code>mos_graphics_fill_rectangle</code></td></tr><tr><td><code>graphics_triangle</code>, <code>graphics_fill_triangle</code></td><td><code>mos_graphics_triangle</code>, <code>mos_graphics_fill_triangle</code></td></tr><tr><td><code>graphics_circle</code>, <code>graphics_fill_circle</code>, <code>graphics_ellipse</code></td><td><code>mos_graphics_circle</code>, <code>mos_graphics_fill_circle</code>, <code>mos_graphics_ellipse</code></td></tr><tr><td><code>graphics_text</code>, <code>graphics_measure_text</code></td><td><code>mos_graphics_text</code>, <code>mos_graphics_measure_text</code></td></tr><tr><td><code>graphics_set_resolution</code></td><td><code>mos_graphics_set_resolution</code></td></tr></tbody></table></div><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/graphics.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="sdk-input" hidden><h1>Input</h1>
+<p>Raw keyboard and mouse input for programs that own the screen. Window apps do not need any of this: mosWM delivers key and mouse events to their window (see <a href="#/docs/sdk-windows/mos_window_next_event"><code>mos_window_next_event</code></a>).</p>
+<p><code>mos_input_read</code> is in <code>x86_64/user_syscalls.h</code>; the mouse calls are in <code>x86_64/user_mouse.h</code> and the USB keyboard calls in <code>x86_64/user_usb.h</code>.</p>
+<nav class="fn-index" aria-label="Functions on this page"><span>Functions</span><a href="#/docs/sdk-input/mos_input_read"><code>mos_input_read</code></a><a href="#/docs/sdk-input/mos_mouse_get_state"><code>mos_mouse_get_state</code></a><a href="#/docs/sdk-input/mos_mouse_poll"><code>mos_mouse_poll</code></a><a href="#/docs/sdk-input/mos_mouse_has_mouse"><code>mos_mouse_has_mouse</code></a><a href="#/docs/sdk-input/mos_mouse_init"><code>mos_mouse_init</code></a><a href="#/docs/sdk-input/mos_mouse"><code>mos_mouse</code></a><a href="#/docs/sdk-input/mos_mouse_call"><code>mos_mouse_call</code></a><a href="#/docs/sdk-input/mos_usb_has_keyboard"><code>mos_usb_has_keyboard</code></a><a href="#/docs/sdk-input/mos_usb_key_to_ascii"><code>mos_usb_key_to_ascii</code></a><a href="#/docs/sdk-input/mos_usb_key_is_pressed"><code>mos_usb_key_is_pressed</code></a><a href="#/docs/sdk-input/mos_usb_keyboard_info"><code>mos_usb_keyboard_info</code></a><a href="#/docs/sdk-input/mos_usb_poll"><code>mos_usb_poll</code></a><a href="#/docs/sdk-input/mos_usb_init"><code>mos_usb_init</code></a><a href="#/docs/sdk-input/mos_usb"><code>mos_usb</code></a></nav>
+<h2 id="sdk-input--mos_input_read" class="fn"><code>mos_input_read</code></h2>
+<pre><code class="lang-c">uint64_t mos_input_read(syscall_input_event_t* events, uint32_t capacity,
+                        uint32_t timeout_ms, uint64_t* dropped_count);</code></pre>
+<p>Takes queued keyboard and mouse events off the kernel's input queue. Only the <a href="#/docs/sdk-graphics/mos_graphics_acquire">screen owner</a> may call it; while nobody owns the screen, hardware input goes to the terminal instead.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>events</code></td><td>Array to fill</td></tr><tr><td><code>capacity</code></td><td>Size of <code>events</code>, 1 … <code>SYSCALL_INPUT_MAX_READ</code> (256)</td></tr><tr><td><code>timeout_ms</code></td><td>How long to wait when the queue is empty, at most 5000. <code>0</code> returns at once</td></tr><tr><td><code>dropped_count</code></td><td>If not NULL, receives the total number of events dropped because the queue was full</td></tr></tbody></table></div>
+<p><strong>Returns</strong> the number of events written (0 on timeout), <code>SYS_ERR_PERM</code> if the caller does not own the screen, <code>SYS_ERR_INVAL</code> for a bad argument.</p>
+<p><code>syscall_input_event_t</code> fields:</p>
+<div class="tw"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>type</code></td><td><code>SYSCALL_INPUT_KEY_DOWN</code>, <code>_KEY_UP</code>, <code>_MOUSE_MOVE</code>, <code>_MOUSE_BUTTON</code> or <code>_MOUSE_WHEEL</code></td></tr><tr><td><code>key</code></td><td>USB HID usage code (key events)</td></tr><tr><td><code>mods</code></td><td><code>SYSCALL_INPUT_MOD_SHIFT</code>, <code>_CTRL</code>, <code>_ALT</code> bits</td></tr><tr><td><code>buttons</code></td><td><code>SYSCALL_INPUT_BTN_LEFT</code>, <code>_RIGHT</code>, <code>_MIDDLE</code> bits: the current button state</td></tr><tr><td><code>dx</code>, <code>dy</code></td><td>Relative motion (<code>MOUSE_MOVE</code>)</td></tr><tr><td><code>wheel</code></td><td>Relative scroll (<code>MOUSE_WHEEL</code>)</td></tr><tr><td><code>time_ms</code></td><td>Uptime when the event was queued</td></tr></tbody></table></div>
+<p><strong>Notes</strong> The queue holds <code>SYSCALL_INPUT_QUEUE_CAPACITY</code> (256) events. When it is full the newest event is dropped and the drop counter increases.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">syscall_input_event_t ev[32];
+uint64_t n = mos_input_read(ev, 32, 16, NULL);   /* wait up to one frame */
+if (n &gt; 32) n = 0;                               /* an SYS_ERR_* value */
+for (uint64_t i = 0; i &lt; n; i++) {
+    if (ev[i].type == SYSCALL_INPUT_KEY_DOWN &amp;&amp; ev[i].key == 41) quit = 1;   /* Esc */
+    if (ev[i].type == SYSCALL_INPUT_MOUSE_MOVE) { mx += ev[i].dx; my += ev[i].dy; }
+}</code></pre>
+<h2 id="sdk-input--mos_mouse_get_state" class="fn"><code>mos_mouse_get_state</code></h2>
+<pre><code class="lang-c">uint64_t mos_mouse_get_state(syscall_mouse_state_t* out_state);</code></pre>
+<p>Reads the USB mouse's accumulated motion since the last call, and resets it. Screen owner only.</p>
+<div class="tw"><table><thead><tr><th><code>syscall_mouse_state_t</code> field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>dx</code>, <code>dy</code></td><td>Motion since the last call</td></tr><tr><td><code>wheel</code></td><td>Scroll since the last call</td></tr><tr><td><code>buttons</code></td><td>Current <code>SYSCALL_MOUSE_BTN_LEFT</code>, <code>_RIGHT</code>, <code>_MIDDLE</code> bits</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_PERM</code> if the caller does not own the screen, <code>SYS_ERR_INVAL</code> for a NULL pointer.</p>
+<h2 id="sdk-input--mos_mouse_poll" class="fn"><code>mos_mouse_poll</code></h2>
+<pre><code class="lang-c">uint64_t mos_mouse_poll(void);</code></pre>
+<p>Polls the USB controllers once so new mouse reports are picked up.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>.</p>
+<h2 id="sdk-input--mos_mouse_has_mouse" class="fn"><code>mos_mouse_has_mouse</code></h2>
+<pre><code class="lang-c">uint64_t mos_mouse_has_mouse(void);</code></pre>
+<p><strong>Returns</strong> <code>1</code> if a USB mouse is present, <code>0</code> if not.</p>
+<h2 id="sdk-input--mos_mouse_init" class="fn"><code>mos_mouse_init</code></h2>
+<pre><code class="lang-c">uint64_t mos_mouse_init(void);</code></pre>
+<p>Initialises the USB mouse driver. Kernel-privileged: a <code>.run</code> program gets <code>SYS_ERR_PERM</code>.</p>
+<h2 id="sdk-input--mos_mouse" class="fn"><code>mos_mouse</code></h2>
+<pre><code class="lang-c">uint64_t mos_mouse(uint64_t operation, uint64_t arg1, uint64_t arg2);</code></pre>
+<p>Issues <code>SYS_MOUSE</code> with a <code>SYS_MOUSE_*</code> operation. The functions above wrap it. <code>mos_mouse_call</code> in <code>minimalos.h</code> is the same call with <code>long</code> results.</p>
+<h2 id="sdk-input--mos_mouse_call" class="fn"><code>mos_mouse_call</code></h2>
+<pre><code class="lang-c">long mos_mouse_call(uint64_t operation, uint64_t arg1, uint64_t arg2);</code></pre>
+<p>See <a href="#/docs/sdk-input/mos_mouse"><code>mos_mouse</code></a>.</p>
+<h2 id="sdk-input--mos_usb_has_keyboard" class="fn"><code>mos_usb_has_keyboard</code></h2>
+<pre><code class="lang-c">uint64_t mos_usb_has_keyboard(void);</code></pre>
+<p><strong>Returns</strong> <code>1</code> if a USB keyboard is attached, <code>0</code> if not.</p>
+<h2 id="sdk-input--mos_usb_key_to_ascii" class="fn"><code>mos_usb_key_to_ascii</code></h2>
+<pre><code class="lang-c">char mos_usb_key_to_ascii(uint8_t scancode, uint8_t modifiers);</code></pre>
+<p>Translates a USB HID usage code to a character using the active keyboard layout.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>scancode</code></td><td>HID usage code, as in <code>syscall_input_event_t.key</code> or a window key event</td></tr><tr><td><code>modifiers</code></td><td>HID modifier byte: <code>0x02</code>/<code>0x20</code> left/right Shift, <code>0x01</code>/<code>0x10</code> left/right Ctrl, <code>0x40</code> AltGr. Caps Lock is applied by the kernel</td></tr></tbody></table></div>
+<p><strong>Returns</strong> the character, or <code>0</code> if the key has none (arrows, function keys).</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">char c = mos_usb_key_to_ascii((uint8_t)ev.key, (ev.mods &amp; SYSCALL_INPUT_MOD_SHIFT) ? 0x02 : 0);</code></pre>
+<h2 id="sdk-input--mos_usb_key_is_pressed" class="fn"><code>mos_usb_key_is_pressed</code></h2>
+<pre><code class="lang-c">uint64_t mos_usb_key_is_pressed(uint8_t scancode);</code></pre>
+<p><strong>Returns</strong> <code>1</code> while the key is held down, <code>0</code> if not. Screen owner only; other processes get <code>SYS_ERR_PERM</code>.</p>
+<h2 id="sdk-input--mos_usb_keyboard_info" class="fn"><code>mos_usb_keyboard_info</code></h2>
+<pre><code class="lang-c">uint64_t mos_usb_keyboard_info(syscall_usb_keyboard_info_t* info);</code></pre>
+<p>Copies details of the attached USB keyboard.</p>
+<div class="tw"><table><thead><tr><th><code>syscall_usb_keyboard_info_t</code> field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>address</code>, <code>port</code></td><td>USB address and root-hub port</td></tr><tr><td><code>state</code></td><td>Device state in the USB stack</td></tr><tr><td><code>vendor_id</code>, <code>product_id</code></td><td>USB IDs</td></tr><tr><td><code>class_code</code></td><td>USB class</td></tr><tr><td><code>is_keyboard</code></td><td><code>1</code></td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_NOTFOUND</code> if there is no keyboard, <code>SYS_ERR_INVAL</code> for a NULL pointer.</p>
+<h2 id="sdk-input--mos_usb_poll" class="fn"><code>mos_usb_poll</code></h2>
+<pre><code class="lang-c">uint64_t mos_usb_poll(void);</code></pre>
+<p>Polls the USB controllers once.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>.</p>
+<h2 id="sdk-input--mos_usb_init" class="fn"><code>mos_usb_init</code></h2>
+<pre><code class="lang-c">uint64_t mos_usb_init(void);</code></pre>
+<p>Re-initialises and re-enumerates the USB controllers. Kernel-privileged: a <code>.run</code> program gets <code>SYS_ERR_PERM</code>.</p>
+<h2 id="sdk-input--mos_usb" class="fn"><code>mos_usb</code></h2>
+<pre><code class="lang-c">uint64_t mos_usb(uint64_t operation, uint64_t arg1, uint64_t arg2);</code></pre>
+<p>Issues <code>SYS_USB</code> with a <code>SYS_USB_*</code> operation. The functions above wrap it.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/input.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="sdk-network" hidden><h1>Networking</h1>
+<p>IPv4 networking over <code>SYS_NET</code>: interface status, DNS, TCP clients and servers, UDP and the experimental ktls transport. Include <code>net.h</code>.</p>
+<p>Before a program can use the network the interface needs an address. Run <code>dhcp</code> in the terminal first; a <code>.run</code> program cannot do it itself (see <a href="#/docs/sdk-network/mos_net_dhcp"><code>mos_net_dhcp</code></a>).</p>
+<p>Things to know about every call here:</p>
+<nav class="fn-index" aria-label="Functions on this page"><span>Functions</span><a href="#/docs/sdk-network/mos_net_status"><code>mos_net_status</code></a><a href="#/docs/sdk-network/mos_net_is_up"><code>mos_net_is_up</code></a><a href="#/docs/sdk-network/mos_net_poll"><code>mos_net_poll</code></a><a href="#/docs/sdk-network/mos_net_resolve"><code>mos_net_resolve</code></a><a href="#/docs/sdk-network/mos_net_lookup"><code>mos_net_lookup</code></a><a href="#/docs/sdk-network/mos_net_dhcp"><code>mos_net_dhcp</code></a><a href="#/docs/sdk-network/mos_tcp_connect"><code>mos_tcp_connect</code></a><a href="#/docs/sdk-network/mos_tcp_send"><code>mos_tcp_send</code></a><a href="#/docs/sdk-network/mos_tcp_send_all"><code>mos_tcp_send_all</code></a><a href="#/docs/sdk-network/mos_tcp_recv"><code>mos_tcp_recv</code></a><a href="#/docs/sdk-network/mos_tcp_recv_exact"><code>mos_tcp_recv_exact</code></a><a href="#/docs/sdk-network/mos_tcp_state"><code>mos_tcp_state</code></a><a href="#/docs/sdk-network/mos_tcp_close"><code>mos_tcp_close</code></a><a href="#/docs/sdk-network/mos_tcp_listen"><code>mos_tcp_listen</code></a><a href="#/docs/sdk-network/mos_tcp_accept"><code>mos_tcp_accept</code></a><a href="#/docs/sdk-network/mos_tcp_unlisten"><code>mos_tcp_unlisten</code></a><a href="#/docs/sdk-network/mos_tcp_handoff"><code>mos_tcp_handoff</code></a><a href="#/docs/sdk-network/mos_udp_bind"><code>mos_udp_bind</code></a><a href="#/docs/sdk-network/mos_udp_unbind"><code>mos_udp_unbind</code></a><a href="#/docs/sdk-network/mos_udp_recv"><code>mos_udp_recv</code></a><a href="#/docs/sdk-network/mos_udp_recv_timeout"><code>mos_udp_recv_timeout</code></a><a href="#/docs/sdk-network/mos_udp_send"><code>mos_udp_send</code></a><a href="#/docs/sdk-network/mos_tls_connect"><code>mos_tls_connect</code></a><a href="#/docs/sdk-network/mos_tls_wait_established"><code>mos_tls_wait_established</code></a><a href="#/docs/sdk-network/mos_tls_accept"><code>mos_tls_accept</code></a><a href="#/docs/sdk-network/mos_tls_state"><code>mos_tls_state</code></a><a href="#/docs/sdk-network/mos_tls_send"><code>mos_tls_send</code></a><a href="#/docs/sdk-network/mos_tls_recv"><code>mos_tls_recv</code></a><a href="#/docs/sdk-network/mos_tls_close"><code>mos_tls_close</code></a><a href="#/docs/sdk-network/mos_ip_parse"><code>mos_ip_parse</code></a><a href="#/docs/sdk-network/mos_ip_to_string"><code>mos_ip_to_string</code></a><a href="#/docs/sdk-network/mos_htons"><code>mos_htons</code></a><a href="#/docs/sdk-network/mos_htonl"><code>mos_htonl</code></a><a href="#/docs/sdk-network/mos_net_call"><code>mos_net_call</code></a></nav>
+<ul><li><strong>Host order.</strong> IPv4 addresses are <code>uint32_t</code> in host order (<code>192.168.1.10</code> is <code>0xC0A8010A</code>), and ports are plain numbers. You only swap bytes for values you put inside your own packets (<a href="#/docs/sdk-network/mos_htons"><code>mos_htons</code></a>).</li><li><strong>Polled.</strong> The kernel stack only makes progress when a process calls into it. A program that stops calling <code>recv</code> stops receiving. Loop with a short <a href="#/docs/sdk-process/mos_sleep"><code>mos_sleep</code></a>, or use the blocking helpers at the end of this page.</li><li><strong>One at a time.</strong> The stack is not reentrant. A call that finds it in use by another process returns <code>SYS_ERR_BUSY</code>; retry it.</li><li><strong>Handles.</strong> Connections, listeners, UDP bindings and TLS sessions are small positive integers in separate namespaces. They belong to the process that made them; a dead process's handles are closed the next time any process connects, listens or accepts.</li><li><strong>No driver.</strong> With no network card every call except <code>mos_net_status</code> and <code>mos_tcp_state</code> returns <code>SYS_ERR_GENERIC</code>.</li></ul>
+<h2 id="sdk-network--a-small-http-client">A small HTTP client</h2>
+<pre><code class="lang-c">#include "net.h"
+#include "stdio.h"
+
+int main(void) {
+    if (!mos_net_is_up()) { mos_puts("run dhcp first\n"); return 1; }
+    uint32_t ip = mos_net_lookup("example.com", 5000);
+    if (!ip) { mos_puts("lookup failed\n"); return 1; }
+
+    long c = mos_tcp_connect(ip, 80, 5000);
+    if (c &lt;= 0) { printf("connect failed (%ld)\n", c); return 1; }
+
+    const char* req = "HEAD / HTTP/1.0\r\nHost: example.com\r\n\r\n";
+    uint32_t len = 0; while (req[len]) len++;
+    mos_tcp_send_all(c, req, len);
+
+    char buf[512];
+    long idle = mos_uptime();
+    for (;;) {
+        long n = mos_tcp_recv(c, buf, sizeof buf - 1);
+        if (n &lt; 0) break;                                  /* closed */
+        if (n == 0) {
+            if (mos_uptime() - idle &gt; 5000) break;
+            mos_sleep(5);
+            continue;
+        }
+        buf[n] = '\0'; mos_puts(buf); idle = mos_uptime();
+    }
+    mos_tcp_close(c);
+    return 0;
+}</code></pre>
+<h2 id="sdk-network--mos_net_status" class="fn"><code>mos_net_status</code></h2>
+<pre><code class="lang-c">long mos_net_status(syscall_net_status_t* out);</code></pre>
+<p>Reports the interface configuration. Never touches the stack, so it never returns <code>SYS_ERR_BUSY</code>.</p>
+<div class="tw"><table><thead><tr><th><code>syscall_net_status_t</code> field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>has_driver</code></td><td><code>1</code> if a network card driver is loaded</td></tr><tr><td><code>configured</code></td><td><code>1</code> if the interface has an IPv4 address</td></tr><tr><td><code>mac[6]</code></td><td>MAC address</td></tr><tr><td><code>local_ip</code>, <code>netmask</code>, <code>gateway</code>, <code>dns</code></td><td>Host-order IPv4 addresses</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, or <code>SYS_ERR_INVAL</code> for a NULL pointer.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">syscall_net_status_t st;
+char ip[16];
+mos_net_status(&amp;st);
+mos_ip_to_string(st.local_ip, ip);
+printf("address %s\n", ip);</code></pre>
+<h2 id="sdk-network--mos_net_is_up" class="fn"><code>mos_net_is_up</code></h2>
+<pre><code class="lang-c">bool mos_net_is_up(void);</code></pre>
+<p><strong>Returns</strong> <code>true</code> if there is a driver and the interface has an address.</p>
+<h2 id="sdk-network--mos_net_poll" class="fn"><code>mos_net_poll</code></h2>
+<pre><code class="lang-c">long mos_net_poll(void);</code></pre>
+<p>Processes whatever the network card has received, once. Cheap; safe in a loop. <code>recv</code>, <code>accept</code> and <code>udp_recv</code> already poll, so most programs never call this directly.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_BUSY</code>, or <code>SYS_ERR_GENERIC</code> with no driver.</p>
+<h2 id="sdk-network--mos_net_resolve" class="fn"><code>mos_net_resolve</code></h2>
+<pre><code class="lang-c">long mos_net_resolve(const char* hostname, uint32_t* out_ip, uint32_t timeout_ms);</code></pre>
+<p>Looks up a host name with DNS.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>hostname</code></td><td>Name to resolve</td></tr><tr><td><code>out_ip</code></td><td>Receives the host-order address</td></tr><tr><td><code>timeout_ms</code></td><td>How long to wait; <code>0</code> means 5000</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_NOTFOUND</code> if the name did not resolve, <code>SYS_ERR_GENERIC</code> if the interface has no address, <code>SYS_ERR_INVAL</code> for a NULL argument, <code>SYS_ERR_BUSY</code>.</p>
+<h2 id="sdk-network--mos_net_lookup" class="fn"><code>mos_net_lookup</code></h2>
+<pre><code class="lang-c">uint32_t mos_net_lookup(const char* host, uint32_t timeout_ms);</code></pre>
+<p>Accepts either a dotted-quad address or a host name.</p>
+<p><strong>Returns</strong> the host-order address, or <code>0</code> on failure.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">uint32_t ip = mos_net_lookup(argc &gt; 1 ? argv[1] : "10.0.2.2", 3000);</code></pre>
+<h2 id="sdk-network--mos_net_dhcp" class="fn"><code>mos_net_dhcp</code></h2>
+<pre><code class="lang-c">long mos_net_dhcp(uint32_t timeout_ms);</code></pre>
+<p>Acquires an address with DHCP. Kernel-privileged: a <code>.run</code> program always gets <code>SYS_ERR_PERM</code>, because a lease changes the address for every process on the machine. Use the terminal's <code>dhcp</code> command.</p>
+<h2 id="sdk-network--mos_tcp_connect" class="fn"><code>mos_tcp_connect</code></h2>
+<pre><code class="lang-c">long mos_tcp_connect(uint32_t ip, uint16_t port, uint32_t timeout_ms);</code></pre>
+<p>Opens a TCP connection and waits for it to be established.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>ip</code></td><td>Host-order address, not 0</td></tr><tr><td><code>port</code></td><td>Remote port, not 0</td></tr><tr><td><code>timeout_ms</code></td><td>Connect timeout; <code>0</code> means 5000</td></tr></tbody></table></div>
+<p><strong>Returns</strong> a connection handle (&gt; 0), <code>SYS_ERR_GENERIC</code> if the connection failed or timed out, there is no address or no free handle, <code>SYS_ERR_INVAL</code> for a zero address or port, <code>SYS_ERR_BUSY</code>.</p>
+<h2 id="sdk-network--mos_tcp_send" class="fn"><code>mos_tcp_send</code></h2>
+<pre><code class="lang-c">long mos_tcp_send(long handle, const void* buf, uint32_t len);</code></pre>
+<p>Sends up to 4096 bytes of <code>buf</code>.</p>
+<p><strong>Returns</strong> the number of bytes sent, which can be fewer than <code>len</code> - a short count is not an error. <code>SYS_ERR_BADFD</code> for a bad handle, <code>SYS_ERR_INVAL</code> for a NULL buffer or zero length, <code>SYS_ERR_GENERIC</code> on failure, <code>SYS_ERR_BUSY</code>.</p>
+<p><strong>Notes</strong> Use <a href="#/docs/sdk-network/mos_tcp_send_all"><code>mos_tcp_send_all</code></a> to send a whole buffer.</p>
+<h2 id="sdk-network--mos_tcp_send_all" class="fn"><code>mos_tcp_send_all</code></h2>
+<pre><code class="lang-c">bool mos_tcp_send_all(long handle, const void* buf, uint32_t len);</code></pre>
+<p>Calls <code>mos_tcp_send</code> until all of <code>buf</code> is sent.</p>
+<p><strong>Returns</strong> <code>true</code> when everything was sent, <code>false</code> as soon as a send fails.</p>
+<h2 id="sdk-network--mos_tcp_recv" class="fn"><code>mos_tcp_recv</code></h2>
+<pre><code class="lang-c">long mos_tcp_recv(long handle, void* buf, uint32_t len);</code></pre>
+<p>Reads whatever has arrived, without waiting.</p>
+<p><strong>Returns</strong> the number of bytes read; <code>0</code> if nothing has arrived yet; <code>SYS_ERR_NOTFOUND</code> once the peer has closed and everything has been read; <code>SYS_ERR_BADFD</code>, <code>SYS_ERR_INVAL</code> or <code>SYS_ERR_BUSY</code>.</p>
+<p><strong>Notes</strong> <code>0</code> means "try again later", not end of stream. Sleep a few milliseconds between empty reads.</p>
+<h2 id="sdk-network--mos_tcp_recv_exact" class="fn"><code>mos_tcp_recv_exact</code></h2>
+<pre><code class="lang-c">bool mos_tcp_recv_exact(long handle, void* buf, uint32_t len, uint32_t timeout_ms);</code></pre>
+<p>Reads exactly <code>len</code> bytes, sleeping between empty reads.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>timeout_ms</code></td><td>Gives up after this long with no new data. The timer restarts whenever data arrives</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>true</code> when <code>len</code> bytes were read, <code>false</code> if the peer closed or the timeout passed.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">uint8_t header[4];
+if (!mos_tcp_recv_exact(c, header, 4, 2000)) goto fail;</code></pre>
+<h2 id="sdk-network--mos_tcp_state" class="fn"><code>mos_tcp_state</code></h2>
+<pre><code class="lang-c">long mos_tcp_state(long handle);</code></pre>
+<p><strong>Returns</strong> one of <code>SYSCALL_NET_TCP_CLOSED</code>, <code>_CONNECTING</code>, <code>_ESTABLISHED</code>, <code>_CLOSING</code> or <code>_PEER_CLOSED</code>, or <code>SYS_ERR_BADFD</code>. Never returns <code>SYS_ERR_BUSY</code>.</p>
+<h2 id="sdk-network--mos_tcp_close" class="fn"><code>mos_tcp_close</code></h2>
+<pre><code class="lang-c">long mos_tcp_close(long handle);</code></pre>
+<p>Closes the connection and frees the handle.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_BADFD</code> or <code>SYS_ERR_BUSY</code>.</p>
+<h2 id="sdk-network--mos_tcp_listen" class="fn"><code>mos_tcp_listen</code></h2>
+<pre><code class="lang-c">long mos_tcp_listen(uint16_t port, uint32_t backlog);</code></pre>
+<p>Starts accepting connections on <code>port</code>.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>port</code></td><td>Local port, not 0. Only one listener per port machine-wide</td></tr><tr><td><code>backlog</code></td><td>Connections to queue before accepting; <code>0</code> for a small default. Clamped by the kernel</td></tr></tbody></table></div>
+<p><strong>Returns</strong> a listener handle (&gt; 0), valid only for <a href="#/docs/sdk-network/mos_tcp_accept"><code>mos_tcp_accept</code></a> and <a href="#/docs/sdk-network/mos_tcp_unlisten"><code>mos_tcp_unlisten</code></a>. <code>SYS_ERR_INVAL</code> if the port is 0 or already has a listener, <code>SYS_ERR_GENERIC</code> if there is no address or no free listener slot, <code>SYS_ERR_BUSY</code>.</p>
+<h2 id="sdk-network--mos_tcp_accept" class="fn"><code>mos_tcp_accept</code></h2>
+<pre><code class="lang-c">long mos_tcp_accept(long listener, uint32_t* out_ip, uint16_t* out_port);</code></pre>
+<p>Takes the oldest waiting client. Never blocks.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>listener</code></td><td>Handle from <code>mos_tcp_listen</code></td></tr><tr><td><code>out_ip</code>, <code>out_port</code></td><td>If not NULL, receive the client's address and port</td></tr></tbody></table></div>
+<p><strong>Returns</strong> a connection handle (&gt; 0); <code>0</code> if nobody is waiting (or every connection handle is in use); <code>SYS_ERR_BADFD</code>, <code>SYS_ERR_BUSY</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">long ls = mos_tcp_listen(8080, 0);
+for (;;) {
+    uint32_t ip; uint16_t port;
+    long c = mos_tcp_accept(ls, &amp;ip, &amp;port);
+    if (c &gt; 0) { serve(c); mos_tcp_close(c); }
+    else mos_sleep(10);
+}</code></pre>
+<h2 id="sdk-network--mos_tcp_unlisten" class="fn"><code>mos_tcp_unlisten</code></h2>
+<pre><code class="lang-c">long mos_tcp_unlisten(long listener);</code></pre>
+<p>Stops listening and frees the listener handle. Connections already accepted stay open.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_BADFD</code> or <code>SYS_ERR_BUSY</code>.</p>
+<h2 id="sdk-network--mos_tcp_handoff" class="fn"><code>mos_tcp_handoff</code></h2>
+<pre><code class="lang-c">long mos_tcp_handoff(long handle, uint32_t pid);</code></pre>
+<p>Gives a connection you own to another process, typically a child started with <a href="#/docs/sdk-process/mos_exec"><code>mos_exec</code></a> to serve it. The connection then closes when that process dies instead of when you do.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>handle</code></td><td>Connection handle you own</td></tr><tr><td><code>pid</code></td><td>New owner, not 0</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_PERM</code> if you do not own the handle, <code>SYS_ERR_BADFD</code>, <code>SYS_ERR_INVAL</code> for pid 0.</p>
+<p><strong>Notes</strong> The child needs nothing special: pass it the handle number on its command line and it can use it once the handoff is done. Until then the parent still owns it.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">char num[24]; /* format c into num */
+const char* args[] = { num };
+long pid = mos_exec("0:/programs/worker.run", args, 1);
+if (pid &gt; 0) mos_tcp_handoff(c, (uint32_t)pid);</code></pre>
+<h2 id="sdk-network--mos_udp_bind" class="fn"><code>mos_udp_bind</code></h2>
+<pre><code class="lang-c">long mos_udp_bind(uint16_t local_port);</code></pre>
+<p>Opens a UDP port for receiving (and as a default source port).</p>
+<p><strong>Returns</strong> a UDP handle (&gt; 0), <code>SYS_ERR_INVAL</code> for port 0, an error if the port is taken or all 4 bindings are in use, <code>SYS_ERR_BUSY</code>.</p>
+<h2 id="sdk-network--mos_udp_unbind" class="fn"><code>mos_udp_unbind</code></h2>
+<pre><code class="lang-c">long mos_udp_unbind(long handle);</code></pre>
+<p>Closes a UDP binding.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code> or an error for a bad handle.</p>
+<h2 id="sdk-network--mos_udp_recv" class="fn"><code>mos_udp_recv</code></h2>
+<pre><code class="lang-c">long mos_udp_recv(long handle, void* buf, uint32_t len,
+                  uint32_t* out_from_ip, uint16_t* out_from_port);</code></pre>
+<p>Takes the next queued datagram. Polls the card first; never blocks.</p>
+<p><strong>Returns</strong> the datagram's length (bytes copied), <code>0</code> if none is waiting, <code>SYS_ERR_BADFD</code>, <code>SYS_ERR_INVAL</code>, <code>SYS_ERR_BUSY</code>.</p>
+<p><strong>Notes</strong> A datagram larger than <code>len</code> is truncated and the rest is lost.</p>
+<h2 id="sdk-network--mos_udp_recv_timeout" class="fn"><code>mos_udp_recv_timeout</code></h2>
+<pre><code class="lang-c">long mos_udp_recv_timeout(long handle, void* buf, uint32_t len,
+                          uint32_t* out_from_ip, uint16_t* out_from_port,
+                          uint32_t timeout_ms);</code></pre>
+<p>Waits up to <code>timeout_ms</code> for a datagram.</p>
+<p><strong>Returns</strong> its length, <code>0</code> on timeout, or a negative error.</p>
+<h2 id="sdk-network--mos_udp_send" class="fn"><code>mos_udp_send</code></h2>
+<pre><code class="lang-c">long mos_udp_send(long handle, uint32_t dst_ip, uint16_t dst_port,
+                  uint16_t src_port, const void* buf, uint32_t len);</code></pre>
+<p>Sends one datagram.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>handle</code></td><td>A UDP handle; used for its port when <code>src_port</code> is 0</td></tr><tr><td><code>dst_ip</code></td><td>Destination, or <code>SYSCALL_NET_IP_BROADCAST</code> for 255.255.255.255</td></tr><tr><td><code>dst_port</code></td><td>Destination port</td></tr><tr><td><code>src_port</code></td><td>Source port, or <code>0</code> to use the handle's</td></tr><tr><td><code>buf</code>, <code>len</code></td><td>Payload, 1 … 1024 bytes</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>len</code>, <code>SYS_ERR_INVAL</code> for an empty or oversize payload or no source port, <code>SYS_ERR_GENERIC</code> if sending failed or there is no address, <code>SYS_ERR_BUSY</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">long u = mos_udp_bind(40000);
+mos_udp_send(u, SYSCALL_NET_IP_BROADCAST, 40000, 0, "hello?", 6);
+char reply[256]; uint32_t from; uint16_t fport;
+long n = mos_udp_recv_timeout(u, reply, sizeof reply, &amp;from, &amp;fport, 2000);</code></pre>
+<p><strong>Notes</strong> Under QEMU's <code>-netdev user</code> the guest is behind NAT and LAN broadcasts never reach it; use a tap or bridge network to test discovery.</p>
+<h2 id="sdk-network--mos_tls_connect" class="fn"><code>mos_tls_connect</code></h2>
+<pre><code class="lang-c">long mos_tls_connect(uint32_t ip, uint16_t port, uint32_t timeout_ms);</code></pre>
+<p>Opens a ktls session: a TCP connection plus a hello. The handshake finishes in the background.</p>
+<p><strong>Returns</strong> a TLS handle (&gt; 0) or a negative error.</p>
+<p><strong>Notes</strong> ktls is a transport shape, not real TLS: there are no certificates and the session key crosses the wire in the clear. It does not talk to ordinary HTTPS servers and gives no security. (The terminal's <code>wget</code> uses the kernel's separate TLS 1.3 client.)</p>
+<h2 id="sdk-network--mos_tls_wait_established" class="fn"><code>mos_tls_wait_established</code></h2>
+<pre><code class="lang-c">bool mos_tls_wait_established(long handle, uint32_t timeout_ms);</code></pre>
+<p>Polls <a href="#/docs/sdk-network/mos_tls_state"><code>mos_tls_state</code></a> until the handshake completes.</p>
+<p><strong>Returns</strong> <code>true</code> when established, <code>false</code> if it failed or <code>timeout_ms</code> passed.</p>
+<h2 id="sdk-network--mos_tls_accept" class="fn"><code>mos_tls_accept</code></h2>
+<pre><code class="lang-c">long mos_tls_accept(long tcp_handle);</code></pre>
+<p>Turns a TCP connection you own into a server-side ktls session.</p>
+<p><strong>Returns</strong> a TLS handle (&gt; 0) or a negative error. On success the TCP handle must no longer be used (closing the TLS handle closes it); on failure it is still yours.</p>
+<h2 id="sdk-network--mos_tls_state" class="fn"><code>mos_tls_state</code></h2>
+<pre><code class="lang-c">long mos_tls_state(long handle);</code></pre>
+<p>Advances the handshake and reports the session state.</p>
+<p><strong>Returns</strong> <code>SYSCALL_NET_TLS_CLOSED</code> (failed or closed), <code>SYSCALL_NET_TLS_HANDSHAKING</code> or <code>SYSCALL_NET_TLS_ESTABLISHED</code>, or a negative error (<code>SYS_ERR_BUSY</code>: retry).</p>
+<h2 id="sdk-network--mos_tls_send" class="fn"><code>mos_tls_send</code></h2>
+<pre><code class="lang-c">long mos_tls_send(long handle, const void* buf, uint32_t len);</code></pre>
+<p><strong>Returns</strong> bytes sent (at most 4096 per call; short counts are normal), <code>SYS_ERR_AGAIN</code> while the handshake is still running, <code>SYS_ERR_BUSY</code>.</p>
+<h2 id="sdk-network--mos_tls_recv" class="fn"><code>mos_tls_recv</code></h2>
+<pre><code class="lang-c">long mos_tls_recv(long handle, void* buf, uint32_t len);</code></pre>
+<p><strong>Returns</strong> bytes read, <code>0</code> if nothing has arrived, <code>SYS_ERR_NOTFOUND</code> once the session is closed and drained.</p>
+<h2 id="sdk-network--mos_tls_close" class="fn"><code>mos_tls_close</code></h2>
+<pre><code class="lang-c">long mos_tls_close(long handle);</code></pre>
+<p>Closes the session and its TCP connection.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code> or a negative error.</p>
+<h2 id="sdk-network--mos_ip_parse" class="fn"><code>mos_ip_parse</code></h2>
+<pre><code class="lang-c">uint32_t mos_ip_parse(const char* dotted);</code></pre>
+<p>Parses <code>"a.b.c.d"</code>.</p>
+<p><strong>Returns</strong> the host-order address, or <code>0</code> if the string is not exactly four decimal octets of 0-255.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">uint32_t gw = mos_ip_parse("10.0.2.2");   /* 0x0A000202 */</code></pre>
+<h2 id="sdk-network--mos_ip_to_string" class="fn"><code>mos_ip_to_string</code></h2>
+<pre><code class="lang-c">void mos_ip_to_string(uint32_t ip, char* out);</code></pre>
+<p>Formats a host-order address as dotted decimal. <code>out</code> must hold at least 16 bytes.</p>
+<h2 id="sdk-network--mos_htons" class="fn"><code>mos_htons</code></h2>
+<pre><code class="lang-c">uint16_t mos_htons(uint16_t v);</code></pre>
+<p>Swaps the bytes of a 16-bit value (host to network order). <code>mos_ntohs</code> is the same function. Only needed for fields inside your own packet formats.</p>
+<h2 id="sdk-network--mos_htonl" class="fn"><code>mos_htonl</code></h2>
+<pre><code class="lang-c">uint32_t mos_htonl(uint32_t v);</code></pre>
+<p>Swaps the bytes of a 32-bit value. <code>mos_ntohl</code> is the same function.</p>
+<h2 id="sdk-network--mos_net_call" class="fn"><code>mos_net_call</code></h2>
+<pre><code class="lang-c">long mos_net_call(syscall_net_request_t* request);</code></pre>
+<p>Issues <code>SYS_NET</code> with a filled <code>syscall_net_request_t</code>. Every function on this page builds a zeroed request, sets <code>op</code> and the fields that operation uses, and calls this.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/network.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="sdk-sysinfo" hidden><h1>System information</h1>
+<p>Machine-wide statistics over <code>SYS_SYSINFO</code>. Include <code>user_sysinfo.h</code>. Every call is allowed for user programs, returns a <code>uint64_t</code>, and returns <code>SYS_ERR_INVAL</code> for an unknown query.</p>
+<p><strong>Example</strong> - a one-line status bar:</p>
+<nav class="fn-index" aria-label="Functions on this page"><span>Functions</span><a href="#/docs/sdk-sysinfo/mos_sysinfo_cpu_usage"><code>mos_sysinfo_cpu_usage</code></a><a href="#/docs/sdk-sysinfo/mos_sysinfo_core_usage"><code>mos_sysinfo_core_usage</code></a><a href="#/docs/sdk-sysinfo/mos_sysinfo_core_count"><code>mos_sysinfo_core_count</code></a><a href="#/docs/sdk-sysinfo/mos_sysinfo_ram_total"><code>mos_sysinfo_ram_total</code></a><a href="#/docs/sdk-sysinfo/mos_sysinfo_ram_used"><code>mos_sysinfo_ram_used</code></a><a href="#/docs/sdk-sysinfo/mos_sysinfo_ram_free"><code>mos_sysinfo_ram_free</code></a><a href="#/docs/sdk-sysinfo/mos_sysinfo_heap_used"><code>mos_sysinfo_heap_used</code></a><a href="#/docs/sdk-sysinfo/mos_sysinfo_heap_free"><code>mos_sysinfo_heap_free</code></a><a href="#/docs/sdk-sysinfo/mos_sysinfo_pmm_used_pages"><code>mos_sysinfo_pmm_used_pages</code></a><a href="#/docs/sdk-sysinfo/mos_sysinfo_pmm_free_pages"><code>mos_sysinfo_pmm_free_pages</code></a><a href="#/docs/sdk-sysinfo/mos_sysinfo_uptime_ms"><code>mos_sysinfo_uptime_ms</code></a><a href="#/docs/sdk-sysinfo/mos_sysinfo_process_count"><code>mos_sysinfo_process_count</code></a><a href="#/docs/sdk-sysinfo/mos_sysinfo"><code>mos_sysinfo</code></a></nav>
+<pre><code class="lang-c">#include "user_sysinfo.h"
+#include "stdio.h"
+
+int main(void) {
+    printf("cpu %lu%%  ram %lu/%lu MiB  %lu cores  %lu procs  up %lu s\n",
+           (unsigned long)mos_sysinfo_cpu_usage(),
+           (unsigned long)(mos_sysinfo_ram_used() &gt;&gt; 20),
+           (unsigned long)(mos_sysinfo_ram_total() &gt;&gt; 20),
+           (unsigned long)mos_sysinfo_core_count(),
+           (unsigned long)mos_sysinfo_process_count(),
+           (unsigned long)(mos_sysinfo_uptime_ms() / 1000));
+    return 0;
+}</code></pre>
+<h2 id="sdk-sysinfo--mos_sysinfo_cpu_usage" class="fn"><code>mos_sysinfo_cpu_usage</code></h2>
+<pre><code class="lang-c">uint64_t mos_sysinfo_cpu_usage(void);</code></pre>
+<p><strong>Returns</strong> average CPU usage across all online cores, in percent (0-100).</p>
+<h2 id="sdk-sysinfo--mos_sysinfo_core_usage" class="fn"><code>mos_sysinfo_core_usage</code></h2>
+<pre><code class="lang-c">uint64_t mos_sysinfo_core_usage(uint32_t core_id);</code></pre>
+<p><strong>Returns</strong> the usage of one core in percent, or <code>SYS_ERR_INVAL</code> if <code>core_id</code> is out of range or that core is not online.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">uint64_t cores = mos_sysinfo_core_count();
+for (uint32_t i = 0; i &lt; cores; i++)
+    printf("core %u: %lu%%\n", i, (unsigned long)mos_sysinfo_core_usage(i));</code></pre>
+<h2 id="sdk-sysinfo--mos_sysinfo_core_count" class="fn"><code>mos_sysinfo_core_count</code></h2>
+<pre><code class="lang-c">uint64_t mos_sysinfo_core_count(void);</code></pre>
+<p><strong>Returns</strong> the number of online cores.</p>
+<h2 id="sdk-sysinfo--mos_sysinfo_ram_total" class="fn"><code>mos_sysinfo_ram_total</code></h2>
+<pre><code class="lang-c">uint64_t mos_sysinfo_ram_total(void);</code></pre>
+<p><strong>Returns</strong> total RAM in bytes.</p>
+<h2 id="sdk-sysinfo--mos_sysinfo_ram_used" class="fn"><code>mos_sysinfo_ram_used</code></h2>
+<pre><code class="lang-c">uint64_t mos_sysinfo_ram_used(void);</code></pre>
+<p><strong>Returns</strong> RAM in use in bytes: kernel heap in use plus physical pages in use. An approximation.</p>
+<h2 id="sdk-sysinfo--mos_sysinfo_ram_free" class="fn"><code>mos_sysinfo_ram_free</code></h2>
+<pre><code class="lang-c">uint64_t mos_sysinfo_ram_free(void);</code></pre>
+<p><strong>Returns</strong> <code>ram_total - ram_used</code>, or 0 if the estimate of used memory exceeds the total.</p>
+<h2 id="sdk-sysinfo--mos_sysinfo_heap_used" class="fn"><code>mos_sysinfo_heap_used</code></h2>
+<pre><code class="lang-c">uint64_t mos_sysinfo_heap_used(void);</code></pre>
+<p><strong>Returns</strong> bytes allocated from the kernel heap, which also backs every program's <code>malloc</code>.</p>
+<h2 id="sdk-sysinfo--mos_sysinfo_heap_free" class="fn"><code>mos_sysinfo_heap_free</code></h2>
+<pre><code class="lang-c">uint64_t mos_sysinfo_heap_free(void);</code></pre>
+<p><strong>Returns</strong> free bytes in the kernel heap.</p>
+<h2 id="sdk-sysinfo--mos_sysinfo_pmm_used_pages" class="fn"><code>mos_sysinfo_pmm_used_pages</code></h2>
+<pre><code class="lang-c">uint64_t mos_sysinfo_pmm_used_pages(void);</code></pre>
+<p><strong>Returns</strong> physical 4 KiB pages in use.</p>
+<h2 id="sdk-sysinfo--mos_sysinfo_pmm_free_pages" class="fn"><code>mos_sysinfo_pmm_free_pages</code></h2>
+<pre><code class="lang-c">uint64_t mos_sysinfo_pmm_free_pages(void);</code></pre>
+<p><strong>Returns</strong> free physical 4 KiB pages.</p>
+<h2 id="sdk-sysinfo--mos_sysinfo_uptime_ms" class="fn"><code>mos_sysinfo_uptime_ms</code></h2>
+<pre><code class="lang-c">uint64_t mos_sysinfo_uptime_ms(void);</code></pre>
+<p><strong>Returns</strong> milliseconds since boot, the same value as <a href="#/docs/sdk-process/mos_uptime"><code>mos_uptime</code></a>.</p>
+<h2 id="sdk-sysinfo--mos_sysinfo_process_count" class="fn"><code>mos_sysinfo_process_count</code></h2>
+<pre><code class="lang-c">uint64_t mos_sysinfo_process_count(void);</code></pre>
+<p><strong>Returns</strong> the number of processes. To list them use <a href="#/docs/sdk-process/mos_pslist"><code>mos_pslist</code></a>.</p>
+<h2 id="sdk-sysinfo--mos_sysinfo" class="fn"><code>mos_sysinfo</code></h2>
+<pre><code class="lang-c">uint64_t mos_sysinfo(uint64_t op);</code></pre>
+<p>Issues <code>SYS_SYSINFO</code> with a <code>SYS_SYSINFO_*</code> query, or <code>SYS_SYSINFO_CORE_USAGE_BASE + core_id</code> for one core. The functions above wrap it.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/sysinfo.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="sdk-packages" hidden><h1>Packages</h1>
+<p><code>.mpkg</code> archives over <code>SYS_PKG</code>. Include <code>minimalos.h</code>.</p>
+<p>An <code>.mpkg</code> holds files and directories, stored or LZSS-compressed. The terminal's <code>pkg</code> command and the <code>dlr</code> package client use the same calls.</p>
+<nav class="fn-index" aria-label="Functions on this page"><span>Functions</span><a href="#/docs/sdk-packages/mos_pkg_unzip"><code>mos_pkg_unzip</code></a><a href="#/docs/sdk-packages/mos_pkg_zip"><code>mos_pkg_zip</code></a><a href="#/docs/sdk-packages/mos_pkg_info"><code>mos_pkg_info</code></a></nav>
+<h2 id="sdk-packages--mos_pkg_unzip" class="fn"><code>mos_pkg_unzip</code></h2>
+<pre><code class="lang-c">long mos_pkg_unzip(const char* archive_path, const char* target_dir,
+                   uint32_t* out_installed, uint32_t* out_failed);</code></pre>
+<p>Extracts an archive into a directory.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>archive_path</code></td><td>The <code>.mpkg</code> file</td></tr><tr><td><code>target_dir</code></td><td>Directory to extract into, for example <code>"0:/"</code></td></tr><tr><td><code>out_installed</code></td><td>If not NULL, receives the number of entries extracted</td></tr><tr><td><code>out_failed</code></td><td>If not NULL, receives the number of entries that failed</td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code> if the archive was processed, <code>SYS_ERR_GENERIC</code> if it could not be read, <code>SYS_ERR_INVAL</code> for a NULL path or target.</p>
+<p><strong>Notes</strong> Success means the archive was read; individual entries can still fail (invalid names are rejected, for one). Check <code>out_failed</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">uint32_t ok = 0, bad = 0;
+if (mos_pkg_unzip("0:/downloads/app.mpkg", "0:/", &amp;ok, &amp;bad) == 0)
+    printf("installed %u entries, %u failed\n", ok, bad);</code></pre>
+<h2 id="sdk-packages--mos_pkg_zip" class="fn"><code>mos_pkg_zip</code></h2>
+<pre><code class="lang-c">long mos_pkg_zip(const char* source_path, const char* algorithm,
+                 char* out_path, uint32_t out_path_size);</code></pre>
+<p>Archives a file or directory as <code>&lt;source_path&gt;.mpkg</code>.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>source_path</code></td><td>File or directory to pack</td></tr><tr><td><code>algorithm</code></td><td><code>"lzss"</code>, <code>"store"</code>, or NULL for the default (LZSS)</td></tr><tr><td><code>out_path</code></td><td>If not NULL, receives the path of the archive written</td></tr><tr><td><code>out_path_size</code></td><td>Size of <code>out_path</code></td></tr></tbody></table></div>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_GENERIC</code> on failure, <code>SYS_ERR_INVAL</code> for a NULL source.</p>
+<p><strong>Example</strong></p>
+<pre><code class="lang-c">char made[128];
+if (mos_pkg_zip("0:/projects/game", NULL, made, sizeof made) == 0)
+    printf("wrote %s\n", made);</code></pre>
+<h2 id="sdk-packages--mos_pkg_info" class="fn"><code>mos_pkg_info</code></h2>
+<pre><code class="lang-c">long mos_pkg_info(const char* archive_path, uint32_t* out_entry_count);</code></pre>
+<p>Reads an archive's entry count without extracting it.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code>, <code>SYS_ERR_GENERIC</code> if the archive is invalid, <code>SYS_ERR_INVAL</code> for a NULL path.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/packages.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<article class="doc" data-doc="sdk-managers" hidden><h1>Device managers</h1>
+<p>Calls into the kernel's GPU, audio, storage and USB managers over <code>SYS_MANAGER</code>. Include <code>x86_64/user_managers.h</code>.</p>
+<p>These exist for kernel-privileged code such as the boot sequence and the terminal. A <code>.run</code> program may only call <a href="#/docs/sdk-managers/mos_audio_has_data"><code>mos_audio_has_data</code></a>; every other operation returns <code>SYS_ERR_PERM</code> to a user process, because it reconfigures hardware the whole system shares.</p>
+<nav class="fn-index" aria-label="Functions on this page"><span>Functions</span><a href="#/docs/sdk-managers/mos_audio_has_data"><code>mos_audio_has_data</code></a><a href="#/docs/sdk-managers/mos_audio_init"><code>mos_audio_init</code></a><a href="#/docs/sdk-managers/mos_audio_start"><code>mos_audio_start</code></a><a href="#/docs/sdk-managers/mos_audio_update"><code>mos_audio_update</code></a><a href="#/docs/sdk-managers/mos_audio_set_sample_rate"><code>mos_audio_set_sample_rate</code></a><a href="#/docs/sdk-managers/mos_gpu_init"><code>mos_gpu_init</code></a><a href="#/docs/sdk-managers/mos_storage_init"><code>mos_storage_init</code></a><a href="#/docs/sdk-managers/mos_usb_manager_init"><code>mos_usb_manager_init</code></a><a href="#/docs/sdk-managers/mos_manager"><code>mos_manager</code></a></nav>
+<h2 id="sdk-managers--mos_audio_has_data" class="fn"><code>mos_audio_has_data</code></h2>
+<pre><code class="lang-c">uint64_t mos_audio_has_data(void);</code></pre>
+<p><strong>Returns</strong> <code>1</code> if the audio manager has data queued, <code>0</code> if not. Allowed for user programs.</p>
+<h2 id="sdk-managers--mos_audio_init" class="fn"><code>mos_audio_init</code></h2>
+<pre><code class="lang-c">uint64_t mos_audio_init(void);</code></pre>
+<p>Initialises the audio manager (AC'97 or PC speaker). Kernel-privileged.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code> or <code>SYS_ERR_GENERIC</code>.</p>
+<h2 id="sdk-managers--mos_audio_start" class="fn"><code>mos_audio_start</code></h2>
+<pre><code class="lang-c">uint64_t mos_audio_start(void);</code></pre>
+<p>Starts audio playback. Kernel-privileged.</p>
+<h2 id="sdk-managers--mos_audio_update" class="fn"><code>mos_audio_update</code></h2>
+<pre><code class="lang-c">uint64_t mos_audio_update(void);</code></pre>
+<p>Lets the audio manager refill its buffers. Kernel-privileged.</p>
+<h2 id="sdk-managers--mos_audio_set_sample_rate" class="fn"><code>mos_audio_set_sample_rate</code></h2>
+<pre><code class="lang-c">uint64_t mos_audio_set_sample_rate(uint32_t rate_hz);</code></pre>
+<p>Sets the output sample rate in Hz. Kernel-privileged.</p>
+<h2 id="sdk-managers--mos_gpu_init" class="fn"><code>mos_gpu_init</code></h2>
+<pre><code class="lang-c">uint64_t mos_gpu_init(void);</code></pre>
+<p>Initialises the GPU manager. Kernel-privileged.</p>
+<p><strong>Returns</strong> <code>SYS_SUCCESS</code> or <code>SYS_ERR_GENERIC</code>.</p>
+<h2 id="sdk-managers--mos_storage_init" class="fn"><code>mos_storage_init</code></h2>
+<pre><code class="lang-c">uint64_t mos_storage_init(void);</code></pre>
+<p>Probes storage controllers. Kernel-privileged.</p>
+<h2 id="sdk-managers--mos_usb_manager_init" class="fn"><code>mos_usb_manager_init</code></h2>
+<pre><code class="lang-c">uint64_t mos_usb_manager_init(void);</code></pre>
+<p>Initialises the USB manager. Kernel-privileged.</p>
+<h2 id="sdk-managers--mos_manager" class="fn"><code>mos_manager</code></h2>
+<pre><code class="lang-c">uint64_t mos_manager(uint64_t manager, uint64_t operation, uint64_t value);</code></pre>
+<p>Issues <code>SYS_MANAGER</code>.</p>
+<div class="tw"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><code>manager</code></td><td><code>SYS_MANAGER_GPU</code>, <code>_AUDIO</code>, <code>_STORAGE</code> or <code>_USB</code></td></tr><tr><td><code>operation</code></td><td><code>SYS_MANAGER_INIT</code>, <code>_UPDATE</code>, <code>_START</code>, <code>_HAS_DATA</code> or <code>_SET_SAMPLE_RATE</code></td></tr><tr><td><code>value</code></td><td>Operation argument (the sample rate), otherwise 0</td></tr></tbody></table></div>
+<p><strong>Returns</strong> the manager's result, or <code>SYS_ERR_INVAL</code> for an unknown manager or operation.</p><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/managers.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<!-- /sdk-docs:pages --></div></main>
 <main id="pages" class="docs" hidden>
 <nav class="side" aria-label="Projects"><span class="h">Projects</span><a href="#/p/minimal-os" data-page-nav="minimal-os">Minimal-OS</a><a href="#/p/sdk" data-page-nav="sdk">Minimal-OS SDK</a><a href="#/p/minimassl" data-page-nav="minimassl">MinimaSSL</a><a href="#/p/mosdesk" data-page-nav="mosdesk">MOSdesk</a><a href="#/p/moswm" data-page-nav="moswm">mosWM</a><a href="#/p/studio" data-page-nav="studio">Run Studio</a><a href="#/red-sandbox" data-page-nav="red-sandbox">Red Sandbox</a></nav>
 <div>
@@ -1462,7 +2657,7 @@ qemu-system-x86_64 -cdrom kernel.iso -m 1024M -boot d -usb -device usb-kbd \
 <p class="eyebrow">Toolchain · C, C++ · v1.1</p>
 <h1>Minimal-OS SDK</h1>
 <p class="intro">Everything needed to write programs for Minimal-OS on a Linux machine: freestanding headers, a tiny C runtime, a linker script, and scripts that build a <code>.run</code> program or a <code>.slib</code> library bundle.</p>
-<div class="btns"><a class="btn primary" href="https://github.com/fsminecrafter/Minimal-OS-SDK">Source</a><a class="btn" href="studio/">Try it in Run Studio</a><a class="btn" href="#/docs/user-sdk-syscalls">Syscall reference</a></div>
+<div class="btns"><a class="btn primary" href="https://github.com/fsminecrafter/Minimal-OS-SDK">Source</a><a class="btn" href="studio/">Try it in Run Studio</a><a class="btn" href="#/docs/sdk-functions">Function reference</a><a class="btn" href="#/docs/user-sdk-syscalls">Syscall reference</a></div>
 <h2>Install</h2>
 <pre><code>./install-toolchain.sh     # compiler and linker (Debian/Ubuntu)
 ./install.sh               # puts MSDK / msdk on your PATH</code></pre>
@@ -1744,14 +2939,19 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
   function mark(r){top.forEach(function(a){a.dataset.route===r?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current')})}
   function route(){
     var h=location.hash,m;
-    if((m=h.match(/^#\/docs(?:\/([\w-]+))?/))){
-      var s=m[1]||'system-overview';
+    if((m=h.match(/^#\/docs(?:\/([\w-]+))?(?:\/([\w-]+))?/))){
+      var s=m[1]&&docs.querySelector('[data-doc="'+m[1]+'"]')?m[1]:'system-overview';
       show(docs);
       arts.forEach(function(a){a.hidden=a.dataset.doc!==s});
       links.forEach(function(l){l.dataset.nav===s?l.setAttribute('aria-current','page'):l.removeAttribute('aria-current')});
       var a=docs.querySelector('.doc:not([hidden])');
       document.title=(a?a.querySelector('h1').textContent:'Docs')+' · Xlabs';
-      mark('docs');window.scrollTo(0,0);
+      mark('docs');
+      window.scrollTo(0,0);
+      var cur=docs.querySelector('.side [aria-current]');
+      if(cur&&window.innerWidth>820)cur.scrollIntoView({block:'nearest'});
+      var t=m[2]&&document.getElementById(s+'--'+m[2]);
+      if(t)t.scrollIntoView();
     }else if((m=h.match(/^#\/p\/([\w-]+)/))){
       var id=pages.querySelector('[data-page="'+m[1]+'"]')?m[1]:'minimal-os';
       show(pages);
