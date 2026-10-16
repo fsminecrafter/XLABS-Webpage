@@ -514,9 +514,25 @@ function openTemplates() {
   $('newDialog').showModal();
 }
 
+// F1: the docs entry for the identifier under the cursor, or show/hide the docs
+function docsAtCursor() {
+  const dv = window.DocsView;
+  if (!dv) return;
+  let word = '';
+  if (cm && cm.hasFocus()) {
+    const r = cm.findWordAt(cm.getCursor());
+    word = cm.getRange(r.anchor, r.head);
+  } else if (textarea && document.activeElement === textarea) {
+    const v = textarea.value, at = textarea.selectionStart;
+    word = (v.slice(0, at).match(/\w*$/)[0] + v.slice(at).match(/^\w*/)[0]);
+  }
+  if (dv.has(word)) dv.open(word); else dv.toggle();
+}
+
 function init() {
   project = loadProject();
   setupEditor();
+  if (window.DocsView) window.DocsView.onResize = () => { if (cm) cm.refresh(); };
   $('name').value = project.name;
   $('args').value = project.args || '';
   applyName();
@@ -545,6 +561,7 @@ function init() {
     if (mod && e.key === 'Enter') { e.preventDefault(); run(); }
     else if (mod && e.key === '.') { e.preventDefault(); stop(); }
     else if (mod && (e.key === 's' || e.key === 'S')) { e.preventDefault(); save(true); status('Saved in this browser'); }
+    else if (e.key === 'F1' && !mod) { e.preventDefault(); docsAtCursor(); }
   });
   const pane = document.querySelector('.editor');
   pane.addEventListener('dragover', (e) => { e.preventDefault(); pane.classList.add('drop'); });

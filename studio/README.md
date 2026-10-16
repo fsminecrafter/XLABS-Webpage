@@ -13,6 +13,7 @@ Open `studio/index.html` through a web server (Web Workers do not run from
 | --- | --- |
 | `index.html` | The page: layout and styles |
 | `studio.js` | Project storage, editor tabs, run/stop, builds and downloads |
+| `docsview.js` | The docs pane: the split-screen gutters, the collapsible page list, search and F1 lookup |
 | `desktop.js` | The preview desktop: mosWM-style windows, taskbar, terminal, input |
 | `worker.js` | Runs a program: compiles it with the JS back end and emulates the Minimal-OS kernel (syscalls, window manager, MinimaFS, heap, graphics, input) |
 | `mcc-front.js` | mcc, the C compiler: preprocessor, parser, type checker |
@@ -21,6 +22,7 @@ Open `studio/index.html` through a web server (Web Workers do not run from
 | `mcc-x64.js` | mcc back end for builds (x86_64 code, ELF writer, `MINIRUN1` and `MPKG0001` bundlers) |
 | `sdk.js` | Generated: the Minimal-OS SDK headers plus freestanding `stdint.h`, `stdarg.h`, … and the crt0 |
 | `templates.js` | Generated: the sample projects |
+| `docs.js` | Generated: the SDK function reference and the Minimal-OS docs, for the docs pane |
 | `vendor/` | CodeMirror 5 (MIT), the editor |
 
 ## Regenerating
@@ -28,12 +30,18 @@ Open `studio/index.html` through a web server (Web Workers do not run from
 ```sh
 node studio/tools/build-sdk.mjs path/to/Minimal-OS-SDK   # after the SDK headers change
 node studio/tools/build-templates.mjs                    # after editing studio/templates/
+node tools/build-sdk-docs.mjs path/to/Minimal-OS-SDK     # after the SDK's docs/ change
 ```
 
 `build-sdk.mjs` copies the SDK's `include/` tree (including `iostream`) unchanged
 except for the three inline-assembly syscall stubs, whose bodies become mcc's
 `__syscall` builtin.
 Freestanding headers and the crt0 live in `tools/builtin/`.
+
+`tools/build-sdk-docs.mjs` (at the repository root) renders the SDK's
+`docs/*.md` into the website's Docs → SDK functions pages in `index.html`, and
+writes `studio/docs.js` with those pages plus the Minimal-OS docs already in
+`index.html`.
 
 ## Tests
 
