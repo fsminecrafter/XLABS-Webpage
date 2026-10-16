@@ -13,7 +13,9 @@ Open `studio/index.html` through a web server (Web Workers do not run from
 | --- | --- |
 | `index.html` | The page: layout and styles |
 | `studio.js` | Project storage, editor tabs, run/stop, builds and downloads |
-| `docsview.js` | The docs pane: the split-screen gutters, the collapsible page list, search and F1 lookup |
+| `layout.js` | The panes: order, docking by dragging a top bar, gutters, minimise / hide, preview full screen |
+| `docsview.js` | The docs pane: the collapsible page list, search, content and F1 lookup |
+| `fonts/` | Inter (SIL OFL), the fonts mosWM installs; the preview puts them at the same path so smooth text works there |
 | `desktop.js` | The preview desktop: mosWM-style windows, taskbar, terminal, input |
 | `worker.js` | Runs a program: compiles it with the JS back end and emulates the Minimal-OS kernel (syscalls, window manager, MinimaFS, heap, graphics, input) |
 | `mcc-front.js` | mcc, the C compiler: preprocessor, parser, type checker |

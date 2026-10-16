@@ -1,100 +1,30 @@
-/* Run Studio: the docs pane, and the draggable gutters between the panes. */
+/* Run Studio: the docs pane (its page list, search, content and F1 lookup).
+ * Where the pane sits and how big it is belongs to layout.js. */
 (function () {
 'use strict';
 const $ = (id) => document.getElementById(id);
 const DATA = window.STUDIO_DOCS || { categories: [], functions: {} };
-const STORE = 'xlabs.studio.layout.v1';
-const MIN = { editor: 260, docs: 240, preview: 260 };
+const STORE = 'xlabs.studio.docs.v1';
+const layout = window.StudioLayout;
 
-const main = document.querySelector('main');
-const editor = document.querySelector('.pane.editor');
-const preview = document.querySelector('.pane.preview');
-const pane = $('docsPane'), side = $('docsSide'), content = $('docsContent'), list = $('docsList'), search = $('docsSearch');
-const gutterA = $('gutterA'), gutterB = $('gutterB');
+const side = $('docsSide'), content = $('docsContent'), list = $('docsList'), search = $('docsSearch');
 
 const pages = new Map();
 for (const c of DATA.categories) for (const p of c.pages) pages.set(p.id, Object.assign({ category: c.name }, p));
 const fnNames = Object.keys(DATA.functions).sort((a, b) => a.replace(/^mos_/, '').localeCompare(b.replace(/^mos_/, '')));
 
-// ---------------------------------------------------------------------
-//  Layout state: pane widths as fractions of <main>, kept in this browser
-// ---------------------------------------------------------------------
-let state = { open: false, editor: 0.465, docs: 0.3, side: true, page: 'sdk-functions', anchor: '' };
-try { Object.assign(state, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) { /* storage blocked */ }
+let state = { side: true, page: 'sdk-functions', anchor: '' };
+try {
+  const old = JSON.parse(localStorage.getItem(STORE) || localStorage.getItem('xlabs.studio.layout.v1') || '{}');
+  for (const k of Object.keys(state)) if (old[k] !== undefined) state[k] = old[k];
+} catch (e) { /* storage blocked */ }
 function persist() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* storage blocked */ } }
 
-let onResize = () => {};
-const stacked = () => window.matchMedia('(max-width: 980px)').matches;
-
-function apply() {
-  pane.hidden = !state.open;
-  gutterB.hidden = !state.open;
-  $('docsToggle').setAttribute('aria-pressed', String(state.open));
+function applySide() {
   side.hidden = !state.side;
-  pane.classList.toggle('noside', !state.side);
   const t = $('docsSideToggle');
   t.setAttribute('aria-expanded', String(state.side));
   t.title = state.side ? 'Hide the page list' : 'Show the page list';
-  if (stacked()) {
-    editor.style.flexBasis = pane.style.flexBasis = '';
-  } else {
-    clamp();
-    editor.style.flexBasis = (state.editor * 100) + '%';
-    pane.style.flexBasis = (state.docs * 100) + '%';
-  }
-  for (const g of [gutterA, gutterB]) {
-    const left = g === gutterA ? editor : pane;
-    g.setAttribute('aria-valuenow', String(Math.round((left.getBoundingClientRect().width / Math.max(1, main.clientWidth)) * 100)));
-  }
-  onResize();
-}
-
-// Keep every visible pane at least its minimum width.
-const lim = (v, lo, hi) => Math.min(Math.max(v, lo), Math.max(lo, hi));
-function mins() { const W = Math.max(1, main.clientWidth); return { e: MIN.editor / W, d: MIN.docs / W, p: MIN.preview / W }; }
-function clamp() {
-  const m = mins();
-  if (state.open) {
-    state.docs = lim(state.docs, m.d, 1 - m.e - m.p);
-    state.editor = lim(state.editor, m.e, 1 - state.docs - m.p);
-  } else state.editor = lim(state.editor, m.e, 1 - m.p);
-}
-
-// A gutter trades width between the two panes on either side of it.
-function drag(gutter) {
-  const move = (d) => {
-    const m = mins();
-    if (gutter === gutterB) state.docs = lim(state.docs + d, m.d, 1 - state.editor - m.p);
-    else if (state.open) {
-      const pair = state.editor + state.docs;
-      state.editor = lim(state.editor + d, m.e, pair - m.d);
-      state.docs = pair - state.editor;
-    } else state.editor = lim(state.editor + d, m.e, 1 - m.p);
-    apply();
-  };
-  gutter.addEventListener('pointerdown', (e) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    gutter.setPointerCapture(e.pointerId);
-    document.body.classList.add('dragging');
-    let last = e.clientX;
-    const mv = (ev) => { const d = ev.clientX - last; last = ev.clientX; if (d) move(d / Math.max(1, main.clientWidth)); };
-    const up = () => {
-      gutter.removeEventListener('pointermove', mv); gutter.removeEventListener('pointerup', up); gutter.removeEventListener('pointercancel', up);
-      document.body.classList.remove('dragging');
-      persist();
-    };
-    gutter.addEventListener('pointermove', mv); gutter.addEventListener('pointerup', up); gutter.addEventListener('pointercancel', up);
-  });
-  gutter.addEventListener('keydown', (e) => {
-    const step = (e.shiftKey ? 64 : 16) / Math.max(1, main.clientWidth);
-    if (e.key === 'ArrowLeft') { e.preventDefault(); move(-step); persist(); }
-    else if (e.key === 'ArrowRight') { e.preventDefault(); move(step); persist(); }
-  });
-  gutter.addEventListener('dblclick', () => {
-    if (gutter === gutterA) state.editor = state.open ? 0.38 : 0.465; else state.docs = 0.3;
-    apply(); persist();
-  });
 }
 
 // ---------------------------------------------------------------------
@@ -211,14 +141,7 @@ content.addEventListener('click', (e) => {
 //  Public
 // ---------------------------------------------------------------------
 function setOpen(open) {
-  if (open && !state.open) {
-    // make room: the docs pane takes its width from the editor and the preview
-    const W = Math.max(1, main.clientWidth);
-    if (state.editor + state.docs > 1 - MIN.preview / W) state.editor = Math.max(MIN.editor / W, 1 - MIN.preview / W - state.docs);
-  }
-  state.open = open;
-  apply();
-  persist();
+  layout.setOpen('docs', open);
   if (open && content.dataset.page !== state.page) show(state.page, state.anchor);
 }
 
@@ -229,23 +152,22 @@ window.DocsView = {
     if (name && DATA.functions[name] && anchor === undefined) { const [p, a] = DATA.functions[name].split('/'); go(p, a); }
     else if (name && pages.has(name)) go(name, anchor || '');
   },
-  toggle() { setOpen(!state.open); },
-  isOpen: () => state.open,
+  toggle() { setOpen(!layout.isOpen('docs')); },
+  isOpen: () => layout.isOpen('docs'),
   has: (name) => !!DATA.functions[name],
-  set onResize(fn) { onResize = fn || (() => {}); },
+  set onResize(fn) { if (fn) layout.onChange(fn); },
 };
 
 $('docsToggle').addEventListener('click', () => window.DocsView.toggle());
-$('docsClose').addEventListener('click', () => setOpen(false));
-$('docsSideToggle').addEventListener('click', () => { state.side = !state.side; apply(); persist(); if (state.side) search.focus(); });
+$('docsSideToggle').addEventListener('click', () => { state.side = !state.side; applySide(); persist(); if (state.side) search.focus(); });
 $('docsBack').addEventListener('click', () => { const b = back.pop(); if (b) show(b[0], b[1]); });
 search.addEventListener('input', renderList);
 search.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { const first = list.querySelector('button'); if (first) first.click(); }
   else if (e.key === 'Escape') { search.value = ''; renderList(); }
 });
-drag(gutterA); drag(gutterB);
-window.addEventListener('resize', apply);
-apply();
-if (state.open) show(state.page, state.anchor); else renderList();
+// restoring the pane from a minimised strip, or a saved layout, shows its page
+layout.onChange(() => { if (layout.isOpen('docs') && content.dataset.page !== state.page) show(state.page, state.anchor); });
+applySide();
+if (layout.isOpen('docs')) show(state.page, state.anchor); else renderList();
 })();

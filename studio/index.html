@@ -61,7 +61,27 @@ body.dragging{cursor:col-resize;user-select:none;-webkit-user-select:none}
 body.dragging main *{pointer-events:none}
 .btn[aria-pressed="true"]{background:var(--line)}
 .docs{flex:0 0 30%;background:var(--bg);border-right:0}
-.dhead{display:flex;align-items:center;gap:2px;padding:4px 6px;border-bottom:1px solid var(--line);min-height:39px}
+.dhead,.phead{display:flex;align-items:center;gap:2px;padding:4px 6px;border-bottom:1px solid var(--line);min-height:39px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none}
+.phead .ptitle{color:var(--muted)}
+.dhead .ptitle{color:var(--ink)}
+.tabs{touch-action:pan-x}
+/* a minimised pane: a narrow strip with its name; click to restore */
+.pane.min{cursor:pointer;background:var(--surface);overflow:hidden}
+.pane.min>:not(.phead){display:none!important}
+.pane.min .phead{flex-direction:column;align-items:center;height:100%;border-bottom:0;padding:6px 0;gap:6px;cursor:pointer}
+.pane.min .phead>:not(.ptitle):not([data-act="min"]):not([data-act="close"]){display:none}
+.pane.min .ptitle{writing-mode:vertical-rl;padding:6px 0;flex:0 1 auto;color:var(--ink)}
+.pane.lifted{opacity:.5}
+body.docking,body.docking *{cursor:grabbing!important;user-select:none}
+.dock-marker{position:fixed;z-index:60;background:var(--accent);border-radius:3px;pointer-events:none;box-shadow:0 0 0 3px rgba(124,144,255,.25)}
+.dock-ghost{position:fixed;z-index:61;pointer-events:none;background:var(--ink);color:var(--bg);font:500 13px "Instrument Sans",system-ui,sans-serif;padding:5px 10px;border-radius:6px;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.screen{position:relative}
+.fs-exit{display:none;position:absolute;top:12px;right:12px;z-index:2;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.55);color:#fff;font:500 13px "Instrument Sans",system-ui,sans-serif;padding:6px 12px;border-radius:6px;cursor:pointer}
+.screen:fullscreen,.screen.fakefs{background:#000;padding:0}
+.screen.fakefs{position:fixed;inset:0;z-index:100;display:flex}
+.screen:fullscreen .fs-exit,.screen.fakefs .fs-exit{display:block;opacity:.35}
+.screen:fullscreen .fs-exit:hover,.screen.fakefs .fs-exit:hover{opacity:1}
+.screen:fullscreen canvas,.screen.fakefs canvas{border-radius:0;box-shadow:none}
 .dbtn{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 6px;border:0;border-radius:5px;background:none;color:var(--muted);font:500 15px "Instrument Sans",system-ui,sans-serif;cursor:pointer;text-decoration:none}
 .dbtn:hover{background:var(--line);color:var(--ink)}
 .dbtn:disabled{opacity:.35;cursor:default;background:none}
@@ -172,6 +192,9 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
   .editor{flex:0 0 auto;height:max(420px,55vh);border-bottom:1px solid var(--line)}
   .docs{flex:0 0 auto;height:70vh;border-bottom:1px solid var(--line)}
   .preview{flex:0 0 auto}
+  .pane.min{height:40px}
+  .pane.min .phead{flex-direction:row;padding:4px 10px}
+  .pane.min .ptitle{writing-mode:horizontal-tb;flex:1}
   .screen{min-height:240px}
   .console{min-height:220px}
 }
@@ -211,6 +234,7 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
       <button role="menuitem" data-build="zip">Project source (.zip)<small>All files, ready for the SDK's build.sh</small></button>
     </div>
   </div>
+  <button class="btn" id="previewToggle" aria-pressed="true" aria-controls="previewPane" title="Show or hide the preview">Preview</button>
   <button class="btn" id="docsToggle" aria-pressed="false" aria-controls="docsPane" title="Show the SDK docs next to the editor (F1 on a function name opens its entry)">Docs <span class="k">F1</span></button>
   <span class="status" id="status" role="status" aria-live="polite"></span>
   <span class="sep"></span>
@@ -221,19 +245,19 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
 </div>
 
 <main>
-  <section class="pane editor" aria-label="Code editor">
+  <section class="pane editor" data-pane="editor" aria-label="Code editor">
     <div class="tabs" role="tablist" id="tabs"></div>
     <div class="code" id="code"></div>
     <input type="file" id="upload" multiple hidden>
   </section>
-  <div class="gutter" id="gutterA" role="separator" aria-orientation="vertical" aria-label="Resize the editor" aria-valuemin="0" aria-valuemax="100" tabindex="0" title="Drag to resize · double-click to reset"></div>
-  <section class="pane docs" id="docsPane" aria-label="Documentation" hidden>
-    <div class="dhead">
+  <section class="pane docs" id="docsPane" data-pane="docs" aria-label="Documentation" hidden>
+    <div class="dhead phead" title="Drag to move the docs next to another pane">
       <button class="dbtn" id="docsSideToggle" aria-controls="docsSide" aria-expanded="true" title="Hide the page list">☰</button>
       <button class="dbtn" id="docsBack" title="Back" aria-label="Back" disabled>←</button>
-      <span class="dtitle" id="docsTitle"></span>
+      <span class="dtitle ptitle" id="docsTitle"></span>
       <a class="dbtn" id="docsExternal" href="../#/docs" target="_blank" rel="noopener" title="Open this page on the website" aria-label="Open on the website">↗</a>
-      <button class="dbtn" id="docsClose" title="Close the docs" aria-label="Close the docs">✕</button>
+      <button class="dbtn" data-act="min" title="Minimise" aria-label="Minimise">–</button>
+      <button class="dbtn" data-act="close" title="Close the docs" aria-label="Close the docs">✕</button>
     </div>
     <div class="dbody">
       <nav class="dside" id="docsSide" aria-label="Docs pages">
@@ -243,9 +267,14 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
       <div class="dcontent" id="docsContent" tabindex="-1"></div>
     </div>
   </section>
-  <div class="gutter" id="gutterB" role="separator" aria-orientation="vertical" aria-label="Resize the docs" aria-valuemin="0" aria-valuemax="100" tabindex="0" title="Drag to resize · double-click to reset" hidden></div>
-  <section class="pane preview" aria-label="Preview">
-    <div class="screen"><canvas id="screen" width="1280" height="720" aria-label="Minimal-OS desktop preview. Click it to give it keyboard focus."></canvas></div>
+  <section class="pane preview" id="previewPane" data-pane="preview" aria-label="Preview">
+    <div class="phead" title="Drag to move the preview next to another pane">
+      <span class="dtitle ptitle">Preview</span>
+      <button class="dbtn" data-act="full" title="Full screen (Esc leaves)" aria-label="Full screen">⛶</button>
+      <button class="dbtn" data-act="min" title="Minimise" aria-label="Minimise">–</button>
+      <button class="dbtn" data-act="close" title="Hide the preview (Run shows it again)" aria-label="Hide the preview">✕</button>
+    </div>
+    <div class="screen"><button class="fs-exit" id="previewExitFs" type="button">Exit full screen</button><canvas id="screen" width="1280" height="720" aria-label="Minimal-OS desktop preview. Click it to give it keyboard focus."></canvas></div>
     <div class="console">
       <div class="ctabs" role="tablist">
         <button class="ctab" role="tab" data-ctab="out" aria-selected="true">Output</button>
@@ -278,7 +307,9 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
         <h3>Keys</h3>
         <p><code>Ctrl+Enter</code> run · <code>Ctrl+.</code> stop · <code>Ctrl+S</code> save · <code>Ctrl+/</code> comment · <code>F1</code> docs for the function under the cursor (or show/hide the docs). Projects are saved in this browser.</p>
         <h3>Docs</h3>
-        <p><b>Docs</b> splits the screen and opens the SDK reference next to the editor. Drag the bars between the panes to resize them (double-click a bar to reset it), pick a page or search for a function in the list on the left, and use <b>☰</b> to hide that list when you want more room.</p>
+        <p><b>Docs</b> splits the screen and opens the SDK reference next to the editor. Pick a page or search for a function in the list on the left, and use <b>☰</b> to hide that list when you want more room.</p>
+        <h3>Panes</h3>
+        <p>Drag a pane's top bar (the Docs or Preview title, or the empty part of the editor's tab bar) to move it next to another pane; a blue bar shows where it will go. Drag the bars between panes to resize them (double-click a bar to reset). <b>–</b> shrinks a pane to a strip (click the strip to bring it back) and <b>✕</b> hides it; the <b>Preview</b> and <b>Docs</b> buttons show them again, and Run always brings the preview back. <b>⛶</b> shows the preview full screen (Esc leaves). The layout is kept in this browser.</p>
       </div>
     </div>
   </section>
@@ -299,6 +330,7 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
 <script src="templates.js"></script>
 <script src="desktop.js"></script>
 <script src="docs.js"></script>
+<script src="layout.js"></script>
 <script src="docsview.js"></script>
 <script src="studio.js"></script>
 </body>

@@ -275,6 +275,19 @@ function resources() {
   return list;
 }
 
+// mosWM installs its Inter fonts here; the preview has them too, so apps
+// that draw smooth text (easyui) look as they do on MOSdesk.
+let systemFilesPromise = null;
+function systemFiles() {
+  if (!systemFilesPromise) {
+    systemFilesPromise = Promise.all(['Inter-Regular.otf', 'Inter-Medium.otf'].map((n) =>
+      fetch('fonts/' + n).then((r) => (r.ok ? r.arrayBuffer() : null))
+        .then((b) => (b ? { path: '0:/programs/mosWM/assets/fonts/' + n, data: new Uint8Array(b) } : null))
+        .catch(() => null))).then((l) => l.filter(Boolean));
+  }
+  return systemFilesPromise;
+}
+
 function kill() {
   if (worker) worker.terminate();
   worker = null; alive = false; exited = true;
@@ -285,6 +298,7 @@ function kill() {
 
 function run() {
   kill();
+  if (window.StudioLayout) window.StudioLayout.reveal('preview');
   save(true);
   clearProblems();
   out.textContent = '';
@@ -303,7 +317,11 @@ function run() {
   const [w, h] = $('res').value.split('x').map(Number);
   worker.onmessage = (e) => onWorker(e.data);
   worker.onerror = (e) => { log('Preview error: ' + (e.message || e) + '\n', 'bad'); status('Preview error', 'bad'); kill(); };
-  worker.postMessage({ t: 'run', files: sources(), name, args: project.args ? project.args.split(/\s+/).filter(Boolean) : [], screen: { w, h }, resources: resources() });
+  const w0 = worker, files = sources(), res = resources();
+  systemFiles().then((system) => {
+    if (worker !== w0) return;
+    worker.postMessage({ t: 'run', files, name, args: project.args ? project.args.split(/\s+/).filter(Boolean) : [], screen: { w, h }, resources: res, system });
+  });
   lastPong = performance.now();
   pingTimer = setInterval(() => {
     if (!worker) return;
@@ -422,6 +440,7 @@ function buildReport(b) {
 }
 
 function doBuild(kind) {
+  if (kind !== 'zip' && window.StudioLayout) window.StudioLayout.reveal('preview');
   if (kind === 'zip') { download(project.name + '.zip', makeZip(), 'application/zip'); return; }
   status('Building…');
   setTimeout(() => {

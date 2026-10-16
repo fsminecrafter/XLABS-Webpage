@@ -229,6 +229,8 @@ function resetState(opts) {
   const app = opts.name || 'app';
   fs.write('0:/programs/' + app + '.run', new Uint8Array(64));
   for (const f of opts.resources || []) fs.write('0:/programs/' + app + '/' + f.path, f.data);
+  // files the installed system has, such as mosWM's fonts (absolute paths)
+  for (const f of opts.system || []) fs.write(f.path, f.data);
   state = {
     fs, app, start: performance.now(), screen: opts.screen || { w: 1280, h: 720 },
     heap: null, windows: new Map(), nextWindowId: 1, focused: 0, handles: new Map(), nextHandle: 3,
