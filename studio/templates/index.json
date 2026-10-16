@@ -1,9 +1,10 @@
 [
-  { "id": "hello-window", "name": "hello", "title": "Hello window", "kind": "mosWM", "description": "A mosWM window that draws text, follows the mouse and handles resizing." },
-  { "id": "paint", "name": "paint", "title": "Paint", "kind": "mosWM", "description": "Mouse drawing with a palette, wheel-sized brush and partial presents." },
-  { "id": "snake", "name": "snake", "title": "Snake", "kind": "mosWM", "description": "Keyboard events (HID codes), a fixed-size window and a custom window style." },
-  { "id": "bubbles", "name": "bubbles", "title": "Bubbles (C++)", "kind": "mosWM · C++", "description": "Classes, virtual functions, a class template and new/delete in a mosWM window." },
-  { "id": "clock", "name": "clock", "title": "Clock", "kind": "mosWM", "description": "Analogue clock from the kernel's real-time clock, with sine done in C." },
-  { "id": "terminal", "name": "sysinfo", "title": "System info", "kind": "Terminal", "description": "A terminal program: arguments, system stats, processes and MinimaFS files." },
-  { "id": "fullscreen", "name": "shapes", "title": "Framebuffer graphics", "kind": "Fullscreen", "description": "The graphics.h API drawing directly to the screen." }
+  {"id": "hello-window", "name": "hello", "title": "Hello window", "kind": "mosWM", "description": "A mosWM window that draws text, follows the mouse and handles resizing."},
+  {"id": "widgets", "name": "widgets", "title": "Widgets (easyui)", "kind": "mosWM · easyui", "description": "Buttons, sliders, text input, radio buttons, lists and more with easyui.h, in the MOSdesk theme."},
+  {"id": "paint", "name": "paint", "title": "Paint", "kind": "mosWM", "description": "Mouse drawing with a palette, wheel-sized brush and partial presents."},
+  {"id": "snake", "name": "snake", "title": "Snake", "kind": "mosWM", "description": "Keyboard events (HID codes), a fixed-size window and a custom window style."},
+  {"id": "bubbles", "name": "bubbles", "title": "Bubbles (C++)", "kind": "mosWM · C++", "description": "Classes, virtual functions, a class template and new/delete in a mosWM window."},
+  {"id": "clock", "name": "clock", "title": "Clock", "kind": "mosWM", "description": "Analogue clock from the kernel's real-time clock, with sine done in C."},
+  {"id": "terminal", "name": "sysinfo", "title": "System info", "kind": "Terminal", "description": "A terminal program: arguments, system stats, processes and MinimaFS files."},
+  {"id": "fullscreen", "name": "shapes", "title": "Framebuffer graphics", "kind": "Fullscreen", "description": "The graphics.h API drawing directly to the screen."}
 ]

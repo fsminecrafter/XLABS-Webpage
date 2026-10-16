@@ -261,6 +261,7 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
         <p>Studio compiles your C or C++ with <b>mcc</b>, a small C11 and C++ compiler written for this page. <code>.c</code> files are C and <code>.cpp</code> files are C++; a project can mix them, and the program starts at <code>main</code> in <code>main.cpp</code> or <code>main.c</code>. For the preview it emits JavaScript that runs against an emulation of the Minimal-OS kernel (the real syscall numbers and structures from the SDK's <code>syscall.h</code>) with mosWM drawn on the canvas. For Build it emits x86_64 machine code and links a position-independent ELF the way the SDK's <code>link.ld</code> does.</p>
         <h3>Writing apps</h3>
         <ul>
+          <li>For buttons, sliders, text inputs and other widgets in the MOSdesk theme, include <code>easyui.h</code> (try the Widgets sample, and see Docs → easyui widgets).</li>
           <li>Window apps include <code>window.h</code>: create a window, draw ARGB8888 pixels (use <code>0xFF</code> alpha), present, and poll <code>mos_window_next_event</code>.</li>
           <li>Key events carry USB HID codes: arrows 79–82, space 44, enter 40, letters 4–29. Click the preview first so it has keyboard focus.</li>
           <li>Terminal programs use <code>stdio.h</code>; their output appears in the Terminal window and the Output tab.</li>

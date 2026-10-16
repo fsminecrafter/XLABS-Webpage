@@ -30,6 +30,7 @@ const PAGES = [
   ['strings', 'Strings and memory'],
   ['output', 'Formatted output'],
   ['windows', 'Windows'],
+  ['easyui', 'easyui widgets'],
   ['graphics', 'Graphics'],
   ['input', 'Input'],
   ['network', 'Networking'],
@@ -62,7 +63,7 @@ function inline(text, page) {
     const c = text[i];
     if (c === '`') {
       const j = text.indexOf('`', i + 1);
-      if (j > i) { out.push('<code>' + esc(text.slice(i + 1, j)) + '</code>'); i = j + 1; continue; }
+      if (j > i) { out.push('<code>' + esc(text.slice(i + 1, j).replace(/\\\|/g, '|')) + '</code>'); i = j + 1; continue; }
     }
     if (c === '*' && text[i + 1] === '*') {
       const j = text.indexOf('**', i + 2);
@@ -211,6 +212,11 @@ const data = {
   ],
   functions: Object.fromEntries(all.map(f => [f.name, f.page + '/' + f.id])),
 };
+// easyui.createbutton is also found as createbutton (F1 on the word after the dot)
+for (const name of Object.keys(data.functions)) {
+  const m = name.match(/^easyui\.(\w+)$/);
+  if (m && !data.functions[m[1]]) data.functions[m[1]] = data.functions[name];
+}
 // graphics.h short names point at the function they alias
 const gfx = readFileSync(join(sdkRoot, 'include', 'graphics.h'), 'utf8');
 for (const m of gfx.matchAll(/#define\s+(graphics_\w+)\s+(mos_\w+)/g)) if (data.functions[m[2]]) data.functions[m[1]] = data.functions[m[2]];
