@@ -9,7 +9,7 @@
  */
 /* global MCC */
 'use strict';
-importScripts('mcc-front.js', 'mcc-cpp.js', 'sdk.js', 'mcc-js.js');
+importScripts('mcc-front.js', 'mcc-cpp.js', 'sdk.js', 'mcc-js.js', 'fgpu.js');
 
 const MEM_SIZE = 96 * 1024 * 1024;
 const STACK_SIZE = 2 * 1024 * 1024;
@@ -77,8 +77,9 @@ const writeStr = (a, s, size) => {
 // ---------------------------------------------------------------------
 const L = (function () {
   const out = {};
-  // x86_64/syscall.h carries the input-event structures; syscall.h wins for the rest
-  for (const header of ['x86_64/syscall.h', 'syscall.h']) {
+  // x86_64/syscall.h carries the input-event structures; syscall.h wins for
+  // the rest; fgpu_abi.h has the SYS_GPU ones
+  for (const header of ['x86_64/syscall.h', 'syscall.h', 'fgpu_abi.h']) {
     const src = new MCC.Preprocessor({ 'layout.c': '#include "' + header + '"\n' }, MCC.SDK).run('layout.c');
     const p = new MCC.Parser(src);
     p.program();
@@ -239,9 +240,41 @@ function resetState(opts) {
     resume: undefined, wait: null, cleanup: 0, exited: false, timer: 0, waitingInput: null,
     outBuf: '',
   };
+  state.gpu = FGPU.create(gpuEnv);
 }
 
 function uptime() { return Math.floor(performance.now() - state.start); }
+
+// ---- GPU (SYS_GPU): fgpu.js, a port of the kernel's FGPU ----
+const gpuEnv = {
+  mem: () => ({ U8, U32 }), L, rd, wr, writeStr, ERR, OK, memSize: MEM_SIZE,
+  screen: () => state.screen,
+  log: (m) => console.warn(m),
+  // what the kernel does with SYS_WINDOW_PRESENT for the window's owner
+  presentWindow(id, s) {
+    const w = state.windows.get(id);
+    if (!w) return ERR.NOTFOUND;
+    if (s.width < w.w || s.height < w.h) return ERR.INVAL;
+    for (let y = 0; y < w.h; y++) w.pixels.set(s.mem.subarray(y * s.pitch, y * s.pitch + w.w), y * w.w);
+    w.version++;
+    state.dirty.add(id);
+    return OK;
+  },
+  // the screen: only after the program acquired the framebuffer
+  presentScreen(s, x, y) {
+    if (!state.fbOwned) return ERR.PERM;
+    const f = fb(), W = state.screen.w, H = state.screen.h;
+    for (let r = 0; r < s.height; r++) {
+      const sy = y + r;
+      if (sy < 0 || sy >= H) continue;
+      const x0 = Math.max(0, x), x1 = Math.min(W, x + s.width);
+      if (x0 >= x1) continue;
+      f.set(s.mem.subarray(r * s.pitch + (x0 - x), r * s.pitch + (x1 - x)), sy * W + x0);
+    }
+    state.fbDirty = true;
+    return OK;
+  },
+};
 
 // ---- window manager (kernel side) ----
 function pushEvent(w, ev) {
@@ -736,6 +769,7 @@ function sysInner(n, a, b, c) {
       return inputRead(evs, cap);
     }
     case 37: return windowSyscall(Number(a));
+    case 40: return state.gpu.syscall(Number(a));      // GPU
   }
   return ERR.INVAL;
 }

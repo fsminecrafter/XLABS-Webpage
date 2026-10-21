@@ -335,7 +335,7 @@ code,pre,kbd,.term{font-variant-ligatures:none}
     <section id="whats-new">
       <h2>What's new in 0.4.51</h2>
       <div class="news">
-        <a class="nitem" href="#/docs/gpu"><span class="eyebrow">GPU and 3D</span><h4>A 3D pipeline in the kernel</h4><p>The FGPU command processor draws depth-tested, lit and textured triangles, runs FGSL shaders, and places surfaces in VRAM. Drivers for NVIDIA Pascal and Turing cards and QEMU report VRAM and page flip.</p></a>
+        <a class="nitem" href="#/docs/gpu"><span class="eyebrow">GPU and 3D</span><h4>A 3D pipeline in the kernel</h4><p>The FGPU command processor draws depth-tested, lit and textured triangles, runs FGSL shaders, and places surfaces in VRAM. Drivers for NVIDIA Pascal and Turing cards and QEMU report VRAM and page flip; drawing on NVIDIA cards themselves is under way.</p></a>
         <a class="nitem" href="#/p/farcadegl"><span class="eyebrow">FarcadeGL</span><h4>3D for every app</h4><p>A header-only library with command buffers, vertex layouts, textures, blending and GLSL-style shaders. <code>fglcube</code> and MOSdesk's Cube app show it off.</p></a>
         <a class="nitem" href="#/docs/storage-and-packages"><span class="eyebrow">Storage</span><h4>Partitions and big disks</h4><p>MBR and GPT tables with <code>part</code>, MinimaFS volumes up to 16 TiB, several mounted drives, and an NVMe driver next to AHCI.</p></a>
         <a class="nitem" href="#/docs/installing"><span class="eyebrow">Installer</span><h4>Install to a disk</h4><p><code>install sata1</code> in the terminal, or the Installer app in MOSdesk, writes a disk that boots by itself on BIOS and UEFI PCs.</p></a>
@@ -365,7 +365,7 @@ code,pre,kbd,.term{font-variant-ligatures:none}
             <li>Its own C and C++ compiler, with the SDK headers built in</li>
             <li>Preview of mosWM windows, terminal output and framebuffer graphics</li>
             <li>Downloads <code>.run</code>, <code>.mpkg</code>, <code>main.elf</code> or the source</li>
-            <li>Nine sample apps: Paint, Snake, Mini golf, Widgets, Bubbles in C++, and more</li>
+            <li>Ten sample apps: a FarcadeGL 3D cube, Paint, Snake, Mini golf, Widgets, Bubbles in C++, and more</li>
           </ul>
           <div class="btns"><a class="btn primary" href="studio/">Open Run Studio</a><a class="btn" href="#/p/studio">How it works</a></div>
         </div>
@@ -435,7 +435,7 @@ code,pre,kbd,.term{font-variant-ligatures:none}
         <div class="todo">
           <span class="k">0.4.52, planned</span>
           <ul>
-            <li><span class="tick">○</span>GPU engine and GLSL-style shaders on the card</li>
+            <li><span class="tick">○</span>GPU engine and GLSL-style shaders on the card — shader IR, firmware loading and the backend hook are in; GSP boot and SASS encoding are next</li>
             <li><span class="tick">○</span>Fixes across the apps</li>
             <li><span class="tick">○</span>A web browser, maybe</li>
           </ul>
@@ -599,7 +599,31 @@ make ci-interact</code></pre>
 <p>The class methods (register meanings) are published by NVIDIA in <code>open-gpu-doc</code>. The shader instruction set (SASS) is not officially documented, but Mesa's open compilers (the nouveau codegen and NAK, used by the NVK Vulkan driver) generate it, and <code>envytools</code> documents much of it.</p>
 <h3 id="gpu--the-plan-for-minimal-os">The plan for Minimal-OS</h3>
 <ol><li><strong>Firmware loading</strong>: read the <code>linux-firmware</code> files from <code>0:/firmware/nvidia/</code>, check them, and boot GSP on Turing (simpler and full speed) or ACR on Pascal.</li><li><strong>Channels</strong>: allocate a channel, a GPFIFO and pushbuffers in VRAM, and submit a "clear the screen" through the 3D class to prove the path.</li><li><strong>An FGPU hardware backend</strong>: translate FGPU command buffers to pushbuffers (surfaces → render targets, <code>DRAW</code> → vertex buffer setup and draw methods) and <strong>FGPU shader bytecode to SASS</strong>. The bytecode was designed for this: straight-line code with forward jumps, vec4 registers and a small instruction set map well onto a GPU compiler.</li><li>Programs do not change: FarcadeGL and FGSL stay the same, and <code>syscall_gpu_info_t.backend</code> reports the hardware backend.</li></ol>
-<p>This needs testing on real cards (QEMU cannot emulate an NVIDIA GPU); steps 1-2 are the first milestone.</p><nav class="pager" aria-label="More pages"><a class="pv" href="#/docs/hardware-and-drivers" rel="prev"><span>Previous</span>Hardware and drivers</a><a class="nx" href="#/docs/storage-and-packages" rel="next"><span>Next</span>Storage and packages</a></nav><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/gpu.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
+<p>This needs testing on real cards (QEMU cannot emulate an NVIDIA GPU); steps 1-2 are the first milestone.</p>
+<h3 id="gpu--what-is-in-place-turing-e-g-rtx-2060">What is in place (Turing, e.g. RTX 2060)</h3>
+<p>Everything below builds into the kernel and changes nothing until the hardware backend's <code>init()</code> succeeds; until then all work runs on the CPU as before.</p>
+<div class="tw"><table><thead><tr><th>Piece</th><th>Where</th><th>State</th></tr></thead><tbody><tr><td>Backend interface: FGPU offers every clear and draw to a hardware backend first and falls back to the CPU per command; GPU work is finished before the CPU touches a surface or buffer</td><td><code>fgpu_backend.h</code>, <code>fgpu.c</code></td><td>done</td></tr><tr><td>NVIDIA backend: chosen at boot for NVIDIA adapters; compiles every shader program to the IR below; declines <code>init()</code> with the reason</td><td><code>fgpu_backend_nv.c</code></td><td>stub</td></tr><tr><td>Shader compiler, first half: FGPU bytecode → scalar SSA IR (one op per hardware instruction), if-conversion of jumps, constant folding, CSE, dead code removal, linear-scan register allocation, SASS-style listing</td><td><code>fgpu_ir.h</code>, <code>fgpu_ir.c</code></td><td>done, tested</td></tr><tr><td>Shader compiler, second half: IR → encoded Turing SASS (128-bit instructions with scheduling bits)</td><td></td><td>to do</td></tr><tr><td>Firmware: list of files per chip, parsers for NVIDIA's <code>.bin</code> containers and the GSP-RM ELF image</td><td><code>nv_hw.h</code>, <code>nv_fw.c</code></td><td>done, tested</td></tr><tr><td>Falcons: read state; IMEM/DMEM upload, start, wait</td><td><code>nv_falcon.c</code></td><td>reading used, the rest ready for GSP boot</td></tr><tr><td>Pushbuffers: method headers, GPFIFO entries, a ready-made <code>TURING_A</code> clear</td><td><code>nv_fw.c</code></td><td>done, tested (method offsets unverified on hardware)</td></tr><tr><td>GSP boot (FWSEC-FRTS from the VBIOS, <code>booter_load</code> on SEC2, GSP-RM)</td><td></td><td>to do</td></tr><tr><td>RM RPC: channel, GPFIFO and class allocation through GSP-RM</td><td></td><td>to do</td></tr></tbody></table></div>
+<p><code>gpu nvidia</code> prints the bring-up state. It only reads registers, so it is safe on any card: which firmware files are present and well-formed, and each microcontroller (GSP, SEC2, PMU, FECS, GPCCS, NVDEC) with its memory sizes and whether it is running.</p>
+<h4 id="gpu--firmware-files">Firmware files</h4>
+<p>Copy these from <code>linux-firmware</code> (<code>nvidia/tu106/</code> for an RTX 2060; follow the symbolic links, MinimaFS has none) to <code>0:/firmware/nvidia/tu106/</code>:</p>
+<pre><code class="lang-text">gsp/booter_load-535.113.01.bin
+gsp/booter_unload-535.113.01.bin
+gsp/bootloader-535.113.01.bin
+gsp/gsp-535.113.01.bin          (about 30 MB)</code></pre>
+<p>TU102/TU104 use <code>tu102</code>/<code>tu104</code>, the GTX 16 series <code>tu116</code>/<code>tu117</code>.</p>
+<h4 id="gpu--the-shader-ir">The shader IR</h4>
+<p>GPU shader cores run 32 threads in step, each on scalar 32-bit registers, so <code>fgpu_ir.c</code> turns each vec4 instruction into scalar operations that correspond one to one to Turing instructions (<code>FFMA</code>, <code>FMNMX</code>, <code>MUFU.RSQ</code>, <code>FSET.BF</code>, <code>FSEL</code>, <code>TEX</code>, <code>IPA</code>, ...):</p>
+<ul><li>the edge cases FGPU defines (<code>x / 0 = 0</code>, <code>sqrt</code>/<code>rsq</code> of <code>x &lt;= 0</code>, <code>log2(x &lt;= 0) = -126</code>, <code>pow</code> of <code>x &lt;= 0</code>) become explicit selects, so GPU and CPU agree;</li><li><code>atan2</code>, <code>smoothstep</code>, <code>mod</code> and <code>sign</code> become short instruction sequences (the same polynomial as the CPU backend);</li><li>jumps are if-converted: each thread keeps the instruction it resumes at, as the CPU interpreter does per lane, and writes inside a skipped range become selects. The result has no branches at all; turning long skipped ranges back into real branches (<code>BRA</code> with <code>BSSY</code>/<code>BSYNC</code>) is a later optimization.</li></ul>
+<p><code>make test-host</code> compiles FGSL shaders (lighting, every built-in function, nested <code>if</code>/<code>else</code> with <code>discard</code>, loops with <code>break</code>/<code>continue</code>, textures, <code>gl_FragCoord</code>) and hand-written bytecode with divergent jumps, runs them on random inputs through both the IR (with a reference evaluator) and the CPU shader machine, and checks that they agree. <code>FGPU_IR_LIST=1 ./build/tests/host/fgpu_ir_tests</code> prints a listing:</p>
+<pre><code class="lang-text">// fragment stage: 35 ops, 7 registers
+  IPA R0, v3.x
+  IPA R1, v3.y
+  TEX.2D R0+, R0, R1, tex0
+  FSET.BF.LT R3, R3, 0.5
+  ...
+  KIL if R3 != 0</code></pre>
+<h4 id="gpu--next-steps-on-a-card">Next steps on a card</h4>
+<ol><li>Run <code>gpu nvidia</code> with the firmware copied: every file should show <code>ok</code>, and GSP/SEC2 should be reachable.</li><li>GSP boot, following nouveau's <code>r535</code> code (<code>nvkm/subdev/gsp/r535.c</code>, <code>tu102.c</code>): run FWSEC-FRTS from the VBIOS, load <code>booter_load</code> on SEC2 with the GSP-RM image and boot loader in system memory, and wait for GSP-RM's init message.</li><li>Allocate a channel through RM RPC, submit <code>nv_push_clear_xrgb</code> and check the surface changed: then <code>clear()</code> in <code>fgpu_backend_nv.c</code> can return true.</li><li>Encode the IR as SASS (Mesa's NAK, <code>src/nouveau/compiler/nak/sm70.rs</code>, has the Volta/Turing encodings), then draws.</li></ol><nav class="pager" aria-label="More pages"><a class="pv" href="#/docs/hardware-and-drivers" rel="prev"><span>Previous</span>Hardware and drivers</a><a class="nx" href="#/docs/storage-and-packages" rel="next"><span>Next</span>Storage and packages</a></nav><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/gpu.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
 <article class="doc" data-doc="storage-and-packages" hidden><h1>Storage And Packages</h1>
 <nav class="fn-index toc" aria-label="On this page"><span>On this page</span><a href="#/docs/storage-and-packages/minimafs-model">MinimaFS Model</a><a href="#/docs/storage-and-packages/disks-partitions-and-drives">Disks, partitions and drives</a><a href="#/docs/storage-and-packages/embedded-install-packages">Embedded Install Packages</a><a href="#/docs/storage-and-packages/mpkg-format">MPKG Format</a><a href="#/docs/storage-and-packages/file-operations">File Operations</a><a href="#/docs/storage-and-packages/safety-rules">Safety Rules</a></nav>
 <h2 id="storage-and-packages--minimafs-model">MinimaFS Model</h2>
@@ -2849,7 +2873,7 @@ long mos_root_read(char* out, size_t out_size);</code></pre>
 <tr><td>Kernel</td><td>Page and heap allocators, processes and threads, per-CPU run queues with three priority levels, SMP spinlocks</td></tr>
 <tr><td>Storage</td><td>AHCI and NVMe, MBR and GPT partitions, MinimaFS volumes up to 16 TiB, several mounted drives, <code>.mpkg</code> packages with LZSS compression</td></tr>
 <tr><td>Hardware</td><td>PCI, framebuffer graphics, UHCI/OHCI and xHCI (USB 3) keyboards and mice, PS/2, AC'97 audio, RTL8139</td></tr>
-<tr><td>GPU and 3D</td><td>Adapters with VRAM (NVIDIA Pascal/Turing, QEMU/Bochs), write-combining, the FGPU command processor with a 3D pipeline and a shader machine, <code>SYS_GPU</code></td></tr>
+<tr><td>GPU and 3D</td><td>Adapters with VRAM (NVIDIA Pascal/Turing, QEMU/Bochs), write-combining, the FGPU command processor with a 3D pipeline and a shader machine, <code>SYS_GPU</code>; NVIDIA hardware rendering in progress</td></tr>
 <tr><td>Install</td><td>The <code>install</code> command writes a GPT or MBR disk that boots by itself on BIOS and UEFI</td></tr>
 <tr><td>Network</td><td>Ethernet, ARP, IPv4, UDP, DHCP, DNS, TCP, and a TLS 1.3 client (<code>TLS_AES_128_GCM_SHA256</code>, X25519)</td></tr>
 <tr><td>User space</td><td><code>.run</code> programs, a syscall ABI with a privilege table, <code>.service</code> files, the window and input syscalls mosWM uses</td></tr>
@@ -2871,7 +2895,7 @@ install nvme0 --mbr --yes  # MBR instead of GPT, no question</code></pre>
 <thead><tr><th>Area</th><th>Commands</th></tr></thead>
 <tbody>
 <tr><td>General</td><td><code>help</code> <code>echo</code> <code>clear</code> <code>sleep</code> <code>systime</code> <code>shutdown</code> <code>reboot</code></td></tr>
-<tr><td>System</td><td><code>info</code> <code>cpu</code> <code>gpu</code> <code>fglcube</code> <code>memsize</code> <code>usage</code> <code>chgres</code></td></tr>
+<tr><td>System</td><td><code>info</code> <code>cpu</code> <code>gpu</code> <code>gpu nvidia</code> <code>fglcube</code> <code>memsize</code> <code>usage</code> <code>chgres</code></td></tr>
 <tr><td>Files</td><td><code>ls</code> <code>lsroot</code> <code>cd</code> <code>mdr</code> <code>insert</code> <code>read</code> <code>rm</code> <code>meta</code></td></tr>
 <tr><td>Disks</td><td><code>disks</code> <code>part</code> <code>format</code> <code>mount</code> <code>umount</code> <code>drives</code> <code>install</code> <code>initdisk</code></td></tr>
 <tr><td>Packages</td><td><code>pkg zip|unzip</code> <code>pkginfo</code> <code>installpkg</code></td></tr>
@@ -3137,11 +3161,12 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
 <p>Both back ends are checked against GCC and G++ on the same test programs, which print identical output — for C++ that includes the exact order of constructor, copy and destructor calls.</p>
 <h2>The preview</h2>
 <p>The preview recreates mosWM: window chrome with the kernel's default style or your own, moving, resizing, edge tiling, minimise and maximise, a taskbar, and a terminal for programs that print. Mouse and keyboard input arrive as the same window events mosWM posts, with USB HID key codes. Programs that use <code>graphics.h</code> draw to a full-screen framebuffer with the kernel's 8×8 font.</p>
+<p>3D works too. FarcadeGL programs draw through a JavaScript port of the kernel's GPU pipeline, with the same lighting, texturing, wireframe and FGSL shaders. Its frames are checked against the kernel's own rasterizer and match it pixel for pixel, apart from a few edge pixels. Try the 3D cube sample.</p>
 <h2>Limits</h2>
 <ul>
 <li>No <code>goto</code>, bit-fields, variable-length arrays, inline assembly or statement expressions; <code>long double</code> is <code>double</code>.</li>
 <li>C++ without exceptions or RTTI (like the SDK), lambdas, rvalue references, multiple inheritance, member templates or class template specialization.</li>
-<li>The preview has no network card and cannot run <code>SYS_EXEC</code> or <code>SYS_PKG</code>.</li>
+<li>The preview has no network card and cannot run <code>SYS_EXEC</code> or <code>SYS_PKG</code>. Its GPU cannot page flip, so full-screen FarcadeGL programs present by copying.</li>
 </ul>
 </article>
 
