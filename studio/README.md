@@ -32,7 +32,7 @@ Open `studio/index.html` through a web server (Web Workers do not run from
 ```sh
 node studio/tools/build-sdk.mjs path/to/Minimal-OS-SDK   # after the SDK headers change
 node studio/tools/build-templates.mjs                    # after editing studio/templates/
-node tools/build-sdk-docs.mjs path/to/Minimal-OS-SDK     # after the SDK's docs/ change
+node tools/build-docs.mjs path/to/Minimal-OS               # after Minimal-OS or SDK docs/ change
 ```
 
 `build-sdk.mjs` copies the SDK's `include/` tree (including `iostream`) unchanged
@@ -40,10 +40,13 @@ except for the three inline-assembly syscall stubs, whose bodies become mcc's
 `__syscall` builtin.
 Freestanding headers and the crt0 live in `tools/builtin/`.
 
-`tools/build-sdk-docs.mjs` (at the repository root) renders the SDK's
-`docs/*.md` into the website's Docs → SDK functions pages in `index.html`, and
-writes `studio/docs.js` with those pages plus the Minimal-OS docs already in
-`index.html`.
+`tools/build-docs.mjs` (at the repository root) renders Minimal-OS's
+`docs/*.md` and the SDK's `docs/*.md` (from the `Minimal-OS-SDK` submodule, or
+a path given as a second argument) into the website's Docs pages in
+`index.html`, and writes `studio/docs.js` with the same pages for the docs pane.
+
+`build-sdk.mjs` also swaps FarcadeGL's one-instruction `fglSqrt` (SSE inline
+assembly) for the same square root in plain C.
 
 ## Tests
 

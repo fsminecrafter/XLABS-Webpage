@@ -53,6 +53,11 @@ for (const p of walk(include)) {
     'x86_64/user_syscalls.h': ['mos_syscall3', 'return __syscall(number, arg1, arg2, arg3);'],
   };
   if (stubs[rel] && new RegExp('\\b' + stubs[rel][0] + '\\s*\\(').test(src) && /\bint \$0x80/.test(src)) src = replaceBody(src, stubs[rel][0], stubs[rel][1]);
+  // FarcadeGL's square root is one SSE instruction; in plain C it is a
+  // bit-level first guess refined by Newton steps (exact to float precision).
+  if (rel === 'farcadegl.h' && /sqrtss/.test(src)) src = replaceBody(src, 'fglSqrt',
+    'if (x <= 0.0f) return 0.0f;\n    union { float f; uint32_t u; } g;\n    g.f = x;\n    g.u = (g.u >> 1) + 0x1fbd1df5u;\n' +
+    '    float r = g.f;\n    for (int i = 0; i < 4; i++) r = 0.5f * (r + x / r);\n    return r;');
   if (/\basm\b|__asm__/.test(src.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, ''))) throw new Error(rel + ' still contains inline assembly');
   files[rel] = src;
 }
