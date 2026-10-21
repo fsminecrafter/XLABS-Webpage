@@ -3,6 +3,7 @@
   {"id": "widgets", "name": "widgets", "title": "Widgets (easyui)", "kind": "mosWM · easyui", "description": "Buttons, sliders, text input, radio buttons, lists and more with easyui.h, in the MOSdesk theme."},
   {"id": "paint", "name": "paint", "title": "Paint", "kind": "mosWM", "description": "Mouse drawing with a palette, wheel-sized brush and partial presents."},
   {"id": "snake", "name": "snake", "title": "Snake", "kind": "mosWM", "description": "Keyboard events (HID codes), a fixed-size window and a custom window style."},
+  {"id": "mini-golf", "name": "mini-golf", "title": "Mini Golf", "kind": "mosWM", "description": "A five-hole mini golf game with terrain, moving obstacles, portals and a scorecard."},
   {"id": "bubbles", "name": "bubbles", "title": "Bubbles (C++)", "kind": "mosWM · C++", "description": "Classes, virtual functions, a class template and new/delete in a mosWM window."},
   {"id": "clock", "name": "clock", "title": "Clock", "kind": "mosWM", "description": "Analogue clock from the kernel's real-time clock, with sine done in C."},
   {"id": "terminal", "name": "sysinfo", "title": "System info", "kind": "Terminal", "description": "A terminal program: arguments, system stats, processes and MinimaFS files."},
