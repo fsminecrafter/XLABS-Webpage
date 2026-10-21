@@ -150,6 +150,8 @@ h3.big{font-size:clamp(26px,3vw,34px);letter-spacing:-.03em;font-weight:500;marg
 .poster .tag{color:var(--panel-dim)}
 .poster .btn.primary{background:#E6E8EB;color:#17191C;border-color:#E6E8EB}
 .poster .btn.primary:hover{background:#D4382A;border-color:#D4382A;color:#fff}
+.poster.hw{background:radial-gradient(120% 90% at 85% 10%,rgba(242,181,28,.45),transparent 60%),repeating-linear-gradient(-45deg,rgba(242,181,28,.10) 0 14px,transparent 14px 28px),#14171A}
+.poster.hw .btn.primary:hover{background:#F2B51C;border-color:#F2B51C;color:#16130C}
 .tick.done{color:var(--accent)}
 .cols{row-gap:36px}
 .eyebrow{margin:0 0 8px}
@@ -257,6 +259,7 @@ code,pre,kbd,.term{font-variant-ligatures:none}
       <a href="#projects" data-route="projects">Projects</a>
       <a href="#/red-sandbox" data-route="sandbox">Red Sandbox</a>
       <a href="studio/">Studio</a>
+      <a href="#/haul-and-wrench" data-route="haul" class="opt">Haul &amp; Wrench</a>
       <a href="#roadmap" class="opt">Roadmap</a>
       <a href="#/docs" data-route="docs">Docs</a>
       <span class="tools">
@@ -307,6 +310,7 @@ code,pre,kbd,.term{font-variant-ligatures:none}
         <a class="card" href="#/p/moswm"><span class="tag">Window manager · C</span><h3>mosWM</h3><p>Composites application windows with damage tracking, tiles them to edges, and gives apps a protected window API.</p><span class="more">Read more →</span></a>
         <a class="card" href="studio/"><span class="tag">Web tool · JavaScript</span><h3>Run Studio</h3><p>Write a <code>.run</code> app, try it in a live mosWM desktop, then build the real x86_64 program — all in the browser.</p><span class="more">Open the studio →</span></a>
         <a class="card" href="#/red-sandbox"><span class="tag">Web · JavaScript, WebAssembly</span><h3>Red Sandbox</h3><p>A 3D physics workbench: glue, gears, axles, springs, engines with real gas combustion, and wired signals.</p><span class="more">Play it here →</span></a>
+        <a class="card" href="#/haul-and-wrench"><span class="tag">Game · JavaScript, Canvas · new</span><h3>Haul &amp; Wrench</h3><p>Run deliveries between towns in a tired 1968 Volta Bug and keep it alive yourself: diagnose faults by ear, scan codes, and torque every bolt by hand.</p><span class="more">Play it here →</span></a>
       </div>
     </section>
 
@@ -392,6 +396,25 @@ code,pre,kbd,.term{font-variant-ligatures:none}
             <strong>Red Sandbox</strong>
             <span>Loads about 1 MB and uses your GPU.</span>
             <button class="btn primary" type="button" data-launch>Launch the sandbox</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="haul-and-wrench">
+      <h2>Play: Haul &amp; Wrench</h2>
+      <div class="split">
+        <div>
+          <h3 class="big">Fix the car. Haul the load. Don't lose a wheel.</h3>
+          <p>Uncle Walt left you a dusty garage, a tired 1968 Volta Bug and a little cash. Find faults by inspecting, testing, scanning codes or just listening to the engine, then pull parts on the bench and torque every fastener back into the green. Work up through vans and a reefer to a Titan semi.</p>
+          <div class="btns"><a class="btn" href="#/haul-and-wrench">Open full page</a><a class="btn" href="games/haul-and-wrench/" target="_blank" rel="noopener">Open in its own tab</a></div>
+        </div>
+        <div class="embed" data-sandbox data-src="games/haul-and-wrench/" data-title="Haul &amp; Wrench">
+          <div class="poster hw">
+            <span class="tag">2D · Canvas · sound on</span>
+            <strong>Haul &amp; Wrench</strong>
+            <span>Loads about 250 KB. Progress saves in this browser.</span>
+            <button class="btn primary" type="button" data-launch>Start the game</button>
           </div>
         </div>
       </div>
@@ -3205,6 +3228,38 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
   </div>
 </main>
 
+<main id="haul" hidden>
+  <div class="sandbox-head">
+    <div>
+      <p class="eyebrow">Game · JavaScript, Canvas, Web Audio</p>
+      <h1 class="page-title">Haul &amp; Wrench</h1>
+    </div>
+    <div class="btns"><a class="btn" href="games/haul-and-wrench/" target="_blank" rel="noopener">Open in its own tab</a></div>
+  </div>
+  <div class="embed tall" data-sandbox data-src="games/haul-and-wrench/" data-title="Haul &amp; Wrench">
+    <div class="poster hw">
+      <span class="tag">2D · Canvas · sound on</span>
+      <strong>Haul &amp; Wrench</strong>
+      <span>Loads about 250 KB. Progress saves in this browser.</span>
+      <button class="btn primary" type="button" data-launch>Start the game</button>
+    </div>
+  </div>
+  <div class="sandbox-info">
+    <div>
+      <h2>Find the fault</h2>
+      <p>Click a part to inspect it for free, run a $10 bench test for a real reading, read stored codes with the OBD scan, or start the engine and listen: knocking is oil trouble, a whine is the alternator, stutters are misfires.</p>
+    </div>
+    <div>
+      <h2>Haul and grow</h2>
+      <p>Take several loads, deliver them stop by stop and park in the yellow bay. Watch the temperature, refuel, stop at red lights and mind the payload limit. Reputation unlocks better vehicles, cargo and a bank loan.</p>
+    </div>
+    <div>
+      <h2>Controls</h2>
+      <p><kbd>→</kbd>/<kbd>D</kbd> gas · <kbd>←</kbd>/<kbd>A</kbd>/<kbd>Space</kbd> brake, hold to reverse · <kbd>F</kbd> refuel · <kbd>C</kbd> cruise · <kbd>H</kbd> horn · <kbd>P</kbd> pause. On the bench: <kbd>1</kbd>–<kbd>0</kbd> tools, <kbd>R</kbd> flip the ratchet, <kbd>I</kbd> impact wrench. Touch screens get pedals.</p>
+    </div>
+  </div>
+</main>
+
 
   <footer>
     <span>© 2026 Xlabs</span>
@@ -3260,8 +3315,8 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
 </script>
 <script>
 (function(){
-  var home=document.getElementById('home'),docs=document.getElementById('docs'),pages=document.getElementById('pages'),sandbox=document.getElementById('sandbox');
-  var mains=[home,docs,pages,sandbox];
+  var home=document.getElementById('home'),docs=document.getElementById('docs'),pages=document.getElementById('pages'),sandbox=document.getElementById('sandbox'),haul=document.getElementById('haul');
+  var mains=[home,docs,pages,sandbox,haul];
   var arts=docs.querySelectorAll('.doc'),links=docs.querySelectorAll('[data-nav]');
   var parts=pages.querySelectorAll('[data-page]'),plinks=pages.querySelectorAll('[data-page-nav]');
   var top=document.querySelectorAll('header nav [data-route]');
@@ -3296,13 +3351,15 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
       mark('projects');window.scrollTo(0,0);
     }else if(/^#\/red-sandbox/.test(h)){
       show(sandbox);document.title='Red Sandbox · Xlabs';mark('sandbox');window.scrollTo(0,0);
+    }else if(/^#\/haul-and-wrench/.test(h)){
+      show(haul);document.title='Haul & Wrench · Xlabs';mark('haul');window.scrollTo(0,0);
     }else{
       show(home);document.title='Xlabs';mark(h==='#projects'?'projects':'');
       var el=h.length>1&&document.getElementById(h.slice(1));
       el?el.scrollIntoView():window.scrollTo(0,0);
     }
   }
-  // Red Sandbox loads only when asked to, and unloads when you leave the page it is on
+  // Embedded games load only when asked to, and unloads when you leave the page it is on
   function unload(box){
     var f=box.querySelector('iframe');
     if(!f)return;
@@ -3311,7 +3368,7 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
   document.querySelectorAll('[data-sandbox]').forEach(function(box){
     box.querySelector('[data-launch]').addEventListener('click',function(){
       var f=document.createElement('iframe');
-      f.src='https://fsminecrafter.github.io/Red-Sandbox/';f.title='Red Sandbox';f.allow='fullscreen';
+      f.src=box.dataset.src||'https://fsminecrafter.github.io/Red-Sandbox/';f.title=box.dataset.title||'Red Sandbox';f.allow='fullscreen; autoplay';
       box.querySelector('.poster').hidden=true;box.appendChild(f);f.focus();
     });
   });
@@ -3420,7 +3477,7 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
     document.querySelectorAll('#pages [data-page]').forEach(function(art){
       index.push({t:txt(art.querySelector('h1')),w:'Project',u:'#/p/'+art.dataset.page,k:0});
     });
-    index.push({t:'Red Sandbox',w:'Project',u:'#/red-sandbox',k:0},{t:'Run Studio',w:'Open the studio',u:'studio/',k:0});
+    index.push({t:'Red Sandbox',w:'Project',u:'#/red-sandbox',k:0},{t:'Haul & Wrench',w:'Game',u:'#/haul-and-wrench',k:0},{t:'Run Studio',w:'Open the studio',u:'studio/',k:0});
     var fns={};index.forEach(function(e){if(e.k===1)fns[e.t]=1});
     index=index.filter(function(e){return !(e.c&&fns[e.t])});
     index.forEach(function(e){e.l=e.t.toLowerCase()});
