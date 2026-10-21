@@ -78,11 +78,11 @@ footer a{margin-left:20px}
 @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
 
 .docs{display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px;padding:24px 0 96px}
-.side{position:sticky;top:24px;align-self:start;display:flex;flex-direction:column;gap:2px;font-size:15px;max-height:calc(100vh - 48px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
-.side a{text-decoration:none;color:var(--muted);padding:6px 10px;border-left:2px solid var(--line)}
+.side{position:sticky;top:24px;align-self:start;display:flex;flex-direction:column;gap:0;font-size:14.5px;max-height:calc(100vh - 48px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.side a{text-decoration:none;color:var(--muted);padding:5px 12px;border-left:2px solid var(--line);line-height:1.35}
 .side a:hover{color:var(--ink)}
 .side a[aria-current="page"]{color:var(--ink);border-left-color:var(--accent);font-weight:500}
-.side .h{font-size:13px;color:var(--muted);margin:0 0 10px 12px}
+.side .h{font:600 11.5px/1.4 "Instrument Sans",system-ui,sans-serif;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 8px 14px}
 .side .h~.h{margin-top:24px}
 .doc h2.fn{font:500 19px/1.35 "JetBrains Mono",ui-monospace,Menlo,monospace;letter-spacing:0;margin:56px 0 12px;padding-top:28px;border-top:1px solid var(--line);scroll-margin-top:16px}
 .doc h2.fn code{background:none;padding:0;font-size:inherit}
@@ -217,6 +217,23 @@ header nav{align-items:center}
 .copy{position:absolute;top:8px;right:8px;padding:3px 8px;border:1px solid rgba(255,255,255,.18);border-radius:5px;background:var(--panel);color:var(--panel-dim);font:500 12px "Instrument Sans",system-ui,sans-serif;cursor:pointer;opacity:0;transition:opacity .15s}
 .doc pre:hover .copy,.copy:focus-visible,.copy.done{opacity:1}
 .copy:hover{color:var(--panel-ink)}
+/* code colours: blocks are dark in both themes, so one palette (the Run Studio editor's) */
+.doc pre{border:1px solid rgba(255,255,255,.06);font-size:13.5px}
+.doc pre[data-lang]::before{content:attr(data-lang);position:absolute;top:9px;right:12px;font:500 11px/1.4 "JetBrains Mono",ui-monospace,monospace;color:var(--panel-dim);letter-spacing:.03em;pointer-events:none;transition:opacity .15s}
+.doc pre[data-lang]:hover::before{opacity:0}
+.hl-keyword{color:#9DA9FF}.hl-type{color:#7FD1C7}.hl-string{color:#E6C07B}.hl-number,.hl-atom{color:#F0A27A}
+.hl-comment{color:#7F8590;font-style:italic}.hl-meta{color:#C792EA}.hl-fn{color:#82AAFF}.hl-op{color:#B9C0CA}
+.hl-prop{color:#D6DAE0}.hl-flag{color:#A6D7A0}
+/* section label above a docs page title */
+.doc .crumb{margin:0 0 10px;font:500 13px/1.4 "JetBrains Mono",ui-monospace,monospace;color:var(--muted)}
+.doc .crumb a{color:inherit;text-decoration:none}
+.doc .crumb a:hover{color:var(--accent)}
+.doc .crumb span{margin:0 6px;opacity:.6}
+/* the open page's sections, under its sidebar link */
+.side .sub{display:flex;flex-direction:column;border-left:2px solid var(--line);padding:2px 0 6px}
+.side .sub a{border-left:0;font-size:13.5px;padding:3px 12px 3px 24px;position:relative}
+.side .sub a.on{color:var(--accent)}
+.side .sub a.on::before{content:"";position:absolute;left:-2px;top:3px;bottom:3px;width:2px;background:var(--accent)}
 .side-toggle{display:none}
 /* search */
 .search{width:min(640px,calc(100vw - 32px));max-height:min(560px,calc(100vh - 96px));margin:12vh auto auto;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);box-shadow:0 24px 64px rgba(0,0,0,.28);overflow:hidden}
@@ -243,10 +260,12 @@ header nav{align-items:center}
   .pager .nx{grid-column:1}
   .anchor{display:none}
   .copy{opacity:1}
+  .doc pre[data-lang]::before{display:none}
+  .side .sub{display:none}
 }
 @media (max-width:640px){.ib kbd{display:none}.search{margin-top:16px}}
 @media (prefers-reduced-motion:reduce){.nitem{transition:none}.nitem:hover{transform:none}}
-code,pre,kbd,.term{font-variant-ligatures:none}
+code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
 [hidden]{display:none!important}
 </style>
 <script>try{var t=localStorage.getItem('xlabs-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
@@ -3375,6 +3394,7 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
   window.addEventListener('hashchange',route);route();
 })();
 </script>
+<script src="assets/highlight.js"></script>
 <script>
 // Theme, search, copy buttons, heading anchors and the mobile docs menu
 (function(){
@@ -3410,6 +3430,62 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
     });
     pre.appendChild(b);
   });
+
+  // ---- code colours, for the pages on screen (all 400 blocks at once would slow the first paint)
+  function colour(){
+    if(!window.xlHighlightAll)return;
+    document.querySelectorAll('#docs .doc:not([hidden]),#pages [data-page]:not([hidden])').forEach(function(a){xlHighlightAll(a)});
+  }
+
+  // ---- "Minimal-OS docs / Guides"-style label above each docs title
+  var docSide=document.querySelector('#docs .side');
+  document.querySelectorAll('#docs .doc').forEach(function(art){
+    var link=docSide&&docSide.querySelector('[data-nav="'+art.dataset.doc+'"]'),h1=art.querySelector('h1');
+    if(!link||!h1)return;
+    var g=link.previousElementSibling;
+    while(g&&!g.classList.contains('h'))g=g.previousElementSibling;
+    if(!g)return;
+    var first=g.nextElementSibling,p=document.createElement('p');
+    p.className='crumb';
+    p.innerHTML='<a></a><span aria-hidden="true">/</span>';
+    p.firstChild.textContent=g.textContent;p.firstChild.href=first?first.getAttribute('href'):'#/docs';
+    p.appendChild(document.createTextNode(link.textContent));
+    art.insertBefore(p,h1);
+  });
+
+  // ---- the open page's sections in the sidebar, marking the one being read
+  var subFor='',subLinks=[],subHeads=[];
+  function buildSub(){
+    var art=document.querySelector('#docs:not([hidden]) .doc:not([hidden])');
+    var id=art?art.dataset.doc:'';
+    if(id===subFor)return;
+    subFor=id;subLinks=[];subHeads=[];
+    var old=docSide&&docSide.querySelector('.sub');if(old)old.remove();
+    if(!art)return;
+    var heads=[].filter.call(art.querySelectorAll('h2[id]:not(.fn)'),function(h){return h.id.indexOf(id+'--')===0});
+    var link=docSide.querySelector('[data-nav="'+id+'"]');
+    if(heads.length<2||!link)return;
+    var box=document.createElement('div');box.className='sub';
+    heads.forEach(function(h){
+      var a=document.createElement('a');
+      a.href='#/docs/'+id+'/'+h.id.slice(id.length+2);
+      a.textContent=h.textContent.replace(/^#/,'');
+      box.appendChild(a);subLinks.push(a);subHeads.push(h);
+    });
+    link.after(box);
+    spy();
+  }
+  function spy(){
+    if(!subHeads.length)return;
+    var cur=-1;
+    for(var i=0;i<subHeads.length;i++){if(subHeads[i].getBoundingClientRect().top<140)cur=i;else break}
+    if(window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4)cur=subHeads.length-1;
+    subLinks.forEach(function(a,i){a.classList.toggle('on',i===cur)});
+  }
+  var ticking=false;
+  window.addEventListener('scroll',function(){if(!ticking){ticking=true;requestAnimationFrame(function(){ticking=false;spy()})}},{passive:true});
+  function onRoute(){colour();buildSub()}
+  window.addEventListener('hashchange',onRoute);onRoute();
 
   // ---- "#" links on docs headings
   document.querySelectorAll('#docs .doc').forEach(function(art){

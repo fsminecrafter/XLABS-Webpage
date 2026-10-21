@@ -94,6 +94,7 @@ function show(pageId, anchor) {
   if (content.dataset.page !== p.id) {
     content.innerHTML = p.html;
     content.dataset.page = p.id;
+    if (window.xlHighlightAll) window.xlHighlightAll(content);
     for (const pre of content.querySelectorAll('pre')) {
       const c = el('button', 'dcopy', 'Copy');
       c.type = 'button';
