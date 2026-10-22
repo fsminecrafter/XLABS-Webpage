@@ -19,6 +19,10 @@
   color-scheme:dark;
 }
 [hidden]{display:none!important}
+.devgrid h3{margin:10px 0 4px;color:#7fd889}
+.devgrid .row{flex-wrap:wrap;gap:6px}
+.devgrid .btn{font-size:13px;padding:5px 9px}
+.brand{cursor:default;user-select:none;-webkit-user-select:none}
 .setgrid{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;align-items:center;margin:8px 0}
 .setgrid>span{color:var(--dim);font-weight:600}
 #volRange,#mvolRange{width:min(260px,52vw);accent-color:var(--hazard)}
@@ -2645,6 +2649,48 @@ function renderHUD(){
   if(d.paused){ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(0,0,W,H)}
 }
 
+/* ================= secret dev menu: type "xlabs" (or tap the title 5 times) ================= */
+let devBuf='',devTaps=[];
+function devKey(k){if(k.length!==1)return;devBuf=(devBuf+k).slice(-5);if(devBuf==='xlabs'){devBuf='';keys.gas=keys.brake=keys.left=keys.right=false;devMenu()}}
+document.addEventListener('pointerdown',e=>{if(!e.target.closest||!e.target.closest('.brand'))return;const n=performance.now();devTaps=devTaps.filter(x=>n-x<2000);devTaps.push(n);if(devTaps.length>=5){devTaps=[];devMenu()}});
+function devMenu(){const d=drive,inDrive=scene==='drive'&&d.route&&!d.over;if(inDrive&&!d.paused){if(d.lock)return;d.paused=true;audioSilence()}
+  const B=(a,t,cls)=>`<button class="btn ${cls||''}" data-act="dev" data-arg="${a}">${t}</button>`;
+  modal(`<h2 style="color:#7fd889">XLABS dev menu</h2><p class="muted">Cheats and test shortcuts. Changes save like normal progress.</p>
+   <div class="devgrid">
+   <h3>Money &amp; reputation</h3><div class="row">${B('money:1000','+$1,000')}${B('money:10000','+$10,000')}${B('money:100000','+$100,000')}${B('debt','Clear loan')}${B('rep:1','+1 ★')}${B('rep:5','Max ★')}</div>
+   <h3>Vehicle</h3><div class="row">${B('fix','Repair everything')}${B('fuel','Fill tank &amp; battery')}${B('mods','All mods on this vehicle')}${B('tools','All workshop tools')}${B('sup','+5 of every supply')}</div>
+   <div class="muted">Get a brand-new vehicle:</div><div class="row">${[...VORDER,...ALXV].map(t=>B('veh:'+t,VEH[t].n)).join('')}</div>
+   <h3>Alterax</h3><div class="row">${B('pass:ok','Valid pass')}${B('pass:fake','Forged pass')}${B('alxjobs','Alterax jobs on the board')}</div>
+   ${inDrive?`<h3>This drive</h3><div class="row">${B('tp:border','Jump to the border')}${B('tp:end','Jump to the destination')}${B('chase','Start a pursuit')}${B('heli','Send the helicopter')}${B('calm','Call off pursuit')}${B('stop','Stop the vehicle')}</div>`:
+     `<h3>Teleport</h3><div class="row">${CITIES.map((c,i)=>B('city:'+i,c.n,i===S.city?'pri':'')).join('')}</div>`}
+   <h3>Time &amp; story</h3><div class="row">${B('time:8','Morning')}${B('time:13','Noon')}${B('time:22','Night')}${B('rest','Fully rested')}${B('story','Next story chapter')}${B('lot','New used-car lot')}</div></div>
+   <div class="row"><button class="btn pri" data-act="setdone">Close</button></div>`)}
+function devCmd(arg){const [c,v]=String(arg).split(':'),vs=V(),d=drive,inDrive=scene==='drive'&&d.route&&!d.over;let msg='Done';
+  switch(c){
+   case 'money':S.money+=+v;msg=`+${money(+v)}`;break;
+   case 'debt':S.loan=0;msg='Loan cleared';break;
+   case 'rep':S.rep=clamp(v==='5'?5:S.rep+1,0,5);msg=`Reputation ${S.rep.toFixed(1)} ★`;genJobs();break;
+   case 'fix':for(const p of PARTS){const st=vs.parts[p.id];st.cond=100;st.out=false;st.fst.forEach(f=>{f.p=1;f.tq=0.85;f.seized=false;f.soak=0});st.know={lvl:3,text:'Measured on bench: 100%',est:100,stale:false}}
+     if(inDrive){d.flatF=d.flatR=false;d.seized=false;d.wheelOff=false;d.deadBatt=false;d.engineOn=true;d.temp=Math.min(d.temp,90);d.bt=40}msg='Everything repaired';break;
+   case 'fuel':vs.fuel=tankCap();vs.soc=1;msg='Tank and battery full';break;
+   case 'mods':for(const m of MODS)vs.up[m.id]=true;vs.up.tank=true;msg='Every mod fitted';break;
+   case 'tools':for(const t of TOOL_UP)S.tools[t.id]=true;msg='All tools owned';break;
+   case 'sup':S.sup.jerry+=5;S.sup.jump+=5;S.sup.jammer=(S.sup.jammer||0)+5;vs.spare+=5;msg='+5 jerry cans, jump packs, cam jammers and spares';break;
+   case 'veh':{const nv=newVehicle(v,'new');S.vehicles.push(nv);if(!S.taken.length&&!inDrive){stopIdle(true);S.cur=S.vehicles.length-1;selPart='oil'}msg=`${VEH[v].n} added${S.taken.length||inDrive?' (switch after your deliveries)':''}`;break}
+   case 'pass':S.pass={ok:v==='ok',flaw:v==='ok'?null:'seal',serial:'AX-'+String(100000+Math.floor(Math.random()*900000)),day:S.day,until:S.day+7,used:false};msg=v==='ok'?'Valid pass in your pocket':'Forged pass (no seal)';break;
+   case 'alxjobs':if(S.city===ALX){msg='You are in Alterax: every job here already pays +75%';break}genJobs();S.jobs.slice(0,3).forEach(j=>{const km=distKm(S.city,ALX);j.pay=Math.round(j.pay/j.km*km*ALX_PAY/5)*5;j.to=ALX;j.km=km;j.deadline=Math.round(km*1000/15*1.7*DF().dl)});msg='3 Alterax jobs on the board';break;
+   case 'city':if(inDrive){msg='Finish the drive first';break}S.city=+v;S.alx=+v===ALX?{from:ALX_GATE,day:S.day}:null;S.taken=[];genJobs();TOWN.city=-1;if(scene!=='garage')setScene('garage');msg=`Now in ${CITIES[+v].n}`;break;
+   case 'tp':if(!inDrive)break;{const R=d.route,g=(R.events||[]).find(e=>e.type==='border');d.x=v==='border'&&g?g.x-60:R.len-40;d.v=0;d.cruise=0;msg=v==='border'?(g?'60 m before the border':'No border on this road'):'Just before the depot'}break;
+   case 'chase':if(inDrive&&R0()&&!d.chase){startChase(99,60,true);msg='Pursuit started'}else msg='Only on an Alterax road';break;
+   case 'heli':if(inDrive&&d.chase){d.chase.t=Math.max(d.chase.t,heliDelay());msg='Helicopter scrambled'}else msg='Start a pursuit first';break;
+   case 'calm':if(d.chase){d.chase=null;d.speedT=0;msg='Pursuit called off'}break;
+   case 'stop':if(inDrive){d.v=0;d.cruise=0}break;
+   case 'time':S.clock=+v*60;msg=`Clock set to ${v}:00`;break;
+   case 'rest':S.awake=0;msg='Fully rested';break;
+   case 'story':if(S.story.ch<6){S.story.ch++;msg=`Story chapter ${S.story.ch}`}break;
+   case 'lot':S.lot=null;msg='Fresh cars on the lot';break}
+  save();updateTop();if(scene==='garage')renderGaragePanel();toast('Dev: '+msg,1800);devMenu()}
+const R0=()=>drive.route&&drive.route.alx;
 /* ================= TOWN: walk the street, go into shops, talk to people ================= */
 const PLAYER_LOOK={n:'You',skin:'#e0b48f',hair:'#5a3a22',shirt:'#2f5d8a',hat:true,hatc:'#f2b51c'};
 const TOWN={x:0,face:1,walk:0,target:null,city:-1,w:2000,venues:[],peds:[],npcX:0,near:null,lastNear:'',camX:0,sc:1};
@@ -3144,6 +3190,7 @@ const ACT={
   jump:()=>{S.money-=50;V().soc=0.45;resumeAfterService();updateTop()},
   jumppack:()=>{S.sup.jump--;V().soc=0.45;resumeAfterService();updateTop()},
   toGarage:()=>toGarage(),
+  dev:(a)=>devCmd(a),
   town:()=>{if(scene==='town')setScene('garage');else if(scene!=='drive')enterTown()},townat:(id)=>enterTown(id),townnpc:()=>enterTown('npc'),tact:()=>townAct(),tgarage:()=>{closeModal();setScene('garage')},
   myveh:()=>shopModal('vehicles','garage'),
   selljunk:(a)=>{const J=S.junk||[];let got=0;if(a==='all'){for(const j of J)got+=junkValue(j);S.junk=[]}else{const j=J[+a];if(!j)return;got=junkValue(j);J.splice(+a,1)}S.money+=got;SFX.cash();toast(`Sold for ${money(got)}`);shopModal('sell');updateTop();save()},
@@ -3206,7 +3253,7 @@ function bindPedal(el,key){
 }
 bindPedal($('#tGas'),'gas');bindPedal($('#tBrake'),'brake');bindPedal($('#tLeft'),'left');bindPedal($('#tRight'),'right');
 addEventListener('keydown',e=>{
-  const k=e.key.toLowerCase();if(e.target.tagName==='INPUT')return;initAudio();
+  const k=e.key.toLowerCase();if(e.target.tagName==='INPUT')return;initAudio();devKey(k);
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
   if(k==='escape'&&!$('#modal').hidden&&scene!=='drive'){closeModal();return}
   if(scene==='drive'){
