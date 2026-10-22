@@ -1019,7 +1019,7 @@ function newVehicle(type,mode,conds,paint){
   return veh;
 }
 function newGame(diff){diff=DIFFS[diff]?diff:'normal';
-  S={v:2,diff,awake:0,dayTemp:0,story:{ch:1,flags:{},pages:[]},passenger:null,money:DIFFS[diff].money,rep:1,city:0,day:1,clock:8*60,cur:0,vehicles:[newVehicle('bug','starter')],inv:{},sup:{jerry:0,jump:0},
+  S={v:2,diff,awake:0,dayTemp:0,story:{ch:1,flags:{},pages:[]},passenger:null,money:DIFFS[diff].money,rep:1,city:0,day:1,clock:8*60,cur:0,vehicles:[newVehicle('bug','starter')],inv:{},sup:{jerry:0,jump:0,jammer:0},
      tools:{impact:false,torque:false,scanner:false,stetho:false},impactOn:true,jobs:[],taken:[],jid:1,loan:0,dayStart:DIFFS[diff].money,jackpot:2500,casinoNet:0,lot:null,
      stats:{deliveries:0,km:0,earned:0},seenHelp:false,pass:null,alx:null};
   genJobs();
@@ -1036,7 +1036,7 @@ function migrate(o){
   for(const v of o.vehicles){if(!VEH[v.type])return null;for(const p of PARTS){const st=v.parts[p.id];if(!st)return null;
     const n=partFs(p.id,v.type).length;if(!Array.isArray(st.fst)||st.fst.length!==n)st.fst=range(n).map(()=>({p:1,tq:0.85,seized:false,soak:0,ang:0}))}}
   o.cur=clamp(o.cur|0,0,o.vehicles.length-1);o.loan=o.loan||0;if(!o.story)o.story={ch:1,flags:{intro:true},pages:[]};o.passenger=null;if(!DIFFS[o.diff])o.diff='normal';o.awake=o.awake||0;o.dayTemp=o.dayTemp||0;if(o.jackpot==null)o.jackpot=2500;o.casinoNet=o.casinoNet||0;for(const v of o.vehicles){v.up=v.up||{};if(v.up.tune){v.up.ecu=true;delete v.up.tune}if(v.mileage==null)v.mileage=150000}if(o.dayStart==null)o.dayStart=o.money;
-  if(o.inv)for(const k of Object.keys(o.inv)){if(k.split(':').length===2){o.inv[k+':oem']=(o.inv[k+':oem']||0)+o.inv[k];delete o.inv[k]}}o.taken=o.taken||[];o.jobs=o.jobs||[];o.inv=o.inv||{};o.sup=o.sup||{jerry:0,jump:0};
+  if(o.inv)for(const k of Object.keys(o.inv)){if(k.split(':').length===2){o.inv[k+':oem']=(o.inv[k+':oem']||0)+o.inv[k];delete o.inv[k]}}o.taken=o.taken||[];o.jobs=o.jobs||[];o.inv=o.inv||{};o.sup=o.sup||{jerry:0,jump:0};o.sup.jammer=o.sup.jammer||0;
   o.pass=o.pass||null;o.alx=o.alx||null;
   return o;
 }
@@ -1556,7 +1556,7 @@ function renderGaragePanel(){
       <button class="btn" data-act="sleep">${S.city===ALX?'Sleep & leave':'Sleep'} <small>−${money(S.vehicles.reduce((a,v)=>a+insurance(v),0))}</small></button>
       <button class="btn" data-act="gtab" data-arg="repair">Diagnose →</button><button class="btn" data-act="shop" data-arg="used">Used car lot</button>${S.city===ALX?'':'<button class="btn" data-act="casino" data-arg="wheel" style="grid-column:1/-1;border-color:#62c06c;color:#7fd889">Lucky Lugnut Casino</button>'}</div>
       <div class="muted mono" style="color:${(S.awake||0)/60*DF().fatigue>14?'var(--warn)':''}">Awake ${Math.floor((S.awake||0)/60)} h · Air ${Math.round(ambient())}°C · Fuel here $${fuelPrice().toFixed(2)}/L</div>
-      <div class="muted mono">Spares ${vs.spare} · Jerry cans ${S.sup.jerry} · Jump packs ${S.sup.jump}</div>`;
+      <div class="muted mono">Spares ${vs.spare} · Jerry cans ${S.sup.jerry} · Jump packs ${S.sup.jump} · Cam jammers ${S.sup.jammer||0}</div>`;
   }else if(gTab==='repair'){
     h+=`<div class="card"><h3>Listen to the engine</h3>
       <div class="row">${idle.on?`<button class="btn danger" data-act="idleoff">Stop engine</button><button class="btn" id="bRev">Hold to rev</button>`:`<button class="btn" data-act="idleon" ${issues.length?'disabled':''}>Start engine</button>`}
@@ -1898,7 +1898,7 @@ function startDrive(test,to,opt){opt=opt||{};
   const Vd=VD();
   Object.assign(drive,{route:R,mass:Vd.mass*(V().up.wheels?0.97:1)+(test?0:cargoKg()),g:0,shiftT:0,pitch:0,pv:0,acc:0,lastThr:0,ptc:[],emitAcc:0,spin:false,skid:false,limiter:false,vm:null,traffic:[],x:30,v:0,t:0,camH:0,susY:0,susV:0,rot:0,temp:V().engT!=null?Math.max(V().engT,ambient()):ambient(),amb:ambient(),wind:(Math.random()*2-1)*7,blink:0,fuelUsed:0,distM:0,
     flatF:false,flatR:false,fines:0,over:false,paused:false,revHold:0,misfire:0,missEvt:false,msgs:[],msgCd:{},
-    looseD:{tiresF:0,tiresR:0},prevFw:null,prevRw:null,lastGrade:0,ppm:0,rain:Math.random()<(R.alx?0.12+0.65*jungleDepth(R,30):0.25),rainSeg:0,drops:[],chase:null,dead:0,lock:false,zoneMsg:false,speedT:0,
+    looseD:{tiresF:0,tiresR:0},prevFw:null,prevRw:null,lastGrade:0,ppm:0,rain:Math.random()<(R.alx?0.12+0.65*jungleDepth(R,30):0.25),rainSeg:0,drops:[],chase:null,dead:0,lock:false,jam:false,zoneMsg:false,speedT:0,
     flash:0,bt:40,cruise:0,fog:0,stuckT:0,chatNext:20,bp:0,tp:0,engineOn:true,crank:0.5+(1-sp)*1.4,startPow:sp,wobF:0,wobR:0,lampN:0,rpm:0,gear:'N',seized:false,deadBatt:false,wheelOff:false,peakT:0,brakeIn:0});
   for(const p of PARTS)V().parts[p.id].rolled=false;
   for(let i=0;i<70;i++)drive.drops.push({x:Math.random(),y:Math.random(),s:0.6+Math.random()*0.6});
@@ -1906,6 +1906,7 @@ function startDrive(test,to,opt){opt=opt||{};
   const legJobs=test?[]:S.taken.filter(j=>j.to===R.to);
   dmsg(test?'Test drive: loop around town and stop in the yellow bay.':legJobs.length?`${legJobs.length} deliver${legJobs.length>1?'ies':'y'} for ${CITIES[R.to].n}. Park in the yellow bay.`:`Heading to ${CITIES[R.to].n}. Park in the yellow bay.`,'#f2b51c',5);
   if(R.alx==='in')dmsg(`Alterax is ${(R.len/1000).toFixed(1)} km away, through the jungle. Stop at the border with your pass.`,'#9cc7e8',5);
+  if(!test&&R.cams.length&&S.sup.jammer>0){S.sup.jammer--;drive.jam=true;dmsg(`Camera jammer on: ${R.cams.length} speed camera${R.cams.length>1?'s':''} on this road won't see you. (${S.sup.jammer} left)`,'#62c06c',5)}
   if(drive.rain)dmsg('Rain on the road. Less grip, longer stops.','#9cc7e8',4);
   else if(hourNow()>=5&&hourNow()<10&&Math.random()<0.4){drive.fog=0.45+Math.random()*0.3;dmsg('Morning fog. Visibility is low, take it easy.','#d6dce2',4)}
 }
@@ -2010,7 +2011,7 @@ function stepDrive(dt){
   const fw=d.x-(Vd.L-Vd.wf)*K,rw=d.x-(Vd.L-Vd.wr)*K;
   if(d.prevFw!=null){for(const px of R.pots){if((d.prevFw<px&&fw>=px)||(d.prevFw>px&&fw<=px))pothole(av,'F');if((d.prevRw<px&&rw>=px)||(d.prevRw>px&&rw<=px))pothole(av,'R')}}
   d.prevFw=fw;d.prevRw=rw;
-  for(const cx of R.cams){if(ox<cx&&d.x>=cx){const lim=limitAt(R,cx),kk=d.v*3.6;if(kk>lim+DF().tol){const fine=Math.round((40+(kk-lim)*3)*DF().fine);S.money-=fine;d.fines+=fine;d.flash=0.35;
+  for(const cx of R.cams){if(ox<cx&&d.x>=cx){const lim=limitAt(R,cx),kk=d.v*3.6;if(d.jam){if(kk>lim+DF().tol)dmsg(`Speed camera jammed at ${Math.round(kk)} km/h. No fine.`,'#62c06c',3)}else if(kk>lim+DF().tol){const fine=Math.round((40+(kk-lim)*3)*DF().fine);S.money-=fine;d.fines+=fine;d.flash=0.35;
     dmsg(`Speed camera! ${Math.round(kk)} in a ${lim} zone. Fine ${money(fine)}.`,'#e4493b',4);SFX.tq()}}}
   for(const L of R.lights||[]){if(ox<L.x&&d.x>=L.x&&lightState(L)==='red'&&av>1.5){const f=Math.round(120*DF().fine);S.money-=f;d.fines+=f;d.flash=0.35;dmsg(`Ran a red light! Fine ${money(f)}.`,'#e4493b',4);SFX.tq()}}
   // fuel from actual engine power (brake-specific fuel consumption), plus idle
@@ -2509,6 +2510,7 @@ function renderHUD(){
    ctx.fillStyle=bv>0.8?'#e4493b':'#b0574a';ctx.fillRect(px2+3,py2+ph-3-(ph-16)*bv,8,(ph-16)*bv);
    ctx.fillStyle='#62c06c';ctx.fillRect(px2+15,py2+ph-3-(ph-16)*gv,8,(ph-16)*gv);
    ctx.fillStyle='#9da5ac';ctx.font='700 9px "Share Tech Mono", monospace';ctx.fillText('B  G',px2+4,py2+10)}
+  if(d.jam){ctx.fillStyle='#62c06c';ctx.font='700 11px "Share Tech Mono", monospace';ctx.fillText('● CAM JAMMER ON',cx+2,cy+ch+36)}
   if(d.cruise>0){ctx.fillStyle='#62c06c';ctx.font='700 11px "Share Tech Mono", monospace';ctx.fillText('CRUISE '+Math.round(d.cruise*3.6),cx+12,cy+ch-24)}
   let lx=cx;const ly=cy+ch+6;ctx.font='700 10px "Share Tech Mono", monospace';
   for(const [n,on] of (d.lamps||[])){ctx.fillStyle=on?(Math.floor(d.t*3)%2?'#e9a53a':'#e4493b'):'rgba(16,19,22,.8)';ctx.fillRect(lx,ly,40,16);ctx.fillStyle=on?'#16130c':'#4a535c';ctx.fillText(n,lx+5,ly+12);lx+=44}
@@ -2615,7 +2617,8 @@ function shopModal(tab){
     h+=`<table><tr><td><b>Spare tire</b> for ${Vd.n} (carrying ${vs.spare})<br><span class="muted">Fit it on the roadside after a blowout instead of calling a tow.</span></td><td style="text-align:right"><button class="btn pri" data-act="buyspare" ${S.money<sp?'disabled':''}>${money(sp)}</button></td></tr>
      <tr><td><b>Jerry can, 10 L</b> (have ${S.sup.jerry})<br><span class="muted">Pour it in if you run dry instead of paying for fuel delivery.</span></td><td style="text-align:right"><button class="btn pri" data-act="buysup" data-arg="jerry" ${S.money<30?'disabled':''}>$30</button></td></tr>
      ${S.city===ALX?'':`<tr><td><b>Alterax pass</b> (${S.pass?'have one':'none'})<br><span class="muted">Required at the Alterax border. Good for one trip there and back. Forgeries circulate: inspect it.</span></td><td style="text-align:right">${S.pass?'<button class="btn" data-act="passview">Inspect</button>':`<button class="btn pri" data-act="buypass" data-arg="shop" ${S.money<ALX_PASS?'disabled':''}>${money(ALX_PASS)}</button>`}</td></tr>`}
-     <tr><td><b>Jump pack</b> (have ${S.sup.jump})<br><span class="muted">One-shot booster for a flat battery, at the roadside or in the bay.</span></td><td style="text-align:right"><button class="btn pri" data-act="buysup" data-arg="jump" ${S.money<80?'disabled':''}>$80</button></td></tr></table>`;
+     <tr><td><b>Jump pack</b> (have ${S.sup.jump})<br><span class="muted">One-shot booster for a flat battery, at the roadside or in the bay.</span></td><td style="text-align:right"><button class="btn pri" data-act="buysup" data-arg="jump" ${S.money<80?'disabled':''}>$80</button></td></tr>
+     <tr><td><b>Speed camera jammer</b> (have ${S.sup.jammer||0})<br><span class="muted">Blinds every speed camera for one drive. Switches on by itself on the next drive that passes a camera, then burns out. It does nothing against Alterax guard posts.</span></td><td style="text-align:right"><button class="btn pri" data-act="buysup" data-arg="jammer" ${S.money<SUP_COST.jammer?'disabled':''}>${money(SUP_COST.jammer)}</button></td></tr></table>`;
   }else{
     if(shopTab==='used'){
       if(!S.lot||S.lot.day!==S.day||S.lot.city!==S.city)genLot();
@@ -2793,6 +2796,7 @@ function helpModal(first){
 }
 
 /* ================= actions ================= */
+const SUP_COST={jerry:30,jump:80,jammer:90};
 function buy(cost){if(S.money<cost){toast('Not enough cash');return false}S.money-=cost;SFX.cash();return true}
 /* Alterax pass: $100, one trip there and back. About 1 in 20 is a forgery with one visible flaw. */
 function buyPass(){if(S.city===ALX){toast('Passes are sold outside Alterax');return false}if(S.pass){toast('You already have an Alterax pass');return false}if(!buy(ALX_PASS))return false;
@@ -2843,7 +2847,7 @@ const ACT={
   buytool:(id)=>{const u=TOOL_UP.find(x=>x.id===id);if(S.tools[id]||!buy(u.cost))return;S.tools[id]=true;shopModal();updateTop();save();if(scene==='bench')renderToolbar()},
   buyvup:(id)=>{const Vd=VD(),cost=Math.round((id==='tune'?900:600)*Vd.partM/10)*10;if(V().up[id]||!buy(cost))return;V().up[id]=true;shopModal();updateTop();save()},
   buyspare:()=>{const sp=Math.round(140*VD().partM/5)*5+20;if(!buy(sp))return;V().spare++;shopModal();updateTop();save()},
-  buysup:(id)=>{if(!buy(id==='jerry'?30:80))return;S.sup[id]++;shopModal();updateTop();save()},
+  buysup:(id)=>{if(!SUP_COST[id]||!buy(SUP_COST[id]))return;S.sup[id]=(S.sup[id]||0)+1;shopModal();updateTop();save()},
   buyveh:(type)=>{const v=VEH[type];if(v.alx&&S.city!==ALX)return;if(S.rep<(v.rep||0)){toast(`Needs ${v.rep} ★ reputation`);return}if(!buy(newPrice(type)))return;const nv=newVehicle(type,'new');S.vehicles.push(nv);
     if(!S.taken.length){stopIdle(true);S.cur=S.vehicles.length-1;selPart='oil'}thumbCache[type+nv.paint]=null;shopModal('vehicles');updateTop();save();toast(`Bought a ${v.n}. ${S.taken.length?'Switch to it after your deliveries.':'It is now your active vehicle.'}`)},
   switchveh:(i)=>{if(S.taken.length)return;stopIdle(true);S.cur=+i;selPart='oil';shopModal('vehicles');updateTop();save()},
