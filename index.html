@@ -329,8 +329,17 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
         <a class="card" href="#/p/moswm"><span class="tag">Window manager · C</span><h3>mosWM</h3><p>Composites application windows with damage tracking, tiles them to edges, and gives apps a protected window API.</p><span class="more">Read more →</span></a>
         <a class="card" href="studio/"><span class="tag">Web tool · JavaScript</span><h3>Run Studio</h3><p>Write a <code>.run</code> app, try it in a live mosWM desktop, then build the real x86_64 program — all in the browser.</p><span class="more">Open the studio →</span></a>
         <a class="card" href="#/red-sandbox"><span class="tag">Web · JavaScript, WebAssembly</span><h3>Red Sandbox</h3><p>A 3D physics workbench: glue, gears, axles, springs, engines with real gas combustion, and wired signals.</p><span class="more">Play it here →</span></a>
-        <a class="card" href="#/haul-and-wrench"><span class="tag">Game · JavaScript, Canvas · new</span><h3>Haul &amp; Wrench</h3><p>Run deliveries between towns in a tired 1968 Volta Bug and keep it alive yourself: diagnose faults by ear, scan codes, and torque every bolt by hand.</p><span class="more">Play it here →</span></a>
       </div>
+    </section>
+
+    <section id="games">
+      <h2>Games</h2>
+      <div class="cards">
+        <a class="card" href="#/haul-and-wrench"><span class="tag">Game · JavaScript, Canvas · new</span><h3>Haul &amp; Wrench</h3><p>Run deliveries between towns in a tired 1968 Volta Bug and keep it alive yourself: diagnose faults by ear, scan codes, and torque every bolt by hand.</p><span class="more">Play it here →</span></a>
+        <a class="card" href="https://joel-minecrafter.itch.io/hashtycoon" target="_blank" rel="noopener"><span class="tag">Game · itch.io</span><h3>Hash Tycoon</h3><p>A tycoon game, published on itch.io.</p><span class="more">Play on itch.io ↗</span></a>
+        <a class="card" href="https://joel-minecrafter.itch.io/last" target="_blank" rel="noopener"><span class="tag">Game · itch.io</span><h3>Last</h3><p>A game published on itch.io.</p><span class="more">Play on itch.io ↗</span></a>
+      </div>
+      <p class="note">More games on <a href="https://joel-minecrafter.itch.io/" target="_blank" rel="noopener">itch.io</a>.</p>
     </section>
 
     <section id="minimal-os">
@@ -3285,6 +3294,7 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
     <span class="flinks">
       <a href="#/docs">Docs</a>
       <a href="studio/">Run Studio</a>
+      <a href="#games">Games</a>
       <a href="https://github.com/fsminecrafter/Minimal-OS">Minimal-OS</a>
       <a href="https://github.com/fsminecrafter/Minimal-OS-SDK">SDK</a>
       <a href="https://github.com/fsminecrafter/MOSdesk">MOSdesk</a>
@@ -3553,7 +3563,7 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
     document.querySelectorAll('#pages [data-page]').forEach(function(art){
       index.push({t:txt(art.querySelector('h1')),w:'Project',u:'#/p/'+art.dataset.page,k:0});
     });
-    index.push({t:'Red Sandbox',w:'Project',u:'#/red-sandbox',k:0},{t:'Haul & Wrench',w:'Game',u:'#/haul-and-wrench',k:0},{t:'Run Studio',w:'Open the studio',u:'studio/',k:0});
+    index.push({t:'Red Sandbox',w:'Project',u:'#/red-sandbox',k:0},{t:'Haul & Wrench',w:'Game',u:'#/haul-and-wrench',k:0},{t:'Hash Tycoon',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/hashtycoon',k:0},{t:'Last',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/last',k:0},{t:'Run Studio',w:'Open the studio',u:'studio/',k:0});
     var fns={};index.forEach(function(e){if(e.k===1)fns[e.t]=1});
     index=index.filter(function(e){return !(e.c&&fns[e.t])});
     index.forEach(function(e){e.l=e.t.toLowerCase()});
