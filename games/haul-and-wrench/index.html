@@ -21,7 +21,7 @@
 [hidden]{display:none!important}
 .setgrid{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;align-items:center;margin:8px 0}
 .setgrid>span{color:var(--dim);font-weight:600}
-#volRange{width:min(260px,52vw);accent-color:var(--hazard)}
+#volRange,#mvolRange{width:min(260px,52vw);accent-color:var(--hazard)}
 /* Alterax */
 .tag.alx{background:#2f5a2a;color:#f0dc8a;border-color:#3d6b34}
 .card.alxcard{border-color:#3d6b34;background:linear-gradient(180deg,rgba(47,90,42,.22),rgba(47,90,42,.06))}
@@ -267,16 +267,18 @@ addEventListener('resize',()=>{resize()});
    rain, hiss, alternator whine, brake squeal/grind, starter, impact gun) whose gains
    follow the vehicle state, plus short scheduled one-shots (knock, ticks, rattles). */
 /* settings: master volume 0-200%, sound on/off, graphics mode; remembered in this browser */
-const VOL={v:1};try{const v=parseFloat(localStorage.getItem('hw_vol'));if(v>=0&&v<=2)VOL.v=v;const g=localStorage.getItem('hw_gfx');if(g==='low'||g==='high'||g==='auto'){gfxMode=g;lowGfx=g==='low'}}catch(e){}
+const VOL={v:1,m:1};try{const v=parseFloat(localStorage.getItem('hw_vol'));if(v>=0&&v<=2)VOL.v=v;const mv=parseFloat(localStorage.getItem('hw_mvol'));if(mv>=0&&mv<=2)VOL.m=mv;const g=localStorage.getItem('hw_gfx');if(g==='low'||g==='high'||g==='auto'){gfxMode=g;lowGfx=g==='low'}}catch(e){}
 function applyVol(){if(AU.A&&AU.M)aset(AU.M.gain,0.9*VOL.v,0.05)}
 function settingsModal(){modal(`<h2>Settings</h2><div class="setgrid">
    <span>Sound</span><div><button class="btn ${AU.on?'pri':''}" data-act="sound">${AU.on?'On':'Off'}</button></div>
-   <span>Music</span><div><button class="btn ${MUS.on?'pri':''}" data-act="music">${MUS.on?'On':'Off'}</button></div>
-   <span>Volume</span><div class="row"><input type="range" id="volRange" min="0" max="200" step="5" value="${Math.round(VOL.v*100)}" aria-label="Master volume"><b id="volVal" class="mono">${Math.round(VOL.v*100)}%</b></div>
+   <span>Sound volume</span><div class="row"><input type="range" id="volRange" min="0" max="200" step="5" value="${Math.round(VOL.v*100)}" aria-label="Sound effects volume" ${AU.on?'':'disabled'}><b id="volVal" class="mono">${Math.round(VOL.v*100)}%</b></div>
+   <span>Music</span><div><button class="btn ${MUS.on&&AU.on?'pri':''}" data-act="music" ${AU.on?'':'disabled'}>${MUS.on?'On':'Off'}</button>${AU.on?'':' <span class="muted">(Sound is off)</span>'}</div>
+   <span>Music volume</span><div class="row"><input type="range" id="mvolRange" min="0" max="200" step="5" value="${Math.round(VOL.m*100)}" aria-label="Music volume" ${AU.on&&MUS.on?'':'disabled'}><b id="mvolVal" class="mono">${Math.round(VOL.m*100)}%</b></div>
    <span>Graphics</span><div class="row">${['auto','low','high'].map(m=>`<button class="btn ${gfxMode===m?'pri':''}" data-act="setgfx" data-arg="${m}">${m}</button>`).join('')}</div></div>
-   <p class="muted">Volume above 100% boosts every sound and the music. Low graphics turns off particles and some scenery for slower devices.</p>
+   <p class="muted">Turning Sound off silences everything, music included. Sound volume covers the engine, road and effects; music volume only the music. Above 100% boosts them. Low graphics turns off particles and some scenery for slower devices.</p>
    <div class="row"><button class="btn pri" data-act="setdone">Done</button></div>`)}
-document.addEventListener('input',e=>{if(e.target&&e.target.id==='volRange'){VOL.v=e.target.value/100;const l=document.getElementById('volVal');if(l)l.textContent=e.target.value+'%';applyVol();try{localStorage.setItem('hw_vol',String(VOL.v))}catch(_){}}});
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='mvolRange'){VOL.m=e.target.value/100;const l=document.getElementById('mvolVal');if(l)l.textContent=e.target.value+'%';try{localStorage.setItem('hw_mvol',String(VOL.m))}catch(_){}}
+  if(e.target&&e.target.id==='volRange'){VOL.v=e.target.value/100;const l=document.getElementById('volVal');if(l)l.textContent=e.target.value+'%';applyVol();try{localStorage.setItem('hw_vol',String(VOL.v))}catch(_){}}});
 const AU={A:null,on:true,n:{},sched:{knock:0,clat:0,chug:0,rattle:0,creak:0},lastRev:0};
 function distCurve(k){const c=new Float32Array(256);for(let i=0;i<256;i++){const x=i/128-1;c[i]=(1+k)*x/(1+k*Math.abs(x))}return c}
 function initAudio(){
@@ -284,7 +286,7 @@ function initAudio(){
   if(AU.A){if(AU.A.state==='suspended')AU.A.resume();return}
   try{
     const A=new (window.AudioContext||window.webkitAudioContext)();AU.A=A;const sr=A.sampleRate;
-    const comp=A.createDynamicsCompressor();comp.threshold.value=-16;comp.knee.value=12;comp.ratio.value=5;comp.connect(A.destination);
+    const comp=A.createDynamicsCompressor();comp.threshold.value=-16;comp.knee.value=12;comp.ratio.value=5;comp.connect(A.destination);AU.C=comp;
     const M=A.createGain();M.gain.value=0.9*VOL.v;M.connect(comp);AU.M=M;
     const nb=A.createBuffer(1,sr*2,sr),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;AU.noise=nb;
     const bb=A.createBuffer(1,Math.floor(sr*0.25),sr),bd=bb.getChannelData(0);for(let i=0;i<bd.length;i++)bd[i]=(Math.random()*2-1)*Math.pow(1-i/bd.length,4);AU.burst=bb;
@@ -414,8 +416,8 @@ const msnare=(t,v)=>{mnoise(t,0.16,v,'bandpass',1900,0.8);mvoice('triangle',190,
 const mhat=(t,v)=>mnoise(t,0.03,v,'highpass',7500,0.7);
 function musicTick(){
   const A=AU.A;if(!A||!AU.on)return;
-  if(!MUS.g){MUS.g=A.createGain();MUS.g.gain.value=0;MUS.g.connect(AU.M)}
-  aset(MUS.g.gain,MUS.on?(scene==='drive'?0.2:0.3):0,0.5);
+  if(!MUS.g){MUS.g=A.createGain();MUS.g.gain.value=0;MUS.g.connect(AU.C||AU.M)}
+  aset(MUS.g.gain,MUS.on?(scene==='drive'?0.2:0.3)*0.9*VOL.m:0,0.5);
   if(!MUS.on)return;
   const now=A.currentTime;if(MUS.next<now-0.25)MUS.next=now+0.05;
   while(MUS.next<now+0.2){
