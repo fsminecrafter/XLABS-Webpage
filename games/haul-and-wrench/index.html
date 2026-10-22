@@ -19,6 +19,9 @@
   color-scheme:dark;
 }
 [hidden]{display:none!important}
+.setgrid{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;align-items:center;margin:8px 0}
+.setgrid>span{color:var(--dim);font-weight:600}
+#volRange{width:min(260px,52vw);accent-color:var(--hazard)}
 /* Alterax */
 .tag.alx{background:#2f5a2a;color:#f0dc8a;border-color:#3d6b34}
 .card.alxcard{border-color:#3d6b34;background:linear-gradient(180deg,rgba(47,90,42,.22),rgba(47,90,42,.06))}
@@ -137,6 +140,12 @@ h3{font-size:15px;color:var(--dim);font-weight:700}
 .pedal.gas{border-color:var(--ok)}
 .pedal.brk{border-color:var(--bad)}
 .pedal.down{transform:translateY(3px);filter:brightness(1.4)}
+#townbtns{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:flex-end;gap:10px;pointer-events:none;z-index:6;
+  padding:0 max(14px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+#townbtns .pedal{width:88px;height:80px;font-size:26px}
+#townbtns .tmid{pointer-events:auto;display:flex;flex-direction:column;gap:6px;align-items:center;max-width:52vw}
+#townbtns .tmid .btn{white-space:normal;text-align:center}
+#townbtns .btn:disabled{opacity:.55;cursor:default}
 #drivebtns{position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:58px;display:flex;flex-direction:column;gap:6px;z-index:6;align-items:flex-end}
 #toast{position:absolute;left:50%;top:62px;transform:translateX(-50%);z-index:30;pointer-events:none;display:flex;flex-direction:column;gap:6px;align-items:center}
 #toast div{background:var(--ink);border:1px solid var(--hazard);color:var(--fg);padding:7px 14px;border-radius:3px;font-weight:600;max-width:80vw;text-align:center}
@@ -188,12 +197,9 @@ h3{font-size:15px;color:var(--dim);font-weight:700}
     <span class="stat"><i>Fuel</i><b id="sFuel">-</b></span>
     <span class="stat"><i>Mode</i><b id="sDiff">-</b></span>
     <span class="sp"></span>
-    <button class="btn pri" data-act="shop" data-arg="parts" id="bShopTop">Shop</button>
-    <button class="btn perfb" data-act="perf" data-arg="mods" id="bPerfTop">Tuning</button>
+    <button class="btn pri" data-act="town" id="bTownTop">Town</button>
     <button class="btn" data-act="help">Help</button>
-    <button class="btn" data-act="sound" id="bSound">Sound: on</button>
-    <button class="btn" data-act="music" id="bMusic">Music: on</button>
-    <button class="btn" data-act="gfx" id="bGfx">Gfx: auto</button>
+    <button class="btn" data-act="settings" id="bSettings">Settings</button>
   </header>
   <aside id="panel"></aside>
   <div id="toolbar" hidden></div>
@@ -208,6 +214,12 @@ h3{font-size:15px;color:var(--dim);font-weight:700}
     <button class="btn pri" data-act="refuel" id="bRefuel" hidden>Refuel</button>
     <button class="btn pri" data-act="spare" id="bSpare" hidden>Fit spare</button>
     <button class="btn pri" data-act="push" id="bPush" hidden>Roadside push $25</button>
+    <button class="btn" data-act="roadsleep" id="bSleep" hidden>Sleep here (Z)</button>
+  </div>
+  <div id="townbtns" hidden>
+    <button class="pedal" id="tLeft" aria-label="Walk left">◀</button>
+    <div class="tmid"><button class="btn pri" data-act="tact" id="tAct">Walk to a door</button><button class="btn" data-act="tgarage">Back to garage</button></div>
+    <button class="pedal" id="tRight" aria-label="Walk right">▶</button>
   </div>
   <div id="modal" hidden><div class="mbox" role="dialog" aria-modal="true"></div></div>
   <div id="toast"></div>
@@ -254,6 +266,17 @@ addEventListener('resize',()=>{resize()});
    One AudioContext with a few always-running voices (engine, intake, road, wind,
    rain, hiss, alternator whine, brake squeal/grind, starter, impact gun) whose gains
    follow the vehicle state, plus short scheduled one-shots (knock, ticks, rattles). */
+/* settings: master volume 0-200%, sound on/off, graphics mode; remembered in this browser */
+const VOL={v:1};try{const v=parseFloat(localStorage.getItem('hw_vol'));if(v>=0&&v<=2)VOL.v=v;const g=localStorage.getItem('hw_gfx');if(g==='low'||g==='high'||g==='auto'){gfxMode=g;lowGfx=g==='low'}}catch(e){}
+function applyVol(){if(AU.A&&AU.M)aset(AU.M.gain,0.9*VOL.v,0.05)}
+function settingsModal(){modal(`<h2>Settings</h2><div class="setgrid">
+   <span>Sound</span><div><button class="btn ${AU.on?'pri':''}" data-act="sound">${AU.on?'On':'Off'}</button></div>
+   <span>Music</span><div><button class="btn ${MUS.on?'pri':''}" data-act="music">${MUS.on?'On':'Off'}</button></div>
+   <span>Volume</span><div class="row"><input type="range" id="volRange" min="0" max="200" step="5" value="${Math.round(VOL.v*100)}" aria-label="Master volume"><b id="volVal" class="mono">${Math.round(VOL.v*100)}%</b></div>
+   <span>Graphics</span><div class="row">${['auto','low','high'].map(m=>`<button class="btn ${gfxMode===m?'pri':''}" data-act="setgfx" data-arg="${m}">${m}</button>`).join('')}</div></div>
+   <p class="muted">Volume above 100% boosts every sound and the music. Low graphics turns off particles and some scenery for slower devices.</p>
+   <div class="row"><button class="btn pri" data-act="setdone">Done</button></div>`)}
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='volRange'){VOL.v=e.target.value/100;const l=document.getElementById('volVal');if(l)l.textContent=e.target.value+'%';applyVol();try{localStorage.setItem('hw_vol',String(VOL.v))}catch(_){}}});
 const AU={A:null,on:true,n:{},sched:{knock:0,clat:0,chug:0,rattle:0,creak:0},lastRev:0};
 function distCurve(k){const c=new Float32Array(256);for(let i=0;i<256;i++){const x=i/128-1;c[i]=(1+k)*x/(1+k*Math.abs(x))}return c}
 function initAudio(){
@@ -262,7 +285,7 @@ function initAudio(){
   try{
     const A=new (window.AudioContext||window.webkitAudioContext)();AU.A=A;const sr=A.sampleRate;
     const comp=A.createDynamicsCompressor();comp.threshold.value=-16;comp.knee.value=12;comp.ratio.value=5;comp.connect(A.destination);
-    const M=A.createGain();M.gain.value=0.9;M.connect(comp);AU.M=M;
+    const M=A.createGain();M.gain.value=0.9*VOL.v;M.connect(comp);AU.M=M;
     const nb=A.createBuffer(1,sr*2,sr),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;AU.noise=nb;
     const bb=A.createBuffer(1,Math.floor(sr*0.25),sr),bd=bb.getChannelData(0);for(let i=0;i<bd.length;i++)bd[i]=(Math.random()*2-1)*Math.pow(1-i/bd.length,4);AU.burst=bb;
     const G=v=>{const g=A.createGain();g.gain.value=v;return g};
@@ -370,15 +393,17 @@ function audioGarage(){if(!AU.A||!AU.on)return;aset(AU.n.humG.gain,0.006,0.5)}
 /* ================= music: small generative band (drums, bass, pad, lead) =================
    Four moods (garage, day drive, night drive, casino); phrases repeat every 8 bars. */
 const MUS={on:true,next:0,step:0,bar:0,mood:'',song:null,g:null,li:3};
-try{MUS.on=localStorage.getItem('hw_music')!=='off'}catch(e){}
+try{MUS.on=localStorage.getItem('hw_music')!=='off';AU.on=localStorage.getItem('hw_sound')!=='off'}catch(e){}
 const mtof=m=>440*Math.pow(2,(m-69)/12);
 const SONGS={
  garage:{bpm:82,swing:0.14,prog:[[57,60,64,67],[53,57,60,64],[50,53,57,60],[52,55,59,62]],scale:[57,60,62,64,67,69,72,74,76],drums:'lofi',lead:0.55,padW:'triangle',leadW:'triangle',bassW:'triangle'},
  day:{bpm:106,swing:0,prog:[[62,66,69],[57,61,64],[59,62,66],[55,59,62]],scale:[62,64,66,69,71,74,76,78,81],drums:'rock',lead:0.7,padW:'sawtooth',leadW:'square',bassW:'square'},
  night:{bpm:72,swing:0.08,prog:[[50,57,60,65],[46,53,57,62],[48,55,58,64],[45,52,55,60]],scale:[57,60,62,65,67,69,72,74],drums:'soft',lead:0.4,padW:'sine',leadW:'triangle',bassW:'triangle'},
+ alterax:{bpm:92,swing:0,march:true,prog:[[50,53,57],[55,58,62],[57,61,64],[50,53,57],[58,62,65],[55,58,62],[57,61,64,67],[50,53,57]]},
  casino:{bpm:126,swing:0.2,prog:[[62,65,69,72],[55,59,62,65],[60,64,67,71],[57,60,64,67]],scale:[60,62,64,67,69,72,74,76,79],drums:'swing',lead:0.85,padW:'triangle',leadW:'sine',bassW:'triangle'},
 };
-function musicMood(){if(!$('#modal').hidden&&$('#modal .jackpot, #modal .felt'))return 'casino';if(scene==='drive'){const h=hourNow();return (h>=20||h<6.2)?'night':'day'}return 'garage'}
+function musicMood(){if(!$('#modal').hidden&&$('#modal .jackpot, #modal .felt'))return 'casino';
+  if(scene==='drive'&&drive.route&&drive.route.alx&&alxD(drive.route,drive.x)<ALX_JUNGLE)return 'alterax';if(scene!=='drive'&&S&&S.city===ALX)return 'alterax';if(scene==='drive'){const h=hourNow();return (h>=20||h<6.2)?'night':'day'}return 'garage'}
 function mvoice(type,freq,t,dur,vol,o={}){const A=AU.A,os=A.createOscillator(),g=A.createGain();os.type=type;os.frequency.setValueAtTime(freq,t);if(o.det)os.detune.value=o.det;
   let n=os;if(o.lp){const f=A.createBiquadFilter();f.type='lowpass';f.frequency.value=o.lp;os.connect(f);n=f}
   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+(o.a||0.01));g.gain.exponentialRampToValueAtTime(0.0001,t+dur);n.connect(g);g.connect(MUS.g);os.start(t);os.stop(t+dur+0.05)}
@@ -399,7 +424,18 @@ function musicTick(){
     playStep(sg,st,bar,ch,t,sd);MUS.next+=sd;MUS.step++;if(MUS.step%16===0)MUS.bar++;
   }
 }
-function playStep(sg,st,bar,ch,t,sd){
+/* Alterax theme: original 8-bar march in D minor, brass lead over oom-pah bass and a snare roll into each repeat */
+const MARCH=[[[74,4],[69,2],[69,2],[74,4],[76,2],[77,2]],[[79,6],[77,2],[76,4],[74,4]],[[73,4],[76,4],[69,8]],[[74,12],[0,4]],
+ [[77,4],[77,2],[79,2],[81,4],[77,4]],[[79,4],[74,4],[70,4],[74,4]],[[76,4],[73,4],[79,4],[76,4]],[[74,12],[69,4]]];
+function playMarch(sg,st,bar,ch,t,sd){const b=bar%8,cyc=Math.floor(bar/8)%2;
+  if(st===0||st===8)mkick(t,0.32);if(st===4||st===12)msnare(t,0.11);if(st===14)msnare(t,0.035);if(b===7&&st>=12)msnare(t,0.05+(st-12)*0.02);
+  if(b===3&&st===14){mnoise(t,0.09,0.12,'lowpass',380,0.8)} // a rubber stamp on the desk
+  const root=ch[0]-12;if(st===0)mvoice('triangle',mtof(root),t,sd*3,0.17,{lp:500});if(st===8)mvoice('triangle',mtof(root+7),t,sd*3,0.15,{lp:500});
+  if(st===4||st===12)for(const n of ch)mvoice('square',mtof(n),t,sd*1.4,0.014,{lp:900});
+  if(st===0)for(const n of ch)mvoice('sawtooth',mtof(n-12),t,sd*16,0.012,{a:0.4,lp:700});
+  let pos=0;for(const [n,len] of MARCH[b]){if(pos===st&&n){const f=mtof(cyc?n-12:n),d=sd*len*0.92;
+      if(cyc)mvoice('triangle',f,t,d,0.06,{a:0.03,lp:1600});else{mvoice('sawtooth',f,t,d,0.03,{a:0.05,lp:1500});mvoice('sawtooth',f,t,d,0.022,{a:0.05,lp:1500,det:9})}}pos+=len}}
+function playStep(sg,st,bar,ch,t,sd){if(sg.march)return playMarch(sg,st,bar,ch,t,sd);
   const ph=bar%8,r=hash(ph*31+st*7+sg.bpm);
   if(sg.drums==='rock'){if(st===0||st===8||(st===10&&r<0.5))mkick(t,0.5);if(st===4||st===12)msnare(t,0.2);if(st%2===0)mhat(t,0.05)}
   else if(sg.drums==='lofi'){if(st===0||(st===7&&r<0.6)||st===10)mkick(t,0.4);if(st===4||st===12)msnare(t,0.1);if(st%2===0)mhat(t,0.03)}
@@ -437,6 +473,27 @@ const GOSSIP={
  pip:["The trains don't wait for anybody. Neither do red lights, so stop for 'em!","I counted fourteen trucks today. Yours was the loudest!","Someday I'm gonna drive a Titan semi. Twenty slots!"],
 };
 const CHATTER=["They say the road to Redstone eats tires for breakfast.","Is that a knock? Might want to check your oil.","Port Dunmore was all fishing boats once. Now it's containers.","My cousin drives a Titan semi. Says the brakes cook on long hills.","Mae's diner has the best pie in six towns. Fight me.","I heard the jackpot at the Lucky Lugnut is over two grand.","Watch for deer around dusk. They come out of nowhere.","Nice ride. Bit rattly, but nice.","I used to fix bikes. Cars are just bikes with more bolts.","The trains at Ashford never run on time.","Fog's thick in the mornings near the river.","The cops love that stretch past the gas station.","Alterax pays well, but they shoot first and check your papers after.","Past Port Dunmore it's all jungle. The tarmac just… gives up."];
+/* hitchhiker personalities: each has its own pitch, small talk on the road and a goodbye. Up to two ride along at once. */
+const MAX_RIDERS=2,riders=()=>S.riders||(S.riders=[]);
+const HITCH=[
+ {role:'Night-shift nurse',intro:'I’m {n}. Twelve-hour shift at the county hospital and my bus never came. Going to {dest}? I can give you {pay}.',
+  ride:['I’ve seen what a pothole does to a motorcyclist. Both hands on the wheel, please.','If you hear me snoring, take it as a compliment to your driving.','Half my Saturday patients crashed while reading their phones. Just saying.','Coffee is a food group. Don’t let anyone tell you otherwise.'],bye:'Thanks. If you ever end up on my ward, I’ll sneak you extra pudding.'},
+ {role:'Geology student',intro:'{n}, geology student. Sorry, my rock samples weigh a ton. {dest}? {pay}, it’s all my grant money.',
+  ride:['See that layered cliff? Forty million years in one road cut.','Redstone is red because of iron oxide. The whole valley is basically rust.','My thesis is about landslides. Slow down near the hills, okay?','Is that a fossil? …No, it’s a sandwich wrapper.'],bye:'If you find any interesting rocks, call me! Day or night!'},
+ {role:'Street musician',intro:'Name’s {n}. Guitar, harmonica, bit of kazoo. Gig in {dest} tonight. {pay} and a free song?',
+  ride:['*hums along with the engine* It’s in B flat. Mostly.','I wrote a song about this road once. Nobody liked it either.','Can I play something? …No? Fair.','Your exhaust has a nice rasp. Very blues.'],bye:'Come to the gig! The first drink is on… well, on you, technically.'},
+ {role:'Retired schoolteacher',intro:'Oh, how kind of you to stop. I’m {n}. I’m visiting my grandson in {dest}. I can pay {pay}, and I baked cookies.',
+  ride:['Are you wearing your seatbelt? Good.','My late husband drove trucks for forty years. Never once let me drive.','Have a cookie. Go on. You’re far too thin.','In my day the road to Redstone was gravel. And uphill both ways.'],bye:'Take the rest of the cookies, dear. And call your mother.'},
+ {role:'Vacuum salesman',intro:'{n}, Suck-O-Matic 3000, regional sales. My car was repossessed, long story. {dest}? {pay}.',
+  ride:['Have you ever thought about how dirty your floor mats are? I’m just asking.','Forty doors a day. Thirty-nine slam. One buys. That’s the job.','If anyone asks, I was never in this vehicle.','The Suck-O-Matic 3000 has a lifetime warranty. Mine, not yours.'],bye:'Here’s my card. Ten percent off any Suck-O-Matic. Tell your friends!'},
+ {role:'Backpacker',intro:'Hallo! I am {n}, backpacking around the world. Is {dest} far? I have {pay}, is this enough?',
+  ride:['In my country the roads are straight. Here they are… exciting.','Everyone says Alterax shoots tourists. Is this true? I still want to go.','Your car makes many noises. Is this normal?','I have been to forty-one countries. This is my favourite car so far.'],bye:'Thank you, new friend! I will write about you on my blog.'},
+ {role:'Nervous stranger',intro:'{n}. Don’t ask why I’m out here. {dest}, and maybe not the main road. Here’s {pay}. Cash.',
+  ride:['The speed cameras record more than speed, you know.','Alterax isn’t a country. It’s an experiment. Think about it.','Why do lights turn red exactly when you’re in a hurry? Exactly.','That van behind us has been there for ages. …Oh, it turned off. Good.'],bye:'You never saw me. I was never here.'},
+ {role:'Tire-shop owner',intro:'Hey! {n}, I run a tire shop. My tow truck threw a belt. {dest}? {pay}, and some free advice.',
+  ride:['Your idle’s a bit rough. Spark plugs, I’d bet.','Never trust a seller who says “it just needs a little TLC.”','Torque spec is a suggestion. Snapped bolts are not.','Rotate your tires every few thousand km. Nobody does. Everybody should.'],bye:'Bring it by the shop sometime. I’ll check your alignment for free.'},
+];
+const DUO=[['Is our driver always this quiet?','Concentrating, I think. Or just tired.'],['Where are you headed after this?','Honestly? No idea. You?'],['Did you hear that clunk?','I’m choosing not to.'],['Want to split a sandwich?','What kind? …Never mind, yes.'],['Do you ride with strangers often?','Only the ones who stop.']];
 const LOU_LINES=["Walt could hear a bad bearing from across the street.","He bought that Bug new in '68. Drove it to every job he ever had.","Your uncle never left a bolt untorqued. Never.","He used to say: the road tells you what's wrong, if you listen."];
 const BREAKDOWNS=[
  {s:'It just clicks when I turn the key, and the dash lights go dim.',a:'battery',w:['fuelf','plugs']},
@@ -510,18 +567,19 @@ function genEvents(R){const ev=[];if(R.test||R.len<1500)return ev;
   for(let i=0;i<n;i++){let x=0,tries=0;do{x=550+Math.random()*(R.len-1250);tries++}while(bad(x)&&tries<30);if(tries>=30)continue;
     let type;const q=Math.random();
     if(i===0&&crate&&q<0.6)type='police';else if(i===0&&wantLou&&q<0.5)type='hitch';else{const r=Math.random();type=r<0.27?'hitch':r<0.5?'stranded':r<0.7?'deer':r<0.84?'police':'works'}
-    if(type==='hitch'&&(S.passenger||ev.some(e=>e.type==='hitch')))type='stranded';
+    if(type==='hitch'&&ev.filter(e=>e.type==='hitch').length>=MAX_RIDERS-riders().length)type='stranded';
     const e={type,x,done:false,p:randPerson(),len:140};
     if(type==='hitch'&&wantLou&&!ev.some(z=>z.lou)){e.lou=true;e.p={n:'Lou',skin:'#c68a5c',hair:'#d8d8d8',shirt:'#6b4a8a',hat:true,hatc:'#3a2a20',beard:true}}
     if(type==='police')e.p={n:'Officer '+rpick(['Diaz','Grant','Novak','Reyes','Hale']),skin:rpick(SKINS),hair:'#111111',shirt:'#2a4a7a',hat:true,hatc:'#1d3354',badge:true};
     if(type==='stranded'){e.bd=rpick(BREAKDOWNS);e.car=rpick(['hatch','bug','pickup','microbus']);e.paint=rpick(VEH[e.car].paints)}
     ev.push(e)}
+  if(R.alx)for(const a of [10500,7000,4200])if(a<R.len-700){const len=26+Math.round(Math.random()*14);ev.push({type:'river',x:R.alx==='in'?R.len-a-len:a,len,done:false,name:rpick(['Kessa River','Mobu Creek','Iron Water','Black Stream','Saro River','Tamu Creek'])})}
   if(R.alx){ // jungle encounters between the border and the edge of the jungle
     const lo=ALX_BORDER+700,hi=Math.min(ALX_JUNGLE-300,R.len-700),nj=3+(Math.random()<0.5?1:0);
     for(let i=0;i<nj&&hi>lo;i++){let a=0,tries=0;
       do{a=lo+Math.random()*(hi-lo);tries++}while(tries<40&&(ev.some(e=>Math.abs(alxD(R,e.x)-a)<700)||R.stations.some(s=>Math.abs(alxD(R,s)-a)<260)));if(tries>=40)continue;
       const r=Math.random();let type=r<0.2?'crate':r<0.36?'soldier':r<0.58?'tree':r<0.8?'bandits':'ford';
-      if(type==='soldier'&&(S.passenger||ev.some(e=>e.type==='soldier')))type='crate';
+      if(type==='soldier'&&(riders().length>=MAX_RIDERS||ev.some(e=>e.type==='soldier')))type='crate';
       const e={type,x:R.alx==='in'?R.len-a:a,done:false,p:randPerson(),len:type==='ford'?40:140};
       if(type==='ford'&&R.alx==='in')e.x-=e.len;
       if(type==='soldier')e.p={n:'Pvt. '+rpick(ALX_NAMES),skin:rpick(SKINS),hair:'#111111',shirt:'#4b5a32',hat:true,hatc:'#7a1f2b'};
@@ -541,7 +599,7 @@ function encounter(e){const d=drive,R=d.route;d.paused=true;d.lock=true;audioSil
     {t:'Leave it. Not my business.',f:resumeDrive}])}
   if(e.type==='soldier'){const pay=Math.round((80+Math.random()*70)*DF().pay/5)*5,dest=CITIES[R.to].n;
     return talk({n:e.p.n,role:'Off-duty soldier',face:e.p},`Thank the colonel, a vehicle! ${e.p.n}, Alterax garrison. My truck left without me. Going to ${dest}? ${money(pay)} for the ride${R.alx==='in'?', and I’ll make sure the cargo inspectors go easy on you':''}. If a patrol stops you, I’ll vouch for you.`,[
-      {t:'Climb in',f:()=>{e.picked=true;S.passenger={name:e.p.n,face:e.p,pay,soldier:true};d.chatNext=d.t+8;dmsg(`${e.p.n} climbs in.`,'#bfe3ff',3);resumeDrive()}},
+      ...(riders().length<MAX_RIDERS?[{t:'Climb in',f:()=>{e.picked=true;riders().push({name:e.p.n,face:e.p,pay,soldier:true});d.chatNext=d.t+8;dmsg(`${e.p.n} climbs in.`,'#bfe3ff',3);resumeDrive()}}]:[]),
       {t:'Sorry, no room',f:resumeDrive}])}
   if(e.type==='tree'){const heavy=d.mass>=5000,cost=Math.round(40*DF().costs/5)*5,who={n:'Fallen tree',role:'Road blocked',face:{icon:'tree',bg:'#2a3a2a'}};
     const open=(m)=>{e.open=true;updateTop();dmsg(m,'#62c06c',3);resumeDrive()};
@@ -556,12 +614,12 @@ function encounter(e){const d=drive,R=d.route;d.paused=true;d.lock=true;audioSil
       ...(S.taken.length?[{t:'Offer them a load instead',f:()=>{const j=S.taken.reduce((a,b)=>b.pay<a.pay?b:a);S.taken=S.taken.filter(x=>x!==j);S.rep=clamp(S.rep-0.2,0,5);e.open=true;e.paid=true;dmsg(`They take the ${CARGO[j.cargo].n.toLowerCase()}. Your client won't be happy. Reputation −0.2.`,'#e9a53a',4);resumeDrive()}}]:[]),
       {t:'Floor it through the roadblock',f:flee}])}
   if(e.type==='border')return borderCheck(e);
-  if(e.type==='hitch'){const pay=Math.round((40+Math.random()*80)*DF().pay/5)*5;
+  if(e.type==='hitch'){const pay=Math.round((40+Math.random()*80)*DF().pay/5)*5;if(e.pi==null)e.pi=Math.floor(Math.random()*HITCH.length);const P=HITCH[e.pi],full=riders().length>=MAX_RIDERS;
     const text=e.lou?`Well, I'll be. You've got Walt's look about you. You must be the kid he talked about. Name's Lou. Rode with Walt for thirty years. Heading to ${CITIES[R.to].n}? I've got something of his for you.`
-      :rpick([`Hi! I'm ${e.p.n}. Any chance you're going to ${CITIES[R.to].n}? I can chip in ${money(pay)} for fuel.`,`Thanks for stopping! I'm ${e.p.n}. My car died two towns back. ${CITIES[R.to].n}? I'll pay ${money(pay)}.`,`Hey there. ${e.p.n}. Long day. Room for one to ${CITIES[R.to].n}? ${money(pay)} is all I've got.`]);
-    return talk({n:e.p.n,role:e.lou?'Walt’s old friend':'Hitchhiker',face:e.p},text,[
-      {t:'Hop in',f:()=>{e.picked=true;S.passenger={name:e.p.n,face:e.p,pay:e.lou?0:pay,lou:!!e.lou};d.chatNext=d.t+8;dmsg(`${e.p.n} climbs in.`,'#bfe3ff',3);resumeDrive()}},
-      {t:'Sorry, no room today',f:resumeDrive}])}
+      :P.intro.replace('{n}',e.p.n).replace('{dest}',CITIES[R.to].n).replace('{pay}',money(pay))+(riders().length&&!full?` (${riders()[0].name} scoots over.)`:'');
+    return talk({n:e.p.n,role:e.lou?'Walt’s old friend':P.role+' · hitchhiker',face:e.p},text,[
+      ...(full?[]:[{t:'Hop in',f:()=>{e.picked=true;riders().push({name:e.p.n,face:e.p,pay:e.lou?0:pay,lou:!!e.lou,pi:e.lou?null:e.pi});d.chatNext=d.t+8;dmsg(`${e.p.n} climbs in.${riders().length>1?' The cab is full now.':''}`,'#bfe3ff',3);resumeDrive()}}]),
+      {t:full?`Sorry, I already have ${MAX_RIDERS} passengers`:'Sorry, no room today',f:resumeDrive}])}
   if(e.type==='stranded'){const bd=e.bd,opts=[bd.a,...bd.w].sort(()=>Math.random()-0.5),who={n:e.p.n,role:'Stranded driver',face:e.p};
     return talk(who,`Oh, thank goodness! ${bd.s} Do you know cars? What do you think it is?`,[
       ...opts.map(id=>({t:`It's the ${PMAP[id].name.toLowerCase()}.`,f:()=>{
@@ -599,12 +657,13 @@ function chaseStep(dt,av){const d=drive,R=d.route,Vd=VD(),kmh=av*3.6;
     if(c.firing){c.fire+=dt;c.gunCd-=dt;if(c.gunCd<=0){c.gunCd=0.5;SFX.gun();if(Math.random()<0.6){const id=rpick(['lights','radiator','tiresR','battery','fuelf']);V().parts[id].cond=Math.max(0,V().parts[id].cond-4);addDamage(1.5)}}
       dmsg('Machine-gun fire! Stop now or they will kill you!','#e4493b',2,'mg');if(c.fire>5){alxDeath('The Humvee gunner opened fire on your vehicle. You did not survive.');return true}}
     if(gap>1200){c.hx=null;c.lost=true;c.firing=false;dmsg('You lost the Humvee. They will not let it go that easily…','#e9a53a',5)}}
-  if(c.t>=180&&!c.heli){c.heli={t:0};SFX.siren();dmsg('Attack helicopter scrambled! It will be on you in 15 seconds.','#e4493b',6)}
+  if(c.t>=heliDelay()&&!c.heli){c.heli={t:0};SFX.siren();dmsg('Attack helicopter scrambled! It will be on you in 15 seconds.','#e4493b',6)}
   if(c.heli){c.heli.t+=dt;c.chop=(c.chop||0)-dt;if(c.chop<=0){c.chop=0.11;shot({noise:true,type:'lowpass',f:260,q:0.8,vol:clamp(c.heli.t/15,0.05,1)*0.25,dur:0.08})}
     if(c.heli.t>15){if(!c.rockets){c.rockets=true;SFX.gun();dmsg('Rockets away!','#e4493b',3)}if(c.heli.t>17.2){alxDeath('An Alterax attack helicopter shot you off the road.');return true}}}
   return false}
-function startChase(kmh,lim){const d=drive;
-  if(S.passenger&&S.passenger.soldier&&!S.passenger.vouched){S.passenger.vouched=true;d.speedT=-8;dmsg(`${S.passenger.name} grabs the radio: “Stand down, they’re with me.” Slow down, now!`,'#62c06c',6);return}
+const heliDelay=()=>V().up&&V().up.radarjam?480:180;
+function startChase(kmh,lim,force){const d=drive;
+  const sol=riders().find(r=>r.soldier&&!r.vouched);if(sol&&!force){sol.vouched=true;d.speedT=-8;dmsg(`${sol.name} grabs the radio: “Stand down, they’re with me.” Slow down, now!`,'#62c06c',6);return}
   d.chase={t:0,hx:null,hv:0,fire:0,gunCd:0,heli:null};SFX.siren();dmsg(`${Math.round(kmh)} in a ${lim} zone! A patrol Humvee is coming (30 s). Stop to surrender or outrun it: max 125 km/h.`,'#e4493b',7)}
 function chaseSurrender(stopped){const d=drive;if(!d.chase)return '';const f=Math.round(450*DF().fine);S.money-=f;d.fines+=f;S.rep=clamp(S.rep-0.3,0,5);d.chase=null;d.speedT=0;
   const text=`“Hands where I can see them!” …Speeding in a military zone. They search your vehicle at gunpoint. Fine: ${money(f)}. Reputation −0.3.`;
@@ -617,7 +676,7 @@ function alxDeathModal(cause){const R=drive.route,home=!R?S.city:R.alx==='in'?R.
   if(S.diff==='hard'){newGame('hard');S.seenHelp=true;save();drive.route=null;setScene('garage');
     modal(`<h2 style="color:var(--bad)">Killed in Alterax</h2><p>${cause}</p><p>Hard mode has no second chances. Haul &amp; Wrench is finished. You start again from Walt’s dusty garage and his tired old Bug.</p><div class="row"><button class="btn danger" data-act="harddeath">Start over</button></div>`);return}
   const lost=S.taken.length,bill=Math.round(350*DF().costs/5)*5,vs=V(),drep=lost?0.5:0.25;
-  S.taken=[];S.passenger=null;S.pass=null;S.alx=null;S.rep=clamp(S.rep-drep,0,5);S.money-=bill;
+  S.taken=[];S.riders=[];S.pass=null;S.alx=null;S.rep=clamp(S.rep-drep,0,5);S.money-=bill;
   for(const p of [...PARTS].sort(()=>Math.random()-0.5).slice(0,4))vs.parts[p.id].cond=Math.max(0,vs.parts[p.id].cond-(25+Math.random()*25));
   markStale();vs.fuel=Math.max(vs.fuel,tankCap()*0.25);vs.engT=null;
   S.city=home;S.clock+=8*60;while(S.clock>=1440){S.clock-=1440;S.day++}S.awake=0;genJobs();save();drive.route=null;setScene('garage');
@@ -711,10 +770,11 @@ function hitDeer(av){const d=drive,vs=V();vs.parts.lights.cond=Math.max(0,vs.par
 function arriveHooks(here){let h='';const st=S.story;
   for(const j of here){if(j.special==='crate'){resolveDebt('paid');h+=`<p style="color:var(--warn)">A man at Ashford Jct takes the crate without a word. Vince’s debt is settled.</p>`}
     if(st&&st.ch===5&&j.slots>=10&&S.rep>=3&&!st.flags.bigHaul){st.flags.bigHaul=true;h+=`<p style="color:var(--ok)">That was the big festival load! Tell Rosa in Millbrook.</p>`}}
-  if(S.passenger){const p=S.passenger;if(p.pay){S.money+=p.pay;S.rep=clamp(S.rep+0.05,0,5)}
-    h+=`<p>${p.name} gets out${p.pay?` and pays you ${money(p.pay)}`:''}. ${p.lou?'Lou presses a folded page into your hand: “Walt wrote this the night before he got sick.”':'“Thanks for the ride!”'}</p>`;
-    if(p.lou&&st&&!st.pages.includes('lou')){st.pages.push('lou');storyToast(`Notebook page found (${st.pages.length}/5)`)}
-    S.passenger=null}
+  for(const p of riders()){if(p.pay){S.money+=p.pay;S.rep=clamp(S.rep+0.05,0,5)}
+    const bye=p.lou?'Lou presses a folded page into your hand: “Walt wrote this the night before he got sick.”':p.soldier?'“Order before comfort. Thanks, driver.”':p.pi!=null?`“${HITCH[p.pi].bye}”`:'“Thanks for the ride!”';
+    h+=`<p>${p.name} gets out${p.pay?` and pays you ${money(p.pay)}`:''}. ${bye}</p>`;
+    if(p.lou&&st&&!st.pages.includes('lou')){st.pages.push('lou');storyToast(`Notebook page found (${st.pages.length}/5)`)}}
+  S.riders=[];
   return h}
 function drawPerson(x,y,u,p,pose,t){ctx.save();
   ctx.fillStyle='#2b3a55';ctx.fillRect(x-0.18*u,y-0.85*u,0.15*u,0.85*u);ctx.fillRect(x+0.03*u,y-0.85*u,0.15*u,0.85*u);
@@ -939,6 +999,7 @@ const MODS=[
  {id:'radiator',n:'Big-core radiator',cost:500,d:'+35% cooling. Keeps tuned engines alive on hills.'},
  {id:'bbk',n:'Big brake kit',cost:900,d:'+25% braking force, and the brakes heat up 30% slower.'},
  {id:'coilover',n:'Coilover suspension',cost:1100,d:'Firmer damping, less body roll, and 40% less cargo damage on potholes.'},
+ {id:'radarjam',n:'Radar jammer',cost:1400,d:'Scrambles military radar. If an Alterax pursuit drags on, the attack helicopter needs 8 minutes to find you instead of 3. Does nothing against cameras or the Humvee.'},
  {id:'skimshock',n:'Skimmer shock absorbers',cost:1900,d:'Race-bred hydraulic shocks. Above 100 km/h you skim straight over potholes: no jolt, no cargo or tire damage. Below 100 km/h they work like normal shocks. They wear out twice as fast.'},
  {id:'wheels',n:'Forged lightweight wheels',cost:1000,d:'−3% vehicle mass and +5% grip.'},
  {id:'semislick',n:'Performance tires',cost:700,d:'+15% grip for launches and braking. Tires wear 30% faster.'},
@@ -1020,9 +1081,9 @@ function newVehicle(type,mode,conds,paint){
   return veh;
 }
 function newGame(diff){diff=DIFFS[diff]?diff:'normal';
-  S={v:2,diff,awake:0,dayTemp:0,story:{ch:1,flags:{},pages:[]},passenger:null,money:DIFFS[diff].money,rep:1,city:0,day:1,clock:8*60,cur:0,vehicles:[newVehicle('bug','starter')],inv:{},sup:{jerry:0,jump:0,jammer:0},
+  S={v:2,diff,awake:0,dayTemp:0,story:{ch:1,flags:{},pages:[]},riders:[],money:DIFFS[diff].money,rep:1,city:0,day:1,clock:8*60,cur:0,vehicles:[newVehicle('bug','starter')],inv:{},sup:{jerry:0,jump:0,jammer:0},
      tools:{impact:false,torque:false,scanner:false,stetho:false},impactOn:true,jobs:[],taken:[],jid:1,loan:0,dayStart:DIFFS[diff].money,jackpot:2500,casinoNet:0,lot:null,
-     stats:{deliveries:0,km:0,earned:0},seenHelp:false,pass:null,alx:null};
+     stats:{deliveries:0,km:0,earned:0},seenHelp:false,pass:null,alx:null,junk:[]};
   genJobs();
 }
 function migrate(o){
@@ -1036,9 +1097,9 @@ function migrate(o){
   if(o.v!==2||!Array.isArray(o.vehicles)||!o.vehicles.length)return null;
   for(const v of o.vehicles){if(!VEH[v.type])return null;for(const p of PARTS){const st=v.parts[p.id];if(!st)return null;
     const n=partFs(p.id,v.type).length;if(!Array.isArray(st.fst)||st.fst.length!==n)st.fst=range(n).map(()=>({p:1,tq:0.85,seized:false,soak:0,ang:0}))}}
-  o.cur=clamp(o.cur|0,0,o.vehicles.length-1);o.loan=o.loan||0;if(!o.story)o.story={ch:1,flags:{intro:true},pages:[]};o.passenger=null;if(!DIFFS[o.diff])o.diff='normal';o.awake=o.awake||0;o.dayTemp=o.dayTemp||0;if(o.jackpot==null)o.jackpot=2500;o.casinoNet=o.casinoNet||0;for(const v of o.vehicles){v.up=v.up||{};if(v.up.tune){v.up.ecu=true;delete v.up.tune}if(v.mileage==null)v.mileage=150000}if(o.dayStart==null)o.dayStart=o.money;
+  o.cur=clamp(o.cur|0,0,o.vehicles.length-1);o.loan=o.loan||0;if(!o.story)o.story={ch:1,flags:{intro:true},pages:[]};o.passenger=null;o.riders=[];if(!DIFFS[o.diff])o.diff='normal';o.awake=o.awake||0;o.dayTemp=o.dayTemp||0;if(o.jackpot==null)o.jackpot=2500;o.casinoNet=o.casinoNet||0;for(const v of o.vehicles){v.up=v.up||{};if(v.up.tune){v.up.ecu=true;delete v.up.tune}if(v.mileage==null)v.mileage=150000}if(o.dayStart==null)o.dayStart=o.money;
   if(o.inv)for(const k of Object.keys(o.inv)){if(k.split(':').length===2){o.inv[k+':oem']=(o.inv[k+':oem']||0)+o.inv[k];delete o.inv[k]}}o.taken=o.taken||[];o.jobs=o.jobs||[];o.inv=o.inv||{};o.sup=o.sup||{jerry:0,jump:0};o.sup.jammer=o.sup.jammer||0;
-  o.pass=o.pass||null;o.alx=o.alx||null;
+  o.pass=o.pass||null;o.alx=o.alx||null;o.junk=o.junk||[];
   return o;
 }
 function save(){try{localStorage.setItem('haulwrench_v1',JSON.stringify(S))}catch(e){}}
@@ -1089,7 +1150,7 @@ function updateTop(){
   const h=Math.floor(S.clock/60)%24,m=Math.floor(S.clock%60);
   $('#sClock').textContent=`${S.day} · ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
   $('#sFuel').textContent=Math.round(V().fuel)+' L';$('#sDiff').textContent=DF().n;
-  $('#bShopTop').hidden=scene==='drive';$('#bPerfTop').hidden=scene==='drive';
+  $('#bTownTop').hidden=scene==='drive';$('#bTownTop').textContent=scene==='town'?'Garage':'Town';
 }
 const hourNow=()=>(S.clock/60)%24;
 const barCol=c=>c>45?'var(--ok)':c>20?'var(--warn)':'var(--bad)';
@@ -1102,7 +1163,7 @@ const idle={on:false,crank:0,rpm:0,rev:false,misfire:0,missEvt:false,startPow:0,
 function setScene(s){
   if(scene==='garage'&&s!=='garage')stopIdle(true);
   scene=s;
-  $('#panel').hidden=s==='drive';$('#toolbar').hidden=s!=='bench';
+  $('#panel').hidden=s==='drive'||s==='town';$('#toolbar').hidden=s!=='bench';$('#townbtns').hidden=s!=='town';
   $('#touch').hidden=s!=='drive';$('#drivebtns').hidden=s!=='drive';
   if(s==='garage')renderGaragePanel();
   if(s==='bench'){renderToolbar();renderBenchPanel()}
@@ -1521,19 +1582,19 @@ function renderGaragePanel(){
   const warnN=PARTS.filter(p=>{const c=knowCls(p.id);return c==='bad'||c==='warn'}).length,openN=issues.length;
   let h=`<div class="hcard"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h3>Your vehicle</h3><b style="font-size:17px">${Vd.yr} ${Vd.n}</b>
     <div class="muted mono">${(vs.odo||0).toFixed(1)} km driven · ${Vd.cap} slot${Vd.cap>1?'s':''} · ${Vd.payload.toLocaleString()} kg${Vd.cold?' · reefer':''}${Vd.express?' · express +50%':''}</div></div>
-    <button class="btn" data-act="shop" data-arg="vehicles">Vehicles${S.vehicles.length>1?` (${S.vehicles.length})`:''}</button></div>
+    <button class="btn" data-act="myveh">Vehicles${S.vehicles.length>1?` (${S.vehicles.length})`:''}</button></div>
     <div class="meters">${meterRow('Fuel',vs.fuel/tankCap(),vs.fuel<tankCap()*0.15?'var(--bad)':'var(--ok)',Math.round(vs.fuel)+' L')}
     ${meterRow('Battery',vs.soc,vs.soc<0.3?'var(--bad)':'var(--ok)',Math.round(vs.soc*100)+'%')}
     ${meterRow('Health',he.avg==null?0:he.avg/100,he.avg==null?'#59626b':barCol(he.avg),he.avg==null?'?':'~'+Math.round(he.avg)+'%')}
     ${meterRow('Cargo',used/Vd.cap,'var(--hazard)',used+'/'+Vd.cap)}</div>
     <div class="muted">${he.n}/12 parts checked${warnN?` · <b style="color:var(--warn)">${warnN} need attention</b>`:''}${openN?` · <b style="color:var(--bad)">${openN} open on the bench</b>`:''}</div>
-    <button class="btn shop" data-act="shop" data-arg="parts">Parts &amp; tools shop</button></div>`.replace('<button class="btn shop" data-act="shop" data-arg="parts">Parts &amp; tools shop</button>','<div class="grid2"><button class="btn shop half" data-act="shop" data-arg="parts">Parts &amp; tools</button><button class="btn shop half perfb" data-act="perf" data-arg="mods">Redline Performance</button></div>');
+    <button class="btn shop" data-act="shop" data-arg="parts">Parts &amp; tools shop</button></div>`.replace('<button class="btn shop" data-act="shop" data-arg="parts">Parts &amp; tools shop</button>',`<button class="btn shop pri" data-act="town">Walk into ${CITIES[S.city].n}</button><div class="muted">Shops, dealers, Redline Performance, the job depot and people to talk to are all out on the street.${(S.junk||[]).length?` <b>${S.junk.length} old part${S.junk.length>1?'s':''}</b> in your trunk to sell at Parts &amp; tools.`:''}</div>`);
   h+=`<div class="ptabs" role="tablist">${[['run','Run'],['repair','Repair'+(warnN+openN?` · ${warnN+openN}`:'')],['biz','Business']].map(([k,n])=>`<button class="btn ${gTab===k?'on':''}" role="tab" aria-selected="${gTab===k}" data-act="gtab" data-arg="${k}">${n}</button>`).join('')}</div>`;
   if(gTab==='run'){
     {const si=storyInfo(),here=Object.keys(NPCS).find(k=>NPCS[k].city===S.city),np=NPCS[here],hot=si.who===here;
      h+=`<div class="card story"><h3>${si.t}</h3><div class="muted" style="color:var(--fg)">${si.o}</div>
       <div class="row"><img src="${faceImg(np)}" alt="" style="width:44px;height:44px;border-radius:6px"><div class="pinfo"><b>${np.n}</b><br><span class="muted">${np.role} · ${CITIES[S.city].n}</span></div>
-      <button class="btn ${hot?'pri':''}" data-act="talk" data-arg="${here}">${hot?'Talk  ●':'Talk'}</button></div></div>`}
+      <button class="btn ${hot?'pri':''}" data-act="townnpc">${hot?'Find in town  ●':'Find in town'}</button></div></div>`}
     if(S.city===ALX){const home=S.alx&&S.alx.from!=null?S.alx.from:ALX_GATE;
       h+=`<div class="card alxcard"><h3>Alterax · garrison city</h3><div class="muted" style="color:var(--fg)">Parts and vehicles are 10% cheaper here, and the army dealer sells vehicles you can’t buy anywhere else. Visitors may stay <b>one night</b>: after you sleep, the garrison sends you home.</div>
        ${S.taken.length?'':`<div class="row"><button class="btn" data-act="gohome" data-arg="${home}" ${issues.length?'disabled':''}>Drive home to ${CITIES[home].n} <small>${distKm(ALX,home)} km</small></button></div>`}</div>`}
@@ -1555,7 +1616,7 @@ function renderGaragePanel(){
       <button class="btn" data-act="gfuel" ${vs.fuel>=tankCap()-0.5?'disabled':''}>Refuel <small>${money((tankCap()-vs.fuel)*fuelPrice())}</small></button>
       <button class="btn" data-act="charge" ${vs.soc>0.95?'disabled':''}>Charge batt. <small>$15</small></button>
       <button class="btn" data-act="sleep">${S.city===ALX?'Sleep & leave':'Sleep'} <small>−${money(S.vehicles.reduce((a,v)=>a+insurance(v),0))}</small></button>
-      <button class="btn" data-act="gtab" data-arg="repair">Diagnose →</button><button class="btn" data-act="shop" data-arg="used">Used car lot</button>${S.city===ALX?'':'<button class="btn" data-act="casino" data-arg="wheel" style="grid-column:1/-1;border-color:#62c06c;color:#7fd889">Lucky Lugnut Casino</button>'}</div>
+      <button class="btn" data-act="gtab" data-arg="repair">Diagnose →</button></div>
       <div class="muted mono" style="color:${(S.awake||0)/60*DF().fatigue>14?'var(--warn)':''}">Awake ${Math.floor((S.awake||0)/60)} h · Air ${Math.round(ambient())}°C · Fuel here $${fuelPrice().toFixed(2)}/L</div>
       <div class="muted mono">Spares ${vs.spare} · Jerry cans ${S.sup.jerry} · Jump packs ${S.sup.jump} · Cam jammers ${S.sup.jammer||0}</div>`;
   }else if(gTab==='repair'){
@@ -1848,7 +1909,7 @@ function renderBenchPanel(){
     </div>`;
   }
   h+=`<div class="card"><h3>Stock</h3><div class="muted">${stock?`${stock} new ${pname(id).toLowerCase()} on the shelf.`:`No spare ${pname(id).toLowerCase()} in stock. New ones cost ${money(price)}.`}</div>
-    <button class="btn shop" data-act="shop" data-arg="parts">Parts &amp; tools shop</button></div>
+    <button class="btn shop" data-act="townat" data-arg="parts">Walk to Parts &amp; tools</button></div>
     <div class="card"><h3>Hints</h3><div class="muted">Bolt heads differ in size: a socket that is <i>too small</i> won't go on, one <i>too big</i> slips. Screws need the right driver. Rusty fasteners may seize: spray penetrating oil, wait, then retry. Too much torque snaps a bolt.</div></div>
     <button class="btn" data-act="leave">Back to garage</button>`;
   $('#panel').innerHTML=h;
@@ -1856,7 +1917,7 @@ function renderBenchPanel(){
 
 /* ================= DRIVE ================= */
 const drive={route:null};
-const keys={gas:false,brake:false},touch={gas:false,brake:false};
+const keys={gas:false,brake:false,left:false,right:false},touch={gas:false,brake:false,left:false,right:false};
 function makeRoute(from,to,test){
   const seed=test?from*991+17:from*131+to*17+(from<to?0:5000);const r=mulberry(seed+999);
   const len=test?1600:distKm(from,to)*1000;
@@ -1881,7 +1942,7 @@ function roadH(R,x){
   const e=smooth(150,520,x)*smooth(150,520,R.len-x);if(e<=0)return 0;
   return R.a*e*(10*Math.sin(x/200+R.p1)+2.2*Math.sin(x/70+R.p2)+0.4*Math.sin(x/19+R.p3));
 }
-function limitAt(R,x,noEv){if(x<350||x>R.len-350)return 50;if(!noEv)for(const e of R.events||[])if((e.type==='works'||e.type==='ford')&&x>e.x-10&&x<e.x+e.len)return e.type==='ford'?20:30;
+function limitAt(R,x,noEv){if(x<350||x>R.len-350)return 50;if(!noEv)for(const e of R.events||[])if((e.type==='works'||e.type==='ford'||e.type==='river')&&x>e.x-10&&x<e.x+e.len)return e.type==='ford'?20:e.type==='river'?30:30;
   if(R.alx){if(inZone(R,x))return 60;if(isDirt(R,x))return 80}for(const z of R.zones)if(x>z[0]&&x<z[1])return 70;return 90}
 function startDrive(test,to,opt){opt=opt||{};
   closeModal();
@@ -1892,7 +1953,7 @@ function startDrive(test,to,opt){opt=opt||{};
       <div class="row"><button class="btn pri" data-act="charge">Charge battery $15</button>${S.sup.jump?'<button class="btn" data-act="jumpself">Use jump pack</button>':''}<button class="btn" data-act="close">Close</button></div>`);return}
   if(!test&&!opt.free&&!S.taken.some(j=>j.to===+to)){toast('No cargo for that stop');return}
   if(!test&&+to===ALX&&!S.pass&&!opt.nopass){modal(`<h2>No Alterax pass</h2><p>The Alterax border guards shoot anyone who turns up without a valid pass. A pass costs ${money(ALX_PASS)} and covers one trip there and back.</p>
-    <div class="row"><button class="btn pri" data-act="buypassgo" data-arg="${to}" ${S.money<ALX_PASS?'disabled':''}>Buy a pass and go</button><button class="btn danger" data-act="goalx" data-arg="${to}">Drive without one</button><button class="btn" data-act="close">Cancel</button></div>`);return}
+    <div class="row"><button class="btn pri" data-act="townat" data-arg="passoffice">Go to the pass office</button><button class="btn danger" data-act="goalx" data-arg="${to}">Drive without one</button><button class="btn" data-act="close">Cancel</button></div>`);return}
   if(!test&&S.city===ALX){S.pass=null;S.alx=null} // the pass covers one trip there and back
   const R=test?makeRoute(S.city,S.city,true):makeRoute(S.city,+to,false);
   R.events=genEvents(R);
@@ -2080,7 +2141,11 @@ function stepDrive(dt){
       if(e.type==='border'&&e.open){if(e.arm<1)e.arm=Math.min(1,e.arm+dt*0.8);if(!e.passed&&d.x>e.x+4){e.passed=true;dmsg(R.alx==='in'?'The gate lifts. Welcome to Alterax.':'You leave Alterax. Your pass is spent.','#62c06c',4)}continue}
       if(e.open)continue;
       const stopX=e.x-1;
-      if(d.x>stopX){const imp=av;d.x=stopX;d.v=0;d.cruise=0;
+      if(d.x>stopX){const imp=av;
+        if(e.type==='border'&&imp*3.6>=180){e.open=true;e.smashed=true;e.passed=true;e.asked=true;d.v*=0.88;d.cruise=0;SFX.snap();SFX.thud(1);d.flash=0.3;
+          vs.parts.lights.cond=Math.max(0,vs.parts.lights.cond-35);vs.parts.radiator.cond=Math.max(0,vs.parts.radiator.cond-12);addDamage(8);markStale();
+          dmsg(`You smash through the Alterax gate at ${Math.round(imp*3.6)} km/h! The garrison is scrambling.`,'#e4493b',6);if(!d.chase)startChase(imp*3.6,60,true);continue}
+        d.x=stopX;d.v=0;d.cruise=0;
         if(e.type==='border'&&imp>4.2){alxDeath('You rammed the Alterax border gate. The guards opened fire before you could get out.');return}
         if(e.type==='bandits'&&imp>8.3&&d.mass>=3000){e.open=true;d.v=imp*0.5;SFX.thud(1);addDamage(imp);banditFire();continue}
         if(imp>2){SFX.thud(clamp(imp/10,0.4,1));const k=imp/3;vs.parts.radiator.cond=Math.max(0,vs.parts.radiator.cond-k*4);vs.parts.lights.cond=Math.max(0,vs.parts.lights.cond-k*5);vs.parts.shocks.cond=Math.max(0,vs.parts.shocks.cond-k*2);addDamage(imp*1.5);markStale();
@@ -2090,11 +2155,21 @@ function stepDrive(dt){
       if(inW){if(av>0.5)d.v*=1-Math.min(0.5,dt*0.12*av);
         if(!e.splashed&&av*3.6>25+DF().tol){e.splashed=true;vs.parts.air.cond=Math.max(0,vs.parts.air.cond-25);vs.parts.plugs.cond=Math.max(0,vs.parts.plugs.cond-15);d.misfire=1.2;d.missEvt=true;addDamage(6+av*0.4);markStale();SFX.spray();dmsg('Water floods the engine bay! The engine coughs and the cargo gets soaked.','#e4493b',5)}
         if(av>2&&!lowGfx&&Math.random()<0.8)for(let i=0;i<2;i++)d.ptc.push({x:d.x-Math.random()*Vd.L*K,h:0.1,vx:d.v*0.3+(Math.random()-0.5)*2,vh:2+Math.random()*2,g:8,life:0.6,max:0.6,r:0.08,gr:0.3,col:'190,215,230',a:0.5})}}
+    else if(e.type==='river'){const inW=d.x>e.x&&d.x-Vd.L*K<e.x+e.len;
+      if(inW){if(!e.inW){e.inW=true;SFX.spray();if(av>3)shot({noise:true,type:'lowpass',f:700,q:0.6,vol:clamp(av/15,0.2,0.7),dur:0.6})}
+        if(av>0.5)d.v*=1-Math.min(0.5,dt*0.2*av);e.spT=(e.spT||0)-dt;if(av>1&&e.spT<=0){e.spT=0.3;shot({noise:true,type:'highpass',f:1800,q:0.5,vol:clamp(av/25,0.04,0.3),dur:0.3})}
+        if(!e.splashed&&av*3.6>35+DF().tol){e.splashed=true;vs.parts.air.cond=Math.max(0,vs.parts.air.cond-20);vs.parts.plugs.cond=Math.max(0,vs.parts.plugs.cond-10);d.misfire=1.4;d.missEvt=true;addDamage(5+av*0.4);markStale();dmsg(`Way too fast through the ${e.name}! Water in the intake and the cargo is soaked.`,'#e4493b',5)}
+        if(!lowGfx){const n=Math.min(10,1+Math.floor(av/2.5));for(let i=0;i<n;i++){const wx=Math.random()<0.5?d.x-(Vd.L-Vd.wf)*K:d.x-(Vd.L-Vd.wr)*K;
+          d.ptc.push({x:wx+(Math.random()-0.5)*0.8,h:0.25,vx:d.v*(0.15+Math.random()*0.5)+(Math.random()-0.5)*3,vh:1.5+Math.random()*(2+av*0.3),g:9,life:0.8+Math.random()*0.4,max:1.1,r:0.07+Math.random()*0.08,gr:0.2,col:'215,236,248',a:0.7})}
+          if(av>3)d.ptc.push({x:d.x+0.2,h:0.3,vx:d.v*0.9,vh:0.8+av*0.12,g:6,life:0.5,max:0.5,r:0.3,gr:1.2,col:'200,225,240',a:0.45})}}
+      else e.inW=false}
     else if(e.type==='works'){const mx=e.x+e.len/2;if(!e.fined&&ox<mx&&d.x>=mx&&av*3.6>30+DF().tol+3){e.fined=true;const f=Math.round((60+(av*3.6-30)*3)*DF().fine);S.money-=f;d.fines+=f;d.flash=0.3;dmsg(`Speeding through roadworks! Fine ${money(f)}.`,'#e4493b',4)}}}
   if(R.alx){const seg=Math.floor(d.x/800);if(seg!==d.rainSeg){d.rainSeg=seg;const p=0.12+0.65*jungleDepth(R,d.x),was=d.rain;d.rain=was?Math.random()<Math.min(0.95,p+0.25):Math.random()<p;
     if(d.rain&&!was)dmsg('Rain sweeps in through the canopy. Less grip.','#9cc7e8',4);else if(!d.rain&&was)dmsg('The rain eases off.','#9cc7e8',3)}}
   if(R.alx&&chaseStep(dt,av))return;
-  if(S.passenger&&d.t>(d.chatNext||0)){d.chatNext=d.t+28+Math.random()*20;dmsg(`${S.passenger.name}: “${rpick(S.passenger.lou?LOU_LINES:S.passenger.soldier?SOLDIER_LINES:CHATTER)}”`,'#bfe3ff',6)}
+  if(riders().length&&d.t>(d.chatNext||0)){d.chatNext=d.t+24+Math.random()*18;const rs=riders();
+    if(rs.length>1&&Math.random()<0.3){const q=rpick(DUO);dmsg(`${rs[0].name}: “${q[0]}”`,'#bfe3ff',6);dmsg(`${rs[1].name}: “${q[1]}”`,'#d6c8ff',6)}
+    else{const p=rpick(rs),pool=p.lou?LOU_LINES:p.soldier?SOLDIER_LINES:p.pi!=null?HITCH[p.pi].ride.concat(CHATTER.slice(0,3)):CHATTER;dmsg(`${p.name}: “${rpick(pool)}”`,'#bfe3ff',6)}}
   d.lamps=[['ENG',C('plugs')<0.35||C('fuelf')<0.25||C('air')<0.3],['TEMP',d.temp>108],['BATT',C('alt')<0.3||vs.soc<0.2],['OIL',C('oil')<0.2],['BRK',C('brakes')<0.15||d.bt>300],['TIRE',d.flatF||d.flatR||C('tiresF')<0.2||C('tiresR')<0.2],['ZZZ',tiredH>14]];
   const lnn=d.lamps.filter(l=>l[1]).length;if(lnn>d.lampN&&d.t>1)SFX.chime();d.lampN=lnn;
   const st=R.stations.find(s=>Math.abs(d.x-s)<16);
@@ -2103,6 +2178,7 @@ function stepDrive(dt){
   if(thr>0.8&&av<0.6&&grade>0.03&&d.engineOn)d.stuckT=(d.stuckT||0)+dt;else d.stuckT=Math.max(0,(d.stuckT||0)-dt*2);
   if(d.stuckT>4)dmsg('Too steep for this load. Roll back a bit for a run-up, or call for a push.','#e9a53a',4,'stuck');
   $('#bPush').hidden=!(d.stuckT>6);
+  $('#bSleep').hidden=!(av<0.5&&!R.test&&!d.chase&&d.x>350&&d.x<R.len-350);
   if(!d.over){
     if(d.x>R.len-22&&d.x<R.len+14&&av<0.4&&d.engineOn)arrive();
     else if(!d.engineOn&&av<0.3)breakdown();
@@ -2172,7 +2248,7 @@ function arrive(){
   if(R.test){S.clock+=10;modal(`<h2>Test drive done</h2><p>${(R.len/1000).toFixed(1)} km around ${CITIES[S.city].n}. Peak engine temp ${Math.round(d.peakT||d.temp)} °C. Did you hear any knocking, whining, squealing or rattles?</p>
     <div class="row"><button class="btn pri" data-act="toGarage">Back to the bay</button></div>`);return}
   const here=S.taken.filter(j=>j.to===R.to);S.city=R.to;
-  const chaseTxt=d.chase?chaseSurrender(false):'',toAlx=R.to===ALX,escort=toAlx&&S.passenger&&S.passenger.soldier;
+  const chaseTxt=d.chase?chaseSurrender(false):'',toAlx=R.to===ALX,escort=toAlx&&riders().some(r=>r.soldier);
   if(toAlx)S.alx={from:R.from,day:S.day};else if(R.from===ALX)S.alx=null;
   let rows='',total=0,drepT=0,insp='';
   for(const j of here){const dmg=clamp(j.dmg,0,100),late=j.el>j.deadline,cg=CARGO[j.cargo],early=!late&&j.el<j.deadline*0.6;let pay=j.pay*(1-dmg/100);if(dmg>=100)pay=0;if(late)pay*=0.7;if(early)pay*=cg.express?1.3:1.15;if(cg.express&&VD().express)pay*=1.5;pay=Math.round(pay);
@@ -2213,7 +2289,7 @@ function doTow(){
   if(R.alx==='in'&&!(R.events||[]).some(e=>e.type==='border'&&e.open)){S.city=R.from;S.rep=clamp(S.rep-0.1,0,5);msg+=`Tow trucks won't cross the Alterax border: you were towed back to ${CITIES[R.from].n} with your cargo still aboard. Reputation −0.1.`;genJobs()}
   else if(!R.test){const here=S.taken.filter(j=>j.to===R.to);let pay=0;for(const j of here)if(!(R.to===ALX&&CARGO[j.cargo].alxBan))pay+=Math.round(j.pay*0.5*(1-clamp(j.dmg,0,100)/100));if(R.to===ALX)S.alx={from:R.from,day:S.day};else if(R.from===ALX)S.alx=null;
     S.money+=pay;S.rep=clamp(S.rep-0.3,0,5);S.stats.earned+=pay;S.taken=S.taken.filter(j=>j.to!==R.to);msg+=`Clients paid ${money(pay)} (half rate). Reputation −0.3.`;S.city=R.to;genJobs()}
-  S.passenger=null;S.clock+=60;S.awake=(S.awake||0)+60;closeModal();save();toGarage();toast(`Towed for ${money(d.towCost)}. ${msg}`,4000);
+  S.riders=[];S.clock+=60;S.awake=(S.awake||0)+60;closeModal();save();toGarage();toast(`Towed for ${money(d.towCost)}. ${msg}`,4000);
 }
 function resumeAfterService(){const d=drive;d.over=false;d.engineOn=true;d.deadBatt=false;d.crank=0.8;closeModal()}
 function toGarage(){closeModal();drive.route=null;setScene('garage');save()}
@@ -2255,7 +2331,10 @@ function renderDrive(t){
   const SPL=R.split??R.len/2,bF=b=>{if(R.test)return CITY_BIOME[R.from]===b?1:0;const s2=smooth(SPL-220,SPL+220,midX);return (CITY_BIOME[R.from]===b?1-s2:0)+(CITY_BIOME[R.to]===b?s2:0)};
   const biomeAt=x=>R.test?CITY_BIOME[R.from]:(x<SPL?CITY_BIOME[R.from]:CITY_BIOME[R.to]);
   const cf=bF('coast'),rf=bF('redrock'),ff=bF('farm'),jf=bF('jungle');
-  layer(0.04,H*0.12,gy-H*0.06,mixHex(mixHex(mixHex('#5d6f86','#a8664a',rf*0.85),'#3f5a48',jf*0.85),'#141a2a',dk*1.4),lowGfx?32:20,u=>0.6+0.4*Math.sin(u/170)+0.3*Math.sin(u/67+1)+0.12*Math.sin(u/23));
+  ctx.globalAlpha=1-jf*0.97;layer(0.04,H*0.12,gy-H*0.06,mixHex(mixHex(mixHex('#5d6f86','#a8664a',rf*0.85),'#3f5a48',jf*0.85),'#141a2a',dk*1.4),lowGfx?32:20,u=>0.6+0.4*Math.sin(u/170)+0.3*Math.sin(u/67+1)+0.12*Math.sin(u/23));ctx.globalAlpha=1;
+  if(jf>0.02){ctx.globalAlpha=jf; // no mountains in Alterax country: rolling rainforest canopy all the way to the horizon
+    layer(0.03,H*0.07,gy-H*0.05,mixHex('#7a9a84','#141a2a',dk*1.4),lowGfx?16:8,u=>0.5+0.2*Math.sin(u/41)+0.18*Math.abs(Math.sin(u/9.7))+0.1*Math.abs(Math.sin(u/4.1+1)));
+    layer(0.06,H*0.08,gy-H*0.025,mixHex('#4f7458','#121a18',dk*1.4),lowGfx?14:7,u=>0.5+0.22*Math.sin(u/29+2)+0.2*Math.abs(Math.sin(u/7.3))+0.1*Math.abs(Math.sin(u/3.4)));ctx.globalAlpha=1}
   if(rf>0.02){ctx.globalAlpha=rf;layer(0.07,H*0.09,gy-H*0.03,mixHex('#c0703f','#1a120c',dk*1.4),lowGfx?20:10,u=>{const v=Math.sin(u/140)+0.6*Math.sin(u/53+2);return v>0.55?1:v>0.35?(v-0.35)*5:0});ctx.globalAlpha=1}
   SEA_Y=Math.min(gy-H*0.045,toY(midX)-1.4*ppm-H*0.05);if(cf>0.02){ctx.globalAlpha=cf;const sg=ctx.createLinearGradient(0,SEA_Y,0,H);sg.addColorStop(0,mixHex('#5b93bf','#0c1828',dk*1.3));sg.addColorStop(1,mixHex('#1f5480','#06101c',dk*1.3));ctx.fillStyle=sg;ctx.fillRect(0,SEA_Y,W,H);
     ctx.fillStyle=`rgba(255,255,255,${(0.25*(1-dk)).toFixed(2)})`;for(let i=0;i<24;i++){const x=((hash(i)*W*1.5-midX*1.5-t*0.01)%(W*1.5)+W*1.5)%(W*1.5)-W*0.25,y=SEA_Y+4+hash(i+40)*H*0.08;ctx.fillRect(x,y,14+hash(i+7)*20,1.5)}ctx.globalAlpha=1}
@@ -2352,6 +2431,8 @@ function renderDrive(t){
     if(e.type==='deer')sign(e.x-130,(sx,sy)=>{ctx.fillStyle='#f2b51c';ctx.beginPath();ctx.moveTo(sx,sy-ppm*1.1);ctx.lineTo(sx+ppm,sy);ctx.lineTo(sx,sy+ppm*1.1);ctx.lineTo(sx-ppm,sy);ctx.fill();ctx.fillStyle='#16130c';ctx.font=`900 ${Math.round(ppm*0.42)}px Barlow, sans-serif`;ctx.textAlign='center';ctx.fillText('DEER',sx,sy+ppm*0.15);ctx.textAlign='left'});
     if(e.type==='works')sign(e.x-150,(sx,sy)=>{ctx.fillStyle='#e07b39';ctx.beginPath();ctx.moveTo(sx,sy-ppm*1.1);ctx.lineTo(sx+ppm,sy);ctx.lineTo(sx,sy+ppm*1.1);ctx.lineTo(sx-ppm,sy);ctx.fill();ctx.fillStyle='#16130c';ctx.font=`900 ${Math.round(ppm*0.34)}px Barlow, sans-serif`;ctx.textAlign='center';ctx.fillText('WORKS',sx,sy+ppm*0.12);ctx.textAlign='left'});
     if(e.type==='tree'&&!e.open)sign(e.x-140,(sx,sy)=>{ctx.fillStyle='#8a6a3e';ctx.save();ctx.translate(sx,sy);ctx.rotate(-0.06);ctx.fillRect(-1.5*ppm,-0.8*ppm,3*ppm,1.4*ppm);ctx.fillStyle='#c0302a';ctx.font=`900 ${Math.round(ppm*0.42)}px "Big Shoulders Display", Impact, sans-serif`;ctx.textAlign='center';ctx.fillText('TREE DOWN!',0,-0.18*ppm);ctx.fillText('SLOW',0,0.35*ppm);ctx.textAlign='left';ctx.restore()});
+    if(e.type==='river')sign(e.x-120,(sx,sy)=>{ctx.fillStyle='#2a6fb0';ctx.fillRect(sx-2.1*ppm,sy-1.1*ppm,4.2*ppm,1.9*ppm);ctx.fillStyle='#fff';ctx.font=`700 ${Math.round(ppm*0.36)}px Barlow, sans-serif`;ctx.textAlign='center';ctx.fillText(e.name.toUpperCase(),sx,sy-ppm*0.55);
+      ctx.font=`900 ${Math.round(ppm*0.5)}px Barlow, sans-serif`;ctx.fillText('FORD · 30',sx,sy+ppm*0.1);ctx.font=`600 ${Math.round(ppm*0.3)}px Barlow, sans-serif`;ctx.fillText('NO BRIDGE',sx,sy+ppm*0.55);ctx.textAlign='left'});
     if(e.type==='ford')sign(e.x-120,(sx,sy)=>{ctx.fillStyle='#2a6fb0';ctx.beginPath();ctx.moveTo(sx,sy-ppm*1.1);ctx.lineTo(sx+ppm,sy);ctx.lineTo(sx,sy+ppm*1.1);ctx.lineTo(sx-ppm,sy);ctx.fill();ctx.fillStyle='#fff';ctx.font=`900 ${Math.round(ppm*0.34)}px Barlow, sans-serif`;ctx.textAlign='center';ctx.fillText('FLOOD',sx,sy-ppm*0.05);ctx.fillText('20',sx,sy+ppm*0.4);ctx.textAlign='left'});
     if(e.type==='border'&&R.alx==='in')sign(e.x-260,(sx,sy)=>{ctx.fillStyle='#2f5a2a';ctx.fillRect(sx-2.6*ppm,sy-1.3*ppm,5.2*ppm,2.2*ppm);ctx.strokeStyle='#e8c547';ctx.lineWidth=Math.max(1,0.08*ppm);ctx.strokeRect(sx-2.5*ppm,sy-1.2*ppm,5*ppm,2*ppm);
       ctx.fillStyle='#e8c547';ctx.font=`900 ${Math.round(ppm*0.46)}px "Big Shoulders Display", Impact, sans-serif`;ctx.textAlign='center';ctx.fillText('ALTERAX BORDER',sx,sy-ppm*0.45);ctx.font=`700 ${Math.round(ppm*0.32)}px Barlow, sans-serif`;ctx.fillText('STOP · PASS CONTROL',sx,sy+ppm*0.05);ctx.fillText('MILITARY ZONE 60',sx,sy+ppm*0.5);ctx.textAlign='left'});
@@ -2389,11 +2470,20 @@ function renderDrive(t){
   for(const e of evs){if(e.type==='works'){for(let x=e.x;x<=e.x+e.len;x+=6){if(x<viewL||x>viewR)continue;const cx2=toX(x),cy2=toY(x)+0.62*ppm;ctx.fillStyle='#e8642c';ctx.beginPath();ctx.moveTo(cx2-0.2*ppm,cy2);ctx.lineTo(cx2+0.2*ppm,cy2);ctx.lineTo(cx2,cy2-0.7*ppm);ctx.closePath();ctx.fill();ctx.fillStyle='#f4f1ea';ctx.fillRect(cx2-0.1*ppm,cy2-0.4*ppm,0.2*ppm,0.1*ppm)}}
     if(e.type==='deer'&&e.t0&&!e.done&&e.y<RC)drawDeer(toX(e.x),toY(e.x)+e.y*ppm,ppm,t);
     if(e.x>viewR+12||e.x+(e.len||10)<viewL-12)continue;
-    if(e.type==='border'){const px2=e.x+4.6,bx2=toX(px2),by2=toY(px2)-0.05*ppm,ang=(e.arm||0)*Math.PI/2,L2=5.2*ppm,ex=bx2-Math.cos(ang)*L2,ey=by2-Math.sin(ang)*L2;
+    if(e.type==='border'&&e.smashed){const bx2=toX(e.x+4.6),by2=toY(e.x+4.6)-0.05*ppm;ctx.fillStyle=mixHex('#3a3f45','#101214',dk);ctx.fillRect(bx2-0.14*ppm,by2,0.28*ppm,1.75*ppm);
+      ctx.lineCap='round';ctx.lineWidth=Math.max(3,0.2*ppm);ctx.strokeStyle=mixHex('#d0302a','#3a0f0c',dk);ctx.beginPath();ctx.moveTo(bx2,by2);ctx.lineTo(bx2-1.2*ppm,by2+0.3*ppm);ctx.stroke();
+      ctx.strokeStyle=mixHex('#f4f1ea','#3a3a36',dk);ctx.beginPath();ctx.moveTo(toX(e.x+9),toY(e.x+9)+1.5*ppm);ctx.lineTo(toX(e.x+12.5),toY(e.x+12.5)+1.2*ppm);ctx.stroke();ctx.lineCap='butt'}
+    else if(e.type==='border'){const px2=e.x+4.6,bx2=toX(px2),by2=toY(px2)-0.05*ppm,ang=(e.arm||0)*Math.PI/2,L2=5.2*ppm,ex=bx2-Math.cos(ang)*L2,ey=by2-Math.sin(ang)*L2;
       ctx.fillStyle=mixHex('#3a3f45','#101214',dk);ctx.fillRect(bx2-0.14*ppm,by2,0.28*ppm,1.75*ppm);ctx.fillRect(bx2,by2-0.25*ppm,0.7*ppm,0.5*ppm);
       ctx.lineCap='round';ctx.lineWidth=Math.max(3,0.2*ppm);ctx.strokeStyle=mixHex('#f4f1ea','#3a3a36',dk);ctx.beginPath();ctx.moveTo(bx2,by2);ctx.lineTo(ex,ey);ctx.stroke();
       ctx.setLineDash([0.55*ppm,0.55*ppm]);ctx.strokeStyle=mixHex('#d0302a','#3a0f0c',dk);ctx.beginPath();ctx.moveTo(bx2,by2);ctx.lineTo(ex,ey);ctx.stroke();ctx.setLineDash([]);ctx.lineCap='butt';
       if(!e.open&&Math.floor(t/400)%2)tlGlow.push([ex,ey,'#ff3b2f'])}
+    if(e.type==='river'){const x0=e.x,x1=e.x+e.len,st2=Math.max(0.5,step/ppm),wc=dk>0.3?'#1e3a48':'#3f7f94',wc2=dk>0.3?'#16303c':'#2f6a80';
+      bandR(x0-1.5,x1+1.5,-1.45,1.95,mixHex('#5a4630','#120e09',dk));
+      const g2=ctx.createLinearGradient(0,toY(x0)-1.4*ppm,0,H);g2.addColorStop(0,wc);g2.addColorStop(1,wc2);ctx.fillStyle=g2;ctx.beginPath();ctx.moveTo(toX(x0),toY(x0)-1.3*ppm);
+      for(let x=x0+st2;x<x1;x+=st2)ctx.lineTo(toX(x),toY(x)-1.3*ppm+Math.sin(x*1.3+t*0.003)*0.05*ppm);ctx.lineTo(toX(x1),toY(x1)-1.3*ppm);ctx.lineTo(toX(x1)+0.6*ppm,H);ctx.lineTo(toX(x0)-0.6*ppm,H);ctx.closePath();ctx.fill();
+      if(!lowGfx){ctx.strokeStyle=`rgba(225,242,250,${(0.4*(1-dk*0.7)).toFixed(2)})`;ctx.lineWidth=Math.max(1,0.05*ppm);ctx.beginPath();
+        for(let i=0;i<26;i++){const x=x0+1+hash(i*7+e.x)*(e.len-2),f=((t*0.00035*(1+hash(i+1)))+hash(i+2))%1,y=toY(x)-1.2*ppm+f*(H-toY(x)+1.2*ppm);ctx.moveTo(toX(x),y);ctx.lineTo(toX(x)+0.25*ppm,y+0.9*ppm)}ctx.stroke()}}
     if(e.type==='ford'){bandR(e.x,e.x+e.len,-0.25,1.9,`rgba(${dk>0.3?'30,55,70':'70,125,140'},.82)`);if(!lowGfx){ctx.strokeStyle=`rgba(220,240,250,${(0.35*(1-dk*0.8)).toFixed(2)})`;ctx.lineWidth=1;ctx.beginPath();
       for(let i=0;i<14;i++){const x=e.x+((hash(i*7)*e.len+t*0.002*(1+hash(i)))%e.len),o=0.1+hash(i+3)*1.6;ctx.moveTo(toX(x),toY(x)+o*ppm);ctx.lineTo(toX(x+1.2),toY(x+1.2)+o*ppm)}ctx.stroke()}}
     if(e.type==='tree'){if(!e.open){const cx2=toX(e.x+0.8),cy2=toY(e.x+0.8)+(RC-0.65)*ppm;ctx.fillStyle=mixHex('#1f4a22','#08100a',dk*1.3);for(const [dx,dy,r] of [[2.4,-0.6,1.3],[3.8,-0.2,1.1],[5,-0.5,1.2],[3,-1.4,0.9],[6.2,0,0.8]]){circ(ctx,cx2+dx*ppm,cy2+dy*ppm,r*ppm);ctx.fill()}
@@ -2424,14 +2514,16 @@ function renderDrive(t){
   DRAWV[V().type](ctx,{paint:V().paint,rot:d.rot,bodyOff:d.susY*76+idleShake+(d.misfire>0?2:0),pitch:d.pitch,mid:(Vd.wr+Vd.wf)/2,flatF:d.flatF,flatR:d.flatR,wobF:d.wobF,wobR:d.wobR,lightOn:hr>=20||hr<6.2,load:R.test?0:usedSlots()});
   ctx.restore();
   for(const e of evs)if(e.type==='deer'&&e.t0&&!e.done&&e.y>=RC)drawDeer(toX(e.x),toY(e.x)+e.y*ppm,ppm,t);
+  for(const e of evs)if(e.type==='river'&&e.x<viewR&&e.x+e.len>viewL)bandR(e.x,e.x+e.len,RC-0.42,1.95,`rgba(${dk>0.3?'30,58,72':'63,127,148'},.62)`);
   if((looseFrac('oil')>0||looseFrac('radiator')>0)&&Math.abs(d.v)>1&&!lowGfx){const lx=toX(fwx-0.6);ctx.fillStyle=looseFrac('oil')>0?'rgba(20,16,10,.8)':'rgba(70,200,120,.7)';
     for(let i=0;i<3;i++){ctx.fillRect(lx-(i*7+(t/9)%7),toY(fwx)+RC*ppm-ppm*(0.4+((t/120+i*0.3)%1)*0.4),2,3)}}
   for(const p of d.ptc){ctx.fillStyle=`rgba(${p.col},${(p.a*p.life/p.max).toFixed(3)})`;circ(ctx,toX(p.x),toY(p.x)+RC*ppm-p.h*ppm,Math.max(1,p.r*ppm));ctx.fill()}
-  if(jf>0.02&&!lowGfx){for(let k=Math.floor(viewL/2.2);k<viewR/2.2;k++){const x=k*2.2+hash(k*17)*1.5;if(x<300||x>R.len-300||biomeAt(x)!=='jungle'||hash(k*19+2)>0.15+0.6*jungleDepth(R,x))continue;
+  const inRiver=x=>evs.some(e=>e.type==='river'&&x>e.x-2&&x<e.x+e.len+2);
+  if(jf>0.02&&!lowGfx){for(let k=Math.floor(viewL/2.2);k<viewR/2.2;k++){const x=k*2.2+hash(k*17)*1.5;if(x<300||x>R.len-300||biomeAt(x)!=='jungle'||inRiver(x)||hash(k*19+2)>0.15+0.6*jungleDepth(R,x))continue;
       const sx=toX(x),sy=toY(x)+(2.3+hash(k+8)*1.2)*ppm,s=0.7+hash(k+1)*0.7;ctx.fillStyle=mixHex(hash(k+3)<0.5?'#1f4a22':'#2a5a2a','#08100a',dk*1.3);
       for(let i=0;i<6;i++){const a=-Math.PI*0.95+i*Math.PI*0.18;ctx.beginPath();ctx.ellipse(sx+Math.cos(a)*0.9*s*ppm,sy+Math.sin(a)*1.1*s*ppm,0.75*s*ppm,0.22*s*ppm,a,0,Math.PI*2);ctx.fill()}}}
   if(!lowGfx){ctx.strokeStyle=mixHex('#3f6b2e','#0b130a',dk*1.3);ctx.lineWidth=Math.max(1,0.07*ppm);ctx.beginPath();
-    for(let k=Math.floor(viewL/2.6);k<viewR/2.6;k++){if(hash(k*3+7)<0.55)continue;const x=k*2.6+hash(k)*1.5,sx=toX(x),sy=toY(x)+(1.85+hash(k+5)*0.5)*ppm,hgt=(0.3+hash(k+9)*0.35)*ppm;
+    for(let k=Math.floor(viewL/2.6);k<viewR/2.6;k++){if(hash(k*3+7)<0.55||inRiver(k*2.6))continue;const x=k*2.6+hash(k)*1.5,sx=toX(x),sy=toY(x)+(1.85+hash(k+5)*0.5)*ppm,hgt=(0.3+hash(k+9)*0.35)*ppm;
       ctx.moveTo(sx,sy);ctx.lineTo(sx-0.15*ppm,sy-hgt);ctx.moveTo(sx,sy);ctx.lineTo(sx+0.05*ppm,sy-hgt*1.2);ctx.moveTo(sx,sy);ctx.lineTo(sx+0.2*ppm,sy-hgt*0.9)}ctx.stroke()}
   if(d.fog>0){const fg=ctx.createLinearGradient(0,0,W,0);fg.addColorStop(0,`rgba(214,220,226,${(d.fog*0.2).toFixed(2)})`);fg.addColorStop(0.45,`rgba(214,220,226,${(d.fog*0.45).toFixed(2)})`);fg.addColorStop(1,`rgba(214,220,226,${(d.fog*0.85).toFixed(2)})`);ctx.fillStyle=fg;ctx.fillRect(0,0,W,H)}
   if(d.rain){ctx.strokeStyle='rgba(170,200,230,.45)';ctx.lineWidth=1;ctx.beginPath();const n=lowGfx?35:70;
@@ -2513,6 +2605,7 @@ function renderHUD(){
    ctx.fillStyle=bv>0.8?'#e4493b':'#b0574a';ctx.fillRect(px2+3,py2+ph-3-(ph-16)*bv,8,(ph-16)*bv);
    ctx.fillStyle='#62c06c';ctx.fillRect(px2+15,py2+ph-3-(ph-16)*gv,8,(ph-16)*gv);
    ctx.fillStyle='#9da5ac';ctx.font='700 9px "Share Tech Mono", monospace';ctx.fillText('B  G',px2+4,py2+10)}
+  if(riders().length){ctx.fillStyle='#bfe3ff';ctx.font='600 11px Barlow, sans-serif';ctx.fillText('Riders: '+riders().map(r=>r.name).join(', '),cx+2,cy+ch+(d.jam?52:36))}
   if(d.jam){ctx.fillStyle='#62c06c';ctx.font='700 11px "Share Tech Mono", monospace';ctx.fillText('● CAM JAMMER ON',cx+2,cy+ch+36)}
   if(d.cruise>0){ctx.fillStyle='#62c06c';ctx.font='700 11px "Share Tech Mono", monospace';ctx.fillText('CRUISE '+Math.round(d.cruise*3.6),cx+12,cy+ch-24)}
   let lx=cx;const ly=cy+ch+6;ctx.font='700 10px "Share Tech Mono", monospace';
@@ -2531,7 +2624,7 @@ function renderHUD(){
   const sx=cx+cw+60,sy=top;ctx.fillStyle='#fff';circ(ctx,sx,sy+18,22);ctx.fill();ctx.strokeStyle='#d0302a';ctx.lineWidth=5;circ(ctx,sx,sy+18,19);ctx.stroke();
   ctx.fillStyle='#111';ctx.font='900 17px Barlow, sans-serif';ctx.textAlign='center';ctx.fillText(lim,sx,sy+24);ctx.textAlign='left';
   if(d.chase){const c=d.chase,cw2=Math.min(W-24,460),cx2=(W-cw2)/2,cy2=top+60+(W<700?40:0),fl=Math.floor(d.t*4)%2;ctx.fillStyle=fl?'rgba(150,22,16,.94)':'rgba(30,44,130,.94)';rr(ctx,cx2,cy2,cw2,28,5);ctx.fill();
-    const hum=c.hx==null?(c.lost?'Humvee lost':`Humvee in ${Math.max(0,Math.ceil(30-c.t))} s`):`Humvee ${Math.max(0,Math.round(d.x-Vd.L*K-c.hx))} m behind`,heli=c.heli?(c.heli.t<15?`HELICOPTER IN ${Math.ceil(15-c.heli.t)} s`:'HELICOPTER OVERHEAD'):`heli in ${fmtT(Math.max(0,180-c.t))}`;
+    const hum=c.hx==null?(c.lost?'Humvee lost':`Humvee in ${Math.max(0,Math.ceil(30-c.t))} s`):`Humvee ${Math.max(0,Math.round(d.x-Vd.L*K-c.hx))} m behind`,heli=c.heli?(c.heli.t<15?`HELICOPTER IN ${Math.ceil(15-c.heli.t)} s`:'HELICOPTER OVERHEAD'):`heli in ${fmtT(Math.max(0,heliDelay()-c.t))}`;
     ctx.fillStyle='#fff';ctx.font='700 13px "Share Tech Mono", monospace';ctx.textAlign='center';ctx.fillText(`PURSUIT · ${hum} · ${heli}`,W/2,cy2+19);ctx.textAlign='left'}
   let my=top+70+(W<700?40:0)+(d.chase?36:0);ctx.font='600 15px Barlow, sans-serif';ctx.textAlign='center';
   for(const m of d.msgs){ctx.globalAlpha=clamp(m.ttl,0,1);const w=ctx.measureText(m.text).width+20;ctx.fillStyle='rgba(16,19,22,.88)';ctx.fillRect(W/2-w/2,my-17,w,24);ctx.fillStyle=m.col;ctx.fillText(m.text,W/2,my);my+=28}
@@ -2543,12 +2636,153 @@ function renderHUD(){
   if(d.x>=R.len+14)prompt='You overshot. Hold brake to reverse into the bay';
   if(d.crank>0)prompt='Cranking…';
   {const L=(R.lights||[]).find(L=>L.x>d.x&&L.x-d.x<70);if(L&&!prompt&&lightState(L)!=='green')prompt=(lightState(L)==='red'?'Red light':'Amber light')+` in ${Math.round(L.x-d.x)} m: stop at the line`}
-  {const PR={police:'Police checkpoint: stop next to the officer',hitch:'Hitchhiker ahead: stop to pick them up',stranded:'Stranded driver ahead: stop to help',soldier:'Soldier hitching a ride: stop to pick them up',crate:'Supply crate by the road: stop to look',guard:'Alterax guard post ahead: keep to the speed limit',border:'Alterax border control: stop at the gate',ford:'Flooded ford: slow to 20 km/h or the engine floods',tree:'Tree down across the road ahead! Slow down and stop',bandits:'Vehicle blocking the road ahead! Slow down'},DS={guard:150,border:160,tree:150,bandits:150};
+  {const PR={police:'Police checkpoint: stop next to the officer',hitch:'Hitchhiker ahead: stop to pick them up',stranded:'Stranded driver ahead: stop to help',soldier:'Soldier hitching a ride: stop to pick them up',crate:'Supply crate by the road: stop to look',guard:'Alterax guard post ahead: keep to the speed limit',river:'River crossing ahead: slow to 30 km/h',border:'Alterax border control: stop at the gate',ford:'Flooded ford: slow to 20 km/h or the engine floods',tree:'Tree down across the road ahead! Slow down and stop',bandits:'Vehicle blocking the road ahead! Slow down'},DS={river:150,guard:150,border:160,tree:150,bandits:150};
    const e=(R.events||[]).find(e=>PR[e.type]&&!e.done&&!e.open&&!e.asked&&!e.splashed&&e.x>d.x-8&&e.x-d.x<(DS[e.type]||80));if(e&&!prompt)prompt=PR[e.type]}
   if(d.chase&&!prompt)prompt=d.chase.hx!=null?'Stop to surrender, or outrun the Humvee':'Patrol inbound: stop and wait to surrender';
   if(prompt){ctx.font='700 14px Barlow, sans-serif';const w=ctx.measureText(prompt).width+20;ctx.fillStyle='rgba(242,181,28,.94)';ctx.fillRect(W/2-w/2,H-160,w,26);ctx.fillStyle='#16130c';ctx.textAlign='center';ctx.fillText(prompt,W/2,H-142);ctx.textAlign='left'}
   if(d.paused){ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(0,0,W,H)}
 }
+
+/* ================= TOWN: walk the street, go into shops, talk to people ================= */
+const PLAYER_LOOK={n:'You',skin:'#e0b48f',hair:'#5a3a22',shirt:'#2f5d8a',hat:true,hatc:'#f2b51c'};
+const TOWN={x:0,face:1,walk:0,target:null,city:-1,w:2000,venues:[],peds:[],npcX:0,near:null,lastNear:'',camX:0,sc:1};
+const VENUE={
+ garage:{n:'Your garage',sign:'HAUL & WRENCH',body:'#6b5a52',signc:'#f2b51c',w:300,h:200},
+ depot:{n:'Freight depot (job board)',sign:'FREIGHT DEPOT',body:'#58606a',signc:'#ece7db',w:300,h:220},
+ parts:{n:'Parts & tools',sign:'PARTS & TOOLS',body:'#7a3b2c',signc:'#fff3c4',w:250,h:210},
+ lot:{n:'Used car lot',sign:'USED CARS',body:null,signc:'#f2b51c',w:360,h:120},
+ dealer:{n:'Car dealer',sign:'DEALER',body:'#3d4a58',signc:'#9cc7e8',w:320,h:210},
+ redline:{n:'Redline Performance',sign:'REDLINE',body:'#1d1f22',signc:'#ff4a3a',w:250,h:200},
+ casino:{n:'Lucky Lugnut Casino',sign:'LUCKY LUGNUT',body:'#2a2438',signc:'#7fd889',w:290,h:250},
+ passoffice:{n:'Alterax pass office',sign:'ALTERAX PASSES',body:'#3a4a34',signc:'#e8c547',w:230,h:190},
+ diner:{n:'Diner',sign:'DINER',body:'#8a6a4a',signc:'#ff9a6a',w:240,h:180},
+ museum:{n:'Museum of the Republic',sign:'MUSEUM OF THE REPUBLIC',body:'#6b6a58',signc:'#e8c547',w:340,h:240},
+ hq:{n:'Garrison office',sign:'GARRISON',body:'#4b5a32',signc:'#e8c547',w:260,h:230},
+};
+const venueName=id=>S.city===ALX?({dealer:'Army dealer',diner:'Mess hall',lot:'Army surplus lot'}[id]||VENUE[id].n):VENUE[id].n;
+const venueSign=id=>S.city===ALX?({dealer:'ARMY DEALER',diner:'MESS HALL',lot:'SURPLUS'}[id]||VENUE[id].sign):VENUE[id].sign;
+const TOWN_CHAT={0:['Millbrook was all dairy farms when I was a kid. Now it’s dairy farms and you.','Rosa fixed my tractor with a coat hanger once. Still runs.','The bakery opens at five. The line starts at four.'],
+ 1:['Ironvale smells like hot metal. You stop noticing after ten years.','Hank shouts, but he pays on time. That’s rare around here.','The steel mill runs three shifts. Traffic’s worst at six.'],
+ 2:['Container ships come in every Tuesday. Bring a big truck.','Vince? Never heard of him. …Why do you ask?','Past the docks the road turns into jungle, all the way to Alterax. People come back quiet.','They print the Alterax passes in a basement by the harbour. Draw your own conclusions.'],
+ 3:['Mae’s pie is worth the drive. The hills are not.','Fog rolls off the falls most mornings. Lights on.','The sawmill buys anything with an engine for parts.'],
+ 4:['Dust gets into everything. Your teeth, your filters, your soul.','Dusty tells the same story about ’89 every night. It’s a good story.','Cactus juice is not a drink. Trust me.'],
+ 5:['Every train in the country passes through here. None of them stop.','Pip counts trucks. You’re probably in the book already.','The junction café has the worst coffee in six towns. Proudly.']};
+const ALX_CHAT=['“Order before comfort.” It’s on every poster. The posters say a lot of things.','My grandfather built the first Jaguars at the Varn works. With a hammer and spite.','Don’t photograph the soldiers. Or the museum. Or the trees, probably.','The Colonel turns eighty-two next month. Nobody has seen him in two years.','Outsiders bring good money and bad radios. We keep the money.','The Kessa floods every monsoon. That’s why the road is dirt. Tarmac washes away.','Sergeant Draskel once turned back a general because his pass had a coffee stain.','Our parts are cheap because half of them fell off army trucks. Don’t ask which half.','Curfew is at ten. The searchlights don’t care whose cousin you are.','The museum is free. Leaving early is not.','My brother drives a Kodiak. He says it has two speeds: slow and also slow.','They say the Colonel listens to an outside radio every night. Smuggled, of course.'];
+const LORE=[
+ {t:'The Plantation Fort · 1958',x:'Before there was a Republic there was the Alterax Plantation Company: rubber, tin and a narrow rail spur through the jungle. The company built a fort on the Kessa River to guard its warehouses, and hired soldiers nobody else wanted.'},
+ {t:'The Day Nobody Left · 1971',x:'When the company went bankrupt, ships came to take everyone home. Major Idris Varn and four hundred soldiers simply didn’t board. They raised a new flag (green for the jungle, a black band for the river road, a gold star for the garrison) and declared the Republic of Alterax. The motto painted on the fort gate still stands: “Order before comfort.”'},
+ {t:'Hammers and Spite · 1979',x:'With no imports, the Varn Motor Works built trucks from whatever the jungle left behind. The first Jaguar 4×4 used a captured tractor engine and doors cut from a bus. The Kodiak 6×6 followed: slow, ugly, and impossible to kill.'},
+ {t:'The Radio Riots · 1986',x:'Smugglers flooded the city with cheap radios. Within a month people were dancing to outside music and arguing with soldiers in the street. The Colonel banned electronics, luxury goods and chemicals at the border, and the Strider armored van was built to move the treasury’s gold.'},
+ {t:'The Border Act · 1994',x:'Every outsider needs a pass, and every pass is checked by hand at the gate. Passes are printed by private contractors in Port Dunmore, which is why a few are not quite right. Sergeant Kova Draskel has guarded the gate since the first day. He has never taken a day off.'},
+ {t:'The Republic Today',x:'Colonel Varn is eighty-one and rarely seen. The city runs on trade it pretends not to need: outside freight pays well because so few drivers dare the jungle road, the guard posts and the gate. Visitors may stay one night. The garrison prefers it that way.'},
+];
+function townVenues(c){return c===ALX?['garage','depot','parts','hq','museum','dealer','lot','redline','diner']:['garage','depot','parts','diner','lot','dealer','redline','passoffice','casino']}
+function buildTown(){const c=S.city;TOWN.city=c;let x=160;
+  TOWN.venues=townVenues(c).map(id=>{const v=VENUE[id],o={id,x,w:v.w,door:x+v.w/2};x+=v.w+70;return o});TOWN.w=x+120;
+  const at=TOWN.venues.find(v=>v.id===(c===ALX?'hq':'diner'));TOWN.npcX=at.x+at.w+32;
+  TOWN.peds=range(c===ALX?6:5).map(i=>{const sol=c===ALX&&i%2===0,p=randPerson();if(sol){p.shirt='#4b5a32';p.hat=true;p.hatc=i%4===0?'#7a1f2b':'#3a4230';p.beard=false}
+    return{p,sol,x:220+Math.random()*(TOWN.w-440),dir:Math.random()<0.5?-1:1,sp:26+Math.random()*26,wait:0,walk:Math.random()*6}})}
+function enterTown(at){stopIdle(true);closeModal();if(TOWN.city!==S.city||!TOWN.venues.length)buildTown();
+  const g=TOWN.venues.find(v=>v.id==='garage');TOWN.x=at==='npc'?TOWN.npcX-30:at?(TOWN.venues.find(v=>v.id===at)||g).door:g.door;TOWN.target=null;TOWN.face=1;TOWN.lastNear='';setScene('town')}
+function stepTown(dt){const T=TOWN;if(T.city!==S.city)buildTown();if(!$('#modal').hidden)return;
+  let dir=(keys.right||touch.right?1:0)-(keys.left||touch.left?1:0);
+  if(dir)T.target=null;else if(T.target!=null){const dx=T.target-T.x;if(Math.abs(dx)<4)T.target=null;else dir=Math.sign(dx)}
+  T.x=clamp(T.x+dir*150*dt,40,T.w-40);if(dir)T.face=dir;T.walk=dir?T.walk+dt*7:0;
+  for(const p of T.peds){if(p.wait>0){p.wait-=dt;continue}p.x+=p.dir*p.sp*dt;p.walk+=dt*p.sp/22;
+    if(p.x<90||p.x>T.w-90||Math.random()<dt*0.06){p.dir*=-1;if(Math.random()<0.5)p.wait=1+Math.random()*3;p.x=clamp(p.x,90,T.w-90)}}
+  let near=null,best=62;for(const v of T.venues){const d=Math.abs(v.door-T.x);if(d<best){best=d;near={k:'venue',id:v.id}}}
+  const npc=Object.keys(NPCS).find(k=>NPCS[k].city===S.city);if(npc&&Math.abs(T.npcX-T.x)<48&&Math.abs(T.npcX-T.x)<=best+12){best=Math.abs(T.npcX-T.x);near={k:'npc',id:npc}}
+  for(const p of T.peds){const d=Math.abs(p.x-T.x);if(d<34&&d<best){best=d;near={k:'ped',p}}}
+  T.near=near;const lbl=!near?'Walk up to a door or a person':near.k==='venue'?(near.id==='garage'?'Enter your garage (E)':`Enter ${venueName(near.id)} (E)`):`Talk to ${near.k==='npc'?NPCS[near.id].n:near.p.p.n} (E)`;
+  if(lbl!==T.lastNear){T.lastNear=lbl;const b=$('#tAct');b.textContent=lbl;b.disabled=!near}}
+function townAct(){const n=TOWN.near;if(scene!=='town'||!n||!$('#modal').hidden)return;SFX.ui();
+  if(n.k==='npc')return talkTo(n.id);
+  if(n.k==='ped'){const p=n.p;p.wait=5;p.dir=TOWN.x<p.x?-1:1;const pool=S.city===ALX?ALX_CHAT:(TOWN_CHAT[S.city]||[]).concat(CHATTER);
+    return talk({n:p.p.n,role:S.city===ALX?(p.sol?'Alterax soldier':'Alterax citizen'):'Local',face:p.p},rpick(pool),[{t:'See you around',f:()=>{}},{t:'Tell me something else',f:()=>{townAct()}}])}
+  openVenue(n.id)}
+function openVenue(id){switch(id){
+  case 'garage':return setScene('garage');case 'depot':return jobsModal();case 'parts':return shopModal('parts','parts');case 'lot':return shopModal('used','lot');
+  case 'dealer':return shopModal('vehicles','dealer');case 'redline':return perfModal('mods');case 'casino':return casinoModal('wheel');case 'passoffice':return passOffice();
+  case 'diner':return dinerModal();case 'museum':return loreModal(0);case 'hq':return garrisonModal()}}
+const dinerItems=()=>S.city===ALX?[['Mess-hall ration',5,90,'Rice, beans and something grey. Filling.'],['Strong tea',3,45,'Black, sweet, and alarmingly strong.']]:[['Coffee & pie',8,90,'The pie is always cherry. Nobody asks why.'],['Full breakfast',15,180,'Eggs, toast, bacon, regret.']];
+function dinerModal(){const alx=S.city===ALX;modal(`<h2>${alx?'Garrison mess hall':'Diner'}</h2><p class="muted">Food and coffee push your tiredness back. You’ve been awake ${Math.floor((S.awake||0)/60)} h.</p>
+  <table>${dinerItems().map((it,i)=>`<tr><td><b>${it[0]}</b><br><span class="muted">${it[3]} −${it[2]/60} h tiredness</span></td><td style="text-align:right"><button class="btn pri" data-act="eat" data-arg="${i}" ${S.money<it[1]?'disabled':''}>${money(it[1])}</button></td></tr>`).join('')}</table>
+  <p class="muted">Overheard at the next table: “${rpick(alx?ALX_CHAT:(TOWN_CHAT[S.city]||CHATTER))}”</p><div class="row"><button class="btn" data-act="close">Back to the street</button></div>`)}
+function passOffice(){const P=S.pass;modal(`<div class="talk"><img class="face" src="${faceImg({skin:'#e0b48f',hair:'#2a1a12',shirt:'#3a4a34',long:true,bg:'#2a3a2a'})}" alt=""><div class="pinfo"><b style="font-size:17px">Clerk Ana Vey</b> <span class="tag">Alterax pass office</span>
+  <p>${P?'You already have a pass. One per traveller. If you want my opinion on it, I don’t have one. Not my department.':`One pass, one trip there and back. ${money(ALX_PASS)}. Fill in the form, sign here, here and here. Next.`}</p></div></div>
+  <p class="muted">The passes come from private printers by the harbour. About one in twenty is… not quite right. Inspect yours before you drive.</p>
+  <div class="row">${P?'<button class="btn" data-act="passview">Inspect your pass</button>':`<button class="btn pri" data-act="buypass" data-arg="office" ${S.money<ALX_PASS?'disabled':''}>Buy a pass ${money(ALX_PASS)}</button>`}<button class="btn" data-act="close">Back to the street</button></div>`)}
+function loreModal(i){i=clamp(i|0,0,LORE.length-1);const L=LORE[i];modal(`<h2>Museum of the Republic</h2><div class="card alxcard"><h3>Exhibit ${i+1} of ${LORE.length} · ${L.t}</h3><p style="color:var(--fg)">${L.x}</p></div>
+  <div class="row">${i>0?`<button class="btn" data-act="lore" data-arg="${i-1}">← Previous</button>`:''}${i<LORE.length-1?`<button class="btn pri" data-act="lore" data-arg="${i+1}">Next exhibit →</button>`:''}<button class="btn" data-act="close">Back to the street</button></div>`)}
+function garrisonModal(){modal(`<h2>Garrison office · notice to visitors</h2><div class="card alxcard"><ol class="steps">
+  <li>Every visitor carries a valid pass, checked at the gate. One pass, one trip there and back.</li><li>Military zone limit: 60 km/h. Guard posts on the jungle road report speeders. Patrols pursue. Stop when told.</li>
+  <li>Prohibited imports: ${CARGO.filter(c=>c.alxBan).map(c=>`${c.n.toLowerCase()} (${c.alxBan})`).join('; ')}. Confiscated on arrival, with a fine.</li>
+  <li>Visitors may stay one night. In the morning the garrison will see you on your way.</li><li>Curfew at 22:00. Order before comfort.</li></ol></div>
+  <p class="muted">Lt. Mira Sabo, the quartermaster, is usually outside. She talks more than the posters do.</p><div class="row"><button class="btn" data-act="close">Back to the street</button></div>`)}
+function drawWalker(c,x,y,u,p,walk,face){const sw=Math.sin(walk)*0.45,lift=Math.abs(Math.sin(walk))*0.03*u;c.save();c.translate(x,y-lift);c.scale(face<0?-1:1,1);c.lineCap='round';
+  c.strokeStyle='#2b3a55';c.lineWidth=0.15*u;c.beginPath();c.moveTo(-0.06*u,-0.85*u);c.lineTo(-0.06*u+Math.sin(sw)*0.45*u,0);c.moveTo(0.06*u,-0.85*u);c.lineTo(0.06*u-Math.sin(sw)*0.45*u,0);c.stroke();
+  c.strokeStyle=shade(p.shirt[0]==='#'?p.shirt:'#555555',0.75);c.lineWidth=0.11*u;c.beginPath();c.moveTo(0,-1.38*u);c.lineTo(-Math.sin(sw)*0.4*u,-0.9*u);c.stroke();
+  c.fillStyle=p.shirt;rr(c,-0.24*u,-1.5*u,0.48*u,0.7*u,0.1*u);c.fill();
+  c.strokeStyle=p.shirt;c.beginPath();c.moveTo(0,-1.38*u);c.lineTo(Math.sin(sw)*0.4*u,-0.9*u);c.stroke();
+  c.fillStyle=p.skin;circ(c,0.02*u,-1.66*u,0.16*u);c.fill();c.fillStyle=p.hair;c.beginPath();c.arc(0.02*u,-1.7*u,0.16*u,Math.PI,0);c.fill();if(p.long)c.fillRect(-0.15*u,-1.72*u,0.1*u,0.32*u);
+  if(p.hat){c.fillStyle=p.hatc||'#8a2c22';c.fillRect(-0.15*u,-1.88*u,0.34*u,0.1*u);c.fillRect(0.06*u,-1.82*u,0.22*u,0.05*u)}
+  c.fillStyle='#1b1b1b';circ(c,0.12*u,-1.67*u,0.025*u);c.fill();c.lineCap='butt';c.restore()}
+function drawFacade(v,x,gy,w,h,sc,t,dk,alx){const id=v.id,V2=VENUE[id],D=c=>mixHex(c,'#0b0f14',dk*1.15),top=gy-h,lit=dk>0.3;
+  const win=lit?'rgba(255,214,120,.85)':D('#2c3a44');ctx.save();
+  if(id==='lot'){ctx.fillStyle=D('#8a8f88');for(let i=0;i<=8;i++)ctx.fillRect(x+i*w/8,gy-34*sc,3*sc,34*sc);ctx.fillRect(x,gy-34*sc,w,3*sc);
+    ctx.fillRect(x,gy-110*sc,4*sc,110*sc);ctx.fillRect(x+w-4*sc,gy-110*sc,4*sc,110*sc);ctx.strokeStyle=D('#5a5a5a');ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x,gy-108*sc);ctx.quadraticCurveTo(x+w/2,gy-80*sc,x+w,gy-108*sc);ctx.stroke();
+    const cols=['#e4493b','#f2b51c','#3f6e9e','#62c06c'];for(let i=0;i<14;i++){const k=(i+0.5)/14,bx=x+k*w,by=gy-108*sc+Math.sin(k*Math.PI)*28*sc;ctx.fillStyle=D(cols[i%4]);ctx.beginPath();ctx.moveTo(bx-6*sc,by);ctx.lineTo(bx+6*sc,by);ctx.lineTo(bx,by+12*sc);ctx.fill()}
+    if(!S.lot||S.lot.day!==S.day||S.lot.city!==S.city)genLot();
+    S.lot.list.slice(0,2).forEach((L,i)=>{const T=VEH[L.type],s2=Math.min(sc*0.5,(w*0.46)/T.L);ctx.save();ctx.translate(x+12*sc+i*w*0.5,gy-4*sc);ctx.scale(s2,s2);DRAWV[L.type](ctx,{paint:L.paint});ctx.restore();
+      ctx.fillStyle='#f2b51c';ctx.fillRect(x+30*sc+i*w*0.5,gy-T.h*s2-26*sc,74*sc,20*sc);ctx.fillStyle='#16130c';ctx.font=`700 ${Math.round(13*sc)}px "Share Tech Mono", monospace`;ctx.fillText(money(L.price),x+34*sc+i*w*0.5,gy-T.h*s2-11*sc)});
+  }else{const body=alx&&id!=='redline'?['#5a6150','#4b5a32','#6b6a58','#3e4638'][hashStr(id)%4]:V2.body;
+    ctx.fillStyle=D(body);ctx.fillRect(x,top,w,h);ctx.fillStyle=D(shade(body,0.7));ctx.fillRect(x-5*sc,top-10*sc,w+10*sc,12*sc);
+    ctx.fillStyle=win;const rows=Math.max(1,Math.floor((h-130*sc)/48/sc));for(let r=0;r<rows;r++)for(let i=0;i<Math.floor(w/58/sc);i++)if(hash(v.x+r*17+i*3)<0.8||!lit)ctx.fillRect(x+16*sc+i*58*sc,top+52*sc+r*48*sc,32*sc,26*sc);
+    const dw=id==='garage'?170*sc:id==='depot'?120*sc:40*sc,dh=id==='garage'||id==='depot'?92*sc:66*sc,dx=x+w/2-dw/2;
+    ctx.fillStyle=D('#22262a');ctx.fillRect(dx,gy-dh,dw,dh);
+    if(id==='garage'||id==='depot'){ctx.fillStyle=D('#8a8f88');ctx.fillRect(dx,gy-dh,dw,dh*0.55);ctx.fillStyle=D('#6b7178');for(let y2=gy-dh+8*sc;y2<gy-dh*0.45;y2+=10*sc)ctx.fillRect(dx,y2,dw,2*sc)}
+    else{ctx.fillStyle=lit?'rgba(255,214,120,.5)':D('#3a4a58');ctx.fillRect(dx+5*sc,gy-dh+6*sc,dw-10*sc,dh*0.45);ctx.fillStyle=D('#c9a227');ctx.fillRect(dx+dw-10*sc,gy-dh*0.45,4*sc,4*sc)}
+    if(id==='depot'){for(let i=0;i<3;i++)cargoBox(ctx,x+w-60*sc+i*0*sc,gy-(i+1)*26*sc,40*sc,24*sc)}
+    if(id==='parts'){ctx.fillStyle=D('#141516');for(let i=0;i<3;i++){rr(ctx,x+10*sc,gy-(i+1)*16*sc,42*sc,15*sc,6*sc);ctx.fill()}}
+    if(id==='dealer'){ctx.fillStyle=lit?'rgba(255,240,200,.35)':'rgba(170,205,230,.45)';ctx.fillRect(x+14*sc,top+40*sc,w-28*sc,h-110*sc);const ty=alx?'jaguar':'pickup',T=VEH[ty],s2=Math.min(sc*0.45,(w-60*sc)/T.L);
+      ctx.save();ctx.translate(x+w/2-T.L*s2/2,top+40*sc+h-110*sc-4*sc);ctx.scale(s2,s2);DRAWV[ty](ctx,{paint:T.paints[0]});ctx.restore()}
+    if(id==='redline'){ctx.fillStyle='#d0302a';ctx.fillRect(x,top+30*sc,w,6*sc);ctx.fillRect(x,top+40*sc,w,3*sc)}
+    if(id==='diner'){for(let i=0;i<8;i++){ctx.fillStyle=D(i%2?'#f4f1ea':(alx?'#4b5a32':'#c0392b'));ctx.fillRect(x+i*w/8,gy-dh-28*sc,w/8,18*sc)}}
+    if(id==='museum'){ctx.fillStyle=D('#c8c2b0');for(let i=0;i<5;i++)ctx.fillRect(x+20*sc+i*(w-50*sc)/4,top+50*sc,12*sc,h-50*sc);ctx.beginPath();ctx.moveTo(x-6*sc,top);ctx.lineTo(x+w/2,top-34*sc);ctx.lineTo(x+w+6*sc,top);ctx.fill();
+      ctx.fillStyle=D('#7a7a70');ctx.fillRect(x+w+8*sc,gy-26*sc,26*sc,26*sc);drawWalker(ctx,x+w+21*sc,gy-26*sc,32*sc,{skin:D('#8a8a80'),hair:D('#6a6a60'),shirt:D('#7a7a70'),hat:true,hatc:D('#6a6a60')},0,-1)}
+    if(id==='casino'){const on=Math.floor(t/300)%2;ctx.fillStyle=on?'#ffd06a':'#7a5a20';for(let i=0;i<14;i++){circ(ctx,x+(i+0.5)*w/14,top+6*sc,3.5*sc);ctx.fill()}}
+    if(id==='passoffice'||id==='hq'||(alx&&id==='garage')){ctx.fillStyle='#8a8f88';ctx.fillRect(x+w-24*sc,top-70*sc,4*sc,70*sc);alxFlag(ctx,x+w-20*sc,top-70*sc,52*sc,32*sc,t*0.003+v.x)}
+    if(id==='hq'){ctx.fillStyle=D('#a08a5a');for(let i=0;i<4;i++)for(let k=0;k<2;k++){ctx.beginPath();ctx.ellipse(x+14*sc+i*20*sc+k*10*sc,gy-(6+k*11)*sc,11*sc,6*sc,0,0,Math.PI*2);ctx.fill()}}
+    const txt=venueSign(id);ctx.font=`900 ${Math.round(Math.min(26*sc,w/txt.length*1.5))}px "Big Shoulders Display", Impact, sans-serif`;const tw=ctx.measureText(txt).width+20*sc;
+    ctx.fillStyle=D('#16130c');ctx.fillRect(x+w/2-tw/2,top+10*sc,tw,30*sc);ctx.fillStyle=V2.signc;ctx.textAlign='center';ctx.fillText(txt,x+w/2,top+33*sc);ctx.textAlign='left';
+    if(lit){ctx.globalCompositeOperation='lighter';const g=ctx.createRadialGradient(x+w/2,top+25*sc,4,x+w/2,top+25*sc,tw*0.7);g.addColorStop(0,'rgba(255,220,150,.22)');g.addColorStop(1,'rgba(255,220,150,0)');ctx.fillStyle=g;ctx.fillRect(x+w/2-tw,top-30*sc,tw*2,110*sc)}}
+  ctx.restore()}
+function renderTown(t){const T=TOWN;if(T.city!==S.city)buildTown();const sc=clamp(H/640,0.7,1.5),gy=Math.round(H*0.72),hr=hourNow(),dk=darkness(hr),alx=S.city===ALX,biome=CITY_BIOME[S.city],u=52*sc;
+  const camX=clamp(T.x*sc-W/2,0,Math.max(0,T.w*sc-W)),X=x=>x*sc-camX;T.camX=camX;T.sc=sc;const D=c=>mixHex(c,'#0b0f14',dk*1.2);
+  const [c1,c2]=skyCols(hr);let g=ctx.createLinearGradient(0,0,0,gy);g.addColorStop(0,c1);g.addColorStop(1,c2);ctx.fillStyle=g;ctx.fillRect(0,0,W,gy);
+  if(dk>0.3){ctx.fillStyle='rgba(255,255,255,.7)';for(let i=0;i<40;i++)ctx.fillRect(hash(i)*W,hash(i+50)*gy*0.55,1.5,1.5)}
+  const hill=(pf,base,amp,col,fn)=>{ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(0,gy);for(let sx=0;sx<=W+10;sx+=lowGfx?16:8)ctx.lineTo(sx,base-fn(sx+camX*pf)*amp);ctx.lineTo(W,gy);ctx.closePath();ctx.fill()};
+  if(alx){hill(0.08,gy-70*sc,80*sc,D('#6f8f78'),q=>0.6+0.2*Math.sin(q/53)+0.2*Math.abs(Math.sin(q/13)));hill(0.2,gy-40*sc,70*sc,D('#3a6a40'),q=>0.6+0.2*Math.sin(q/37+1)+0.25*Math.abs(Math.sin(q/9)));
+    for(let i=0;i<12;i++){const tx=((i*173-camX*0.35)%(W+200)+W+200)%(W+200)-100;ctx.fillStyle=D('#3d2e20');ctx.fillRect(tx,gy-150*sc,6*sc,150*sc);ctx.fillStyle=D(i%2?'#1d3b1f':'#24452a');for(const [dx,dy,r] of [[0,0,34],[-24,12,24],[26,10,26]]){circ(ctx,tx+dx*sc,gy-150*sc+dy*sc,r*sc);ctx.fill()}}}
+  else{const mc={farm:'#7d9a6a',industrial:'#6a737c',coast:'#7f9fb8',forest:'#4f7458',redrock:'#b0703f'}[biome]||'#7d9a6a';
+    hill(0.06,gy-80*sc,120*sc,D(mixHex(mc,'#c8d4e0',0.4)),q=>0.5+0.35*Math.sin(q/190)+0.15*Math.sin(q/61));if(biome==='coast'){ctx.fillStyle=D('#4f86b0');ctx.fillRect(0,gy-50*sc,W,50*sc)}
+    hill(0.18,gy-30*sc,46*sc,D(mc),q=>0.5+0.3*Math.sin(q/90+2)+0.2*Math.sin(q/31))}
+  for(const v of T.venues){const x=X(v.x),w=v.w*sc;if(x>W+80||x+w<-80)continue;drawFacade(v,x,gy,w,VENUE[v.id].h*sc,sc,t,dk,alx)}
+  const lamps=[];for(let lx=100;lx<T.w;lx+=260){const sx=X(lx);if(sx<-30||sx>W+30)continue;ctx.fillStyle=D('#3a3f45');ctx.fillRect(sx,gy-150*sc,5*sc,150*sc);ctx.fillRect(sx,gy-150*sc,26*sc,4*sc);ctx.fillStyle=dk>0.2?'#ffe9a8':D('#9aa1a8');ctx.fillRect(sx+18*sc,gy-147*sc,12*sc,5*sc);lamps.push([sx+24*sc,gy-142*sc])}
+  ctx.fillStyle=D(alx?'#8a8470':'#9a9a92');ctx.fillRect(0,gy,W,30*sc);ctx.fillStyle=D('#c8c8c0');ctx.fillRect(0,gy+30*sc,W,5*sc);ctx.fillStyle=D(alx?'#6b5a42':'#3e4145');ctx.fillRect(0,gy+35*sc,W,H-gy);
+  if(!alx){ctx.fillStyle=D('#d8d4c6');for(let x=-(camX%140);x<W;x+=140)ctx.fillRect(x,gy+35*sc+(H-gy-35*sc)*0.5,70*sc,4*sc)}
+  {const gv=T.venues.find(v=>v.id==='garage'),Vd=VD(),s2=u/76,vx=X(gv.x+gv.w/2)-Vd.L*s2/2;if(vx<W&&vx+Vd.L*s2>0){ctx.save();ctx.translate(vx,Math.min(H-6,gy+150*sc));ctx.scale(s2,s2);DRAWV[V().type](ctx,{paint:V().paint,load:usedSlots()});ctx.restore()}}
+  const fy=gy+20*sc,npc=Object.keys(NPCS).find(k=>NPCS[k].city===S.city),si=storyInfo();
+  for(const p of T.peds){const sx=X(p.x);if(sx>-40&&sx<W+40)drawWalker(ctx,sx,fy,u,{...p.p,skin:D(p.p.skin),shirt:D(p.p.shirt)},p.wait>0?0:p.walk,p.dir)}
+  if(npc){const sx=X(T.npcX),np=NPCS[npc];if(sx>-40&&sx<W+40){drawWalker(ctx,sx,fy,u,{...np,skin:D(np.skin),shirt:D(np.shirt)},0,-1);
+    ctx.font=`600 ${Math.round(12*sc)}px Barlow, sans-serif`;ctx.textAlign='center';ctx.fillStyle='rgba(16,19,22,.8)';const nw=ctx.measureText(np.n).width+12;ctx.fillRect(sx-nw/2,fy-2.25*u,nw,18*sc);ctx.fillStyle='#ece7db';ctx.fillText(np.n,sx,fy-2.25*u+13*sc);
+    if(si.who===npc){ctx.fillStyle='#f2b51c';ctx.font=`900 ${Math.round(26*sc)}px "Big Shoulders Display", Impact, sans-serif`;ctx.fillText('!',sx,fy-2.4*u-Math.abs(Math.sin(t*0.005))*8)}ctx.textAlign='left'}}
+  drawWalker(ctx,X(T.x),fy+4*sc,u,PLAYER_LOOK,T.walk,T.face);
+  if(dk>0.02){ctx.fillStyle=`rgba(4,8,22,${dk*0.7})`;ctx.fillRect(0,0,W,H);ctx.save();ctx.globalCompositeOperation='lighter';for(const [lx,ly] of lamps){const lg=ctx.createRadialGradient(lx,ly,2,lx,ly,120*sc);lg.addColorStop(0,`rgba(255,220,150,${0.45*dk})`);lg.addColorStop(1,'rgba(255,220,150,0)');ctx.fillStyle=lg;ctx.fillRect(lx-120*sc,ly-120*sc,240*sc,300*sc)}ctx.restore()}
+  if(T.near){const lbl=T.near.k==='venue'?venueName(T.near.id):T.near.k==='npc'?NPCS[T.near.id].n:T.near.p.p.n,px=X(T.x);ctx.font='700 14px Barlow, sans-serif';const tw=ctx.measureText(lbl+'  [E]').width+20;
+    ctx.fillStyle='rgba(242,181,28,.95)';ctx.fillRect(clamp(px-tw/2,8,W-tw-8),fy-2.7*u,tw,26);ctx.fillStyle='#16130c';ctx.textAlign='center';ctx.fillText(lbl+'  [E]',clamp(px,tw/2+8,W-tw/2-8),fy-2.7*u+18);ctx.textAlign='left'}
+  ctx.fillStyle='rgba(242,181,28,.92)';ctx.font=`900 ${Math.round(clamp(W/26,18,34))}px "Big Shoulders Display", Impact, sans-serif`;ctx.fillText(CITIES[S.city].n.toUpperCase(),16,82);
+  ctx.font='600 13px Barlow, sans-serif';ctx.fillStyle='#ece7db';ctx.fillText(W<600?'Hold ◀ ▶ to walk · tap the yellow button':'← → or A/D to walk · E to enter or talk · tap the street to walk there',18,102)}
 
 /* ================= modals: jobs, shop, tests, obd ================= */
 function planOrder(){
@@ -2597,11 +2831,17 @@ let shopTab='parts';
 function vehThumb(type,paint){const c=document.createElement('canvas');c.width=300;c.height=140;const x=c.getContext('2d');const v=VEH[type];
   const s=Math.min(280/v.L,120/v.h);x.translate((300-v.L*s)/2,130);x.scale(s,s);DRAWV[type](x,{paint:paint||v.paints[0]});return c.toDataURL()}
 const thumbCache={};
-function shopModal(tab){
+let shopVenue=null;
+const VENUE_TABS={parts:['parts','tools','supplies','sell'],lot:['used'],dealer:['vehicles'],garage:['vehicles']};
+const junkValue=j=>Math.max(2,Math.round(pprice(j.id,j.type)*(0.06+0.34*j.cond/100)));
+const shelfValue=k=>{const [t,id,tier]=k.split(':');return Math.max(1,Math.round(pprice(id,t)*TIERS[tier].m*0.5))};
+function shopModal(tab,venue){if(venue!==undefined)shopVenue=venue;
   shopTab=tab||shopTab;const Vd=VD(),vs=V();
-  const tabs=[['parts','Parts'],['tools','Tools'],['supplies','Supplies'],['used','Used car lot'],['vehicles','Dealer & garage']];
-  let h=`<div class="row" style="justify-content:space-between"><h2>Parts &amp; tools shop</h2><span class="mono">Cash ${money(S.money)}</span></div>
-   <div class="tabs">${tabs.map(([k,n])=>`<button class="btn ${shopTab===k?'on':''}" data-act="shop" data-arg="${k}">${n}</button>`).join('')}</div>`;
+  let tabs=[['parts','Parts'],['tools','Tools'],['supplies','Supplies'],['sell','Sell parts'],['used','Used car lot'],['vehicles',shopVenue==='garage'?'Your vehicles':'Dealer & garage']];
+  if(shopVenue&&VENUE_TABS[shopVenue]){tabs=tabs.filter(([k])=>VENUE_TABS[shopVenue].includes(k));if(!tabs.some(([k])=>k===shopTab))shopTab=tabs[0][0]}
+  const title=shopVenue==='lot'?'Used car lot':shopVenue==='dealer'?(S.city===ALX?'Alterax army dealer':'Car dealer'):shopVenue==='garage'?'Your vehicles':'Parts &amp; tools shop';
+  let h=`<div class="row" style="justify-content:space-between"><h2>${title}</h2><span class="mono">Cash ${money(S.money)}</span></div>
+   ${tabs.length>1?`<div class="tabs">${tabs.map(([k,n])=>`<button class="btn ${shopTab===k?'on':''}" data-act="shop" data-arg="${k}">${n}</button>`).join('')}</div>`:''}`;
   if(shopTab==='parts'){
     h+=`<p class="muted">Parts for your <b>${Vd.yr} ${Vd.n}</b> go on the shelf; fit them on the bench (“Work on it”). <b>Used</b> parts are cheap but already ${TIERS.used.d}. <b>OEM</b> are new. <b>Performance</b> parts (new, wear 40% slower) are sold at Redline Performance. The dot shows your last reading of the fitted part.</p>
      <table><tr><th>Part</th><th>Shelf U · O · P</th><th style="text-align:right">Buy</th></tr>`;
@@ -2619,9 +2859,15 @@ function shopModal(tab){
     const sp=Math.round(140*Vd.partM/5)*5+20;
     h+=`<table><tr><td><b>Spare tire</b> for ${Vd.n} (carrying ${vs.spare})<br><span class="muted">Fit it on the roadside after a blowout instead of calling a tow.</span></td><td style="text-align:right"><button class="btn pri" data-act="buyspare" ${S.money<sp?'disabled':''}>${money(sp)}</button></td></tr>
      <tr><td><b>Jerry can, 10 L</b> (have ${S.sup.jerry})<br><span class="muted">Pour it in if you run dry instead of paying for fuel delivery.</span></td><td style="text-align:right"><button class="btn pri" data-act="buysup" data-arg="jerry" ${S.money<30?'disabled':''}>$30</button></td></tr>
-     ${S.city===ALX?'':`<tr><td><b>Alterax pass</b> (${S.pass?'have one':'none'})<br><span class="muted">Required at the Alterax border. Good for one trip there and back. Forgeries circulate: inspect it.</span></td><td style="text-align:right">${S.pass?'<button class="btn" data-act="passview">Inspect</button>':`<button class="btn pri" data-act="buypass" data-arg="shop" ${S.money<ALX_PASS?'disabled':''}>${money(ALX_PASS)}</button>`}</td></tr>`}
+     ${true?'':`<tr><td><b>Alterax pass</b> (${S.pass?'have one':'none'})<br><span class="muted">Required at the Alterax border. Good for one trip there and back. Forgeries circulate: inspect it.</span></td><td style="text-align:right">${S.pass?'<button class="btn" data-act="passview">Inspect</button>':`<button class="btn pri" data-act="buypass" data-arg="shop" ${S.money<ALX_PASS?'disabled':''}>${money(ALX_PASS)}</button>`}</td></tr>`}
      <tr><td><b>Jump pack</b> (have ${S.sup.jump})<br><span class="muted">One-shot booster for a flat battery, at the roadside or in the bay.</span></td><td style="text-align:right"><button class="btn pri" data-act="buysup" data-arg="jump" ${S.money<80?'disabled':''}>$80</button></td></tr>
      <tr><td><b>Speed camera jammer</b> (have ${S.sup.jammer||0})<br><span class="muted">Blinds every speed camera for one drive. Switches on by itself on the next drive that passes a camera, then burns out. It does nothing against Alterax guard posts.</span></td><td style="text-align:right"><button class="btn pri" data-act="buysup" data-arg="jammer" ${S.money<SUP_COST.jammer?'disabled':''}>${money(SUP_COST.jammer)}</button></td></tr></table>`;
+  }else if(shopTab==='sell'){const junk=S.junk||[],shelf=Object.keys(S.inv).filter(k=>S.inv[k]>0);
+    h+=`<p class="muted">Old parts you take off on the bench go in your trunk. The shop buys them for scrap or rebuilding: the better the condition, the more they pay. Unused parts on your shelf sell back for half price.</p>`;
+    if(!junk.length&&!shelf.length)h+=`<p>Nothing to sell. Replace a part on the bench and the old one ends up here.</p>`;
+    if(junk.length){const tot=junk.reduce((a,j)=>a+junkValue(j),0);h+=`<h3>Old parts in your trunk</h3><table>${junk.map((j,i)=>`<tr><td><b>${pname(j.id,j.type)}</b><br><span class="muted">from a ${VEH[j.type].n} · ${pct(j.cond)} ${j.cond<20?'· scrap':j.cond<50?'· worn':'· usable'}</span></td><td style="text-align:right"><button class="btn" data-act="selljunk" data-arg="${i}">Sell ${money(junkValue(j))}</button></td></tr>`).join('')}</table>
+      <div class="row"><button class="btn pri" data-act="selljunk" data-arg="all">Sell all old parts ${money(tot)}</button></div>`}
+    if(shelf.length)h+=`<h3>Unused parts on your shelf</h3><table>${shelf.map(k=>{const [t,id,tier]=k.split(':');return `<tr><td><b>${pname(id,t)}</b> · ${TIERS[tier].n} ×${S.inv[k]}<br><span class="muted">for the ${VEH[t].n}</span></td><td style="text-align:right"><button class="btn" data-act="sellshelf" data-arg="${k}">Sell one ${money(shelfValue(k))}</button></td></tr>`}).join('')}</table>`;
   }else{
     if(shopTab==='used'){
       if(!S.lot||S.lot.day!==S.day||S.lot.city!==S.city)genLot();
@@ -2640,15 +2886,15 @@ function shopModal(tab){
         h+=`<div class="vcard ${cur?'cur':''}"><img src="${thumb(veh.type,veh.paint)}" alt="${v.n}" style="width:150px;height:70px;background:#1a1f24;border-radius:3px">
          <div class="pinfo"><b>${v.yr} ${v.n}</b> ${cur?'<span class="tag hot">driving</span>':''}<br><span class="tag">${v.cap} slot${v.cap>1?'s':''}</span> <span class="tag">${Math.round((veh.mileage||0)+(veh.odo||0)).toLocaleString()} km</span> ${mods?`<span class="tag hot">${mods} mod${mods>1?'s':''}</span>`:''}</div>
          <div class="row">${cur?'':`<button class="btn pri" data-act="switchveh" data-arg="${i}" ${S.taken.length?'disabled':''}>Drive this</button><button class="btn" data-act="sellveh" data-arg="${i}">Sell ${money(sellValue(veh))}</button>`}</div></div>`});
-      h+=`<h3>Dealer · brand new</h3><p class="muted">Every part new, full warranty feel, full price. Cheaper used examples turn up on the used car lot.${S.city===ALX?' <b>Alterax army dealer:</b> 10% off, plus military vehicles sold nowhere else.':` Alterax’s army dealer also sells vehicles you can’t buy here: ${ALXV.map(t=>VEH[t].n).join(', ')}.`}</p>`;
+      if(shopVenue!=='garage'){h+=`<h3>Dealer · brand new</h3><p class="muted">Every part new, full warranty feel, full price. Cheaper used examples turn up on the used car lot.${S.city===ALX?' <b>Alterax army dealer:</b> 10% off, plus military vehicles sold nowhere else.':` Alterax’s army dealer also sells vehicles you can’t buy here: ${ALXV.map(t=>VEH[t].n).join(', ')}.`}</p>`;
       for(const type of S.city===ALX?[...VORDER,...ALXV]:VORDER){const v=VEH[type],np=newPrice(type),lock=S.rep<(v.rep||0);
         h+=`<div class="vcard"><img src="${thumb(type,v.paints[0])}" alt="${v.n}" style="width:150px;height:70px;background:#1a1f24;border-radius:3px">
          <div class="pinfo"><b>${v.yr} ${v.n}</b><br><span class="muted">${v.desc}</span><br>
          <span class="tag">${v.cap} slot${v.cap>1?'s':''}</span> <span class="tag">${Math.round(v.pmax/1000)} kW · ${v.tq} N·m</span> <span class="tag">${v.payload.toLocaleString()} kg payload</span> <span class="tag">${v.top} km/h</span> <span class="tag">${v.tank} L</span> <span class="tag">parts ×${v.partM}</span> ${v.cold?'<span class="tag hot">reefer</span>':''} ${v.express?'<span class="tag hot">express +50%</span>':''} ${v.alx?'<span class="tag alx">Alterax only</span>':''} ${v.tough?`<span class="tag">wears ${Math.round((1-v.tough)*100)}% slower</span>`:''} ${v.armor?`<span class="tag">cargo damage −${Math.round((1-v.armor)*100)}%</span>`:''}</div>
          <div class="row">${lock?`<span class="lock">Needs ${v.rep} ★ · ${money(np)}</span>`:`<button class="btn pri" data-act="buyveh" data-arg="${type}" ${S.money<np?'disabled':''}>Buy new ${money(np)}</button>`}</div></div>`}
-    }
+      }}
   }
-  h+=`<div class="row"><button class="btn" data-act="close">Close</button></div>`;modal(h);
+  h+=`<div class="row"><button class="btn" data-act="close">${scene==='town'?'Back to the street':'Close'}</button></div>`;modal(h);
 }
 const thumb=(type,paint)=>{const k=type+paint;return thumbCache[k]||(thumbCache[k]=vehThumb(type,paint))};
 function genLot(){
@@ -2790,6 +3036,8 @@ function helpModal(first){
   <li><b>Upgrade.</b> Buy used cars on the lot (inspect first: some sellers lie) or brand new from the dealer, and tune them at Redline Performance. Feeling lucky? The Lucky Lugnut Casino has a jackpot wheel and blackjack.</li>
   <li><b>Real-world rules.</b> Stop at red lights in town. Each vehicle has a payload limit. Cold engines are weak and thirsty until warm, wind changes your speed and fuel use, and staying awake too long makes you nod off at the wheel. Sleep resets it.</li>
   <li><b>Run a business.</b> Buy parts as Used, OEM or Performance. Chilled loads need the reefer van; express loads pay extra for early delivery. Insurance is charged each night, and the bank lends against your reputation.</li>
+  <li><b>Walk around town.</b> Press <i>Town</i> (or “Walk into …” in the garage) to step out onto the street. Walk with ←/→ or A/D and press E at a door or next to someone: parts shop (buy, and sell old parts from your trunk), used car lot, dealer, Redline Performance, the freight depot, the diner, the casino, the Alterax pass office, and the locals.</li>
+  <li><b>On the road.</b> Up to two hitchhikers can ride with you. Stopped and tired? Sleep in the cab, but about 1 in 20 nights a thief takes 10% of your cash (1 in 5 and 25% on the jungle road to Alterax). Settings has volume up to 200%.</li>
   <li><b>Alterax.</b> A military city deep in the jungle, ${ALX_KM} km past Port Dunmore. Jobs to and from it pay +75%, and it sells parts and vehicles 10% cheaper, plus army vehicles you can’t buy anywhere else. You need a ${money(ALX_PASS)} pass for each trip there and back (about 1 in 20 is a forgery: inspect yours). There are no speed cameras out there: guard posts watch the road instead, and anyone they catch speeding gets chased. Stop at the border, keep under 60 km/h in the military zone, don’t bring contraband, and expect to leave after one night. Dying there sends you back to your garage on Easy and Normal; on Hard it ends the game.</li>
   <li><b>Everything wears.</b> Bad parts cause misfires, overheating, flat batteries, blowouts, engine seizure and cargo damage. Loose fasteners leak, rattle, and can lose a wheel.</li></ol>
   <table><tr><th>Drive</th><td><span class="kbd">→</span>/<span class="kbd">D</span> gas · <span class="kbd">←</span>/<span class="kbd">A</span>/<span class="kbd">Space</span> brake (hold when stopped to reverse) · <span class="kbd">F</span> refuel · <span class="kbd">C</span> cruise control · <span class="kbd">H</span> horn · <span class="kbd">P</span> pause. On touch screens use the pedals.</td></tr>
@@ -2812,7 +3060,7 @@ function passHtml(P){const f=P.flaw;
    <div class="pkv"><span>Holder</span><b>${f==='holder'?'Haul &amp; Wench Co.':'Haul &amp; Wrench Co.'}</b><span>Serial</span><b class="mono">${P.serial}</b><span>Issued</span><b>Day ${P.day}</b><span>Valid until</span><b>Day ${P.until}</b></div>
    <div class="pseal${f==='seal'?' none':''}">${f==='seal'?'':'★'}</div></div></div>`}
 function passCard(){const P=S.pass;return `<div class="card alxcard"><h3>Alterax pass</h3>${P?`<div class="muted">Serial ${P.serial} · valid until day ${P.until} · one trip there and back</div><div class="row"><button class="btn" data-act="passview">Inspect pass</button><button class="btn" data-act="passtear">Tear it up</button></div>`
-  :`<div class="muted" style="color:var(--warn)">You have Alterax cargo aboard but no pass. The border guards shoot anyone without one.</div><div class="row"><button class="btn pri" data-act="buypass" ${S.money<ALX_PASS?'disabled':''}>Buy pass ${money(ALX_PASS)}</button></div>`}</div>`}
+  :`<div class="muted" style="color:var(--warn)">You have Alterax cargo aboard but no pass. The border guards shoot anyone without one.</div><div class="row"><button class="btn pri" data-act="townat" data-arg="passoffice">Pass office in town</button></div>`}</div>`}
 function passModal(){const P=S.pass;if(!P)return;
   modal(`<h2>Your Alterax pass</h2>${passHtml(P)}<p class="muted">Sergeant Draskel checks five things: the republic’s name is spelled right, the holder is your company, there is a photo, the red wax seal is there, and today (day ${S.day}) is not past the expiry day. If anything is off, tear it up and buy another. Forgeries get you shot.</p>
    <div class="row"><button class="btn danger" data-act="passtear">Tear it up</button><button class="btn pri" data-act="close">Looks fine</button></div>`)}
@@ -2821,8 +3069,10 @@ function forceRoadReady(){const vs=V();let fixed=false;stopIdle(true);
   if(startPower()<0.18)vs.soc=1;if(vs.fuel<12)vs.fuel=Math.min(tankCap(),12);if(fixed)toast('Soldiers bolted your vehicle back together. Roughly.',3500)}
 const ACT={
   close:()=>closeModal(),help:()=>helpModal(false),
-  sound:()=>{AU.on=!AU.on;$('#bSound').textContent='Sound: '+(AU.on?'on':'off');if(AU.on)initAudio();else{audioSilence();if(AU.A)AU.A.suspend()}},
-  gfx:()=>{gfxMode=gfxMode==='auto'?'low':gfxMode==='low'?'high':'auto';lowGfx=gfxMode==='low';$('#bGfx').textContent='Gfx: '+gfxMode;resize()},
+  sound:()=>{AU.on=!AU.on;if(AU.on)initAudio();else{audioSilence();if(AU.A)AU.A.suspend()}try{localStorage.setItem('hw_sound',AU.on?'on':'off')}catch(e){}settingsModal()},
+  setgfx:(m)=>{gfxMode=m;lowGfx=m==='low';try{localStorage.setItem('hw_gfx',m)}catch(e){}resize();settingsModal()},
+  settings:()=>{if(scene==='drive'&&drive.route&&!drive.over&&!drive.paused){if(drive.lock)return;drive.paused=true;audioSilence()}settingsModal()},
+  setdone:()=>{if(scene==='drive'&&drive.route&&drive.paused&&!drive.over&&!drive.lock){drive.paused=false;togglePause()}else closeModal()},
   sel:(id)=>{selPart=id;renderGaragePanel()},
   inspect:()=>{const p=PMAP[selPart],st=V().parts[selPart];
     if(st.out||st.fst.some(f=>f.p<1)){toast('Part is open on the bench. Look there.');return}
@@ -2836,6 +3086,7 @@ const ACT={
   pull:()=>{const st=V().parts[bench.id];if(!st.fst.every(f=>f.p<=0))return;st.out=true;setKnow(bench.id,3,`Measured on bench: ${pct(st.cond)}`);SFX.thud(0.8);benchMsg('Part is off. Fit a new or refurbished part, or put the old one back.');renderBenchPanel();save()},
   newpart:(tier)=>{tier=tier||'oem';const id=bench.id,st=V().parts[id],k=invKey(id,tier);
     if(S.inv[k]>0)S.inv[k]--;else if(!buy(Math.round(pprice(id)*TIERS[tier].m)))return;
+    (S.junk||(S.junk=[])).push({type:V().type,id,cond:Math.round(st.cond)});if(S.junk.length>40)S.junk.shift();toast('The old part goes in your trunk. Sell it at Parts & tools.',2600);
     st.cond=tier==='used'?45+Math.random()*25:100;st.tier=tier;st.serial++;installPart(`${TIERS[tier].n} part fitted (${pct(st.cond)}). Now tighten every fastener.`)},
   refurb:()=>{const d=PMAP[bench.id],st=V().parts[bench.id],rf=d.refurb;S.money-=rf.cost;st.cond=Math.min(rf.cap,st.cond+rf.add);installPart(`${rf.n}: now ${pct(st.cond)}. Fit it back on.`)},
   reinstall:()=>installPart('Old part goes back on. Tighten every fastener.'),
@@ -2872,7 +3123,7 @@ const ACT={
   talk:(id)=>{stopIdle(true);talkTo(id)},
   say:(i)=>{const f=DLG.choices[+i];DLG.choices=[];closeModal();if(f)f()},
   push:()=>{const d=drive;if(!(d.stuckT>6))return;S.money-=25;d.v=Math.max(d.v,5);d.stuckT=0;$('#bPush').hidden=true;dmsg('A passing farmer gives you a push. ($25)','#62c06c',3);updateTop()},
-  music:()=>{MUS.on=!MUS.on;$('#bMusic').textContent='Music: '+(MUS.on?'on':'off');try{localStorage.setItem('hw_music',MUS.on?'on':'off')}catch(e){}initAudio()},
+  music:()=>{MUS.on=!MUS.on;try{localStorage.setItem('hw_music',MUS.on?'on':'off')}catch(e){}initAudio();settingsModal()},
   setdiff:(k)=>{if(!DIFFS[k])return;S.diff=k;save();updateTop();renderGaragePanel();toast(`Difficulty: ${DIFFS[k].n}`)},
   startdiff:(k)=>{if(!DIFFS[k])return;S.diff=k;S.money=DIFFS[k].money;S.dayStart=S.money;closeModal();save();updateTop();toast(`${DIFFS[k].n} mode. Good luck!`);setTimeout(()=>{if($('#modal').hidden&&!S.story.flags.intro)talkTo('rosa')},400)},
   borrow:()=>{if(S.loan+1000>loanLimit())return;S.loan+=1000;S.money+=1000;SFX.cash();renderGaragePanel();save()},
@@ -2891,7 +3142,21 @@ const ACT={
   jump:()=>{S.money-=50;V().soc=0.45;resumeAfterService();updateTop()},
   jumppack:()=>{S.sup.jump--;V().soc=0.45;resumeAfterService();updateTop()},
   toGarage:()=>toGarage(),
-  buypass:(arg)=>{if(!buyPass())return;updateTop();if(arg==='shop')shopModal('supplies');else if(scene==='garage')renderGaragePanel()},
+  town:()=>{if(scene==='town')setScene('garage');else if(scene!=='drive')enterTown()},townat:(id)=>enterTown(id),townnpc:()=>enterTown('npc'),tact:()=>townAct(),tgarage:()=>{closeModal();setScene('garage')},
+  myveh:()=>shopModal('vehicles','garage'),
+  selljunk:(a)=>{const J=S.junk||[];let got=0;if(a==='all'){for(const j of J)got+=junkValue(j);S.junk=[]}else{const j=J[+a];if(!j)return;got=junkValue(j);J.splice(+a,1)}S.money+=got;SFX.cash();toast(`Sold for ${money(got)}`);shopModal('sell');updateTop();save()},
+  sellshelf:(k)=>{if(!(S.inv[k]>0))return;const v=shelfValue(k);S.inv[k]--;S.money+=v;SFX.cash();shopModal('sell');updateTop();save()},
+  eat:(i)=>{const it=dinerItems()[+i];if(!it||!buy(it[1]))return;S.awake=Math.max(0,(S.awake||0)-it[2]);updateTop();save();toast(`${it[0]}. You feel more awake.`);dinerModal()},
+  lore:(i)=>loreModal(+i),garrison:()=>garrisonModal(),
+  roadsleep:()=>{const d=drive,R=d.route;if(!R||R.test||d.over||d.paused||d.lock||Math.abs(d.v)>0.5||d.chase)return;d.paused=true;d.lock=true;audioSilence();keys.gas=keys.brake=false;
+    const jungle=R.alx&&alxD(R,d.x)<ALX_JUNGLE,chance=jungle?0.2:0.05,share=jungle?0.25:0.1;let stolen=0;
+    if(S.money>0&&Math.random()<chance){stolen=Math.round(S.money*share);S.money-=stolen}
+    S.clock+=7*60;while(S.clock>=1440){S.clock-=1440;S.day++}S.awake=0;d.temp=ambient();V().soc=Math.max(0,V().soc-0.03);d.crank=0.6;d.engineOn=true;save();updateTop();
+    const hh=String(Math.floor(S.clock/60)).padStart(2,'0'),mm=String(Math.floor(S.clock%60)).padStart(2,'0');
+    modal(`<h2>${stolen?'Robbed in your sleep':'A night in the cab'}</h2><p>${stolen?`You wake up to an open door and an empty glovebox. Someone took <b style="color:var(--bad)">${money(stolen)}</b> (${Math.round(share*100)}% of your cash).${jungle?' The jungle road to Alterax is a bad place to sleep.':''}`:'You curl up across the seats and sleep for seven hours. Nobody bothers you.'}${riders().length?` Your passenger${riders().length>1?'s':''} slept sitting up.`:''}</p>
+      <p class="muted">Rested. It's ${hh}:${mm} on day ${S.day}. Job timers didn't run while you slept. Sleeping by the road has a ${Math.round(chance*100)}% chance of a robbery here.</p><div class="row"><button class="btn pri" data-act="wake">Back on the road</button></div>`)},
+  wake:()=>{closeModal();resumeDrive()},
+  buypass:(arg)=>{if(!buyPass())return;updateTop();if(arg==='office')passOffice();else if(scene==='garage')renderGaragePanel()},
   buypassgo:(to)=>{if(buyPass())startDrive(false,to)},goalx:(to)=>startDrive(false,to,{nopass:true}),
   passview:()=>passModal(),passtear:()=>{if(!S.pass)return;S.pass=null;save();closeModal();toast('You tear the pass into pieces.')},
   gohome:(to)=>startDrive(false,+to,{free:true}),
@@ -2923,7 +3188,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(
 function canvasPos(e){const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]}
 cv.addEventListener('pointerdown',e=>{initAudio();const [x,y]=canvasPos(e);
   if(scene==='garage'){const h=garageHit(x,y);if(h){selPart=h;gTab='repair';SFX.ui();renderGaragePanel();const el=$('#panel .prow.sel');if(el&&el.scrollIntoView)el.scrollIntoView({block:'nearest'})}}
-  else if(scene==='bench'){bench.mx=x;bench.my=y;try{cv.setPointerCapture(e.pointerId)}catch(_){}benchDown(x,y)}});
+  else if(scene==='bench'){bench.mx=x;bench.my=y;try{cv.setPointerCapture(e.pointerId)}catch(_){}benchDown(x,y)}
+  else if(scene==='town'&&$('#modal').hidden){TOWN.target=clamp((x+TOWN.camX)/TOWN.sc,40,TOWN.w-40)}});
 cv.addEventListener('pointermove',e=>{const [x,y]=canvasPos(e);
   if(scene==='garage'){const h=garageHit(x,y);hoverPart=h;cv.style.cursor=h?'pointer':'default'}
   else if(scene==='bench'){bench.mx=x;bench.my=y;bench.hover=benchHit(x,y);cv.style.cursor=bench.hover>=0?'pointer':'crosshair'}});
@@ -2936,7 +3202,7 @@ function bindPedal(el,key){
   el.addEventListener('pointerdown',on);el.addEventListener('pointerup',off);el.addEventListener('pointercancel',off);el.addEventListener('lostpointercapture',off);
   el.addEventListener('contextmenu',e=>e.preventDefault());
 }
-bindPedal($('#tGas'),'gas');bindPedal($('#tBrake'),'brake');
+bindPedal($('#tGas'),'gas');bindPedal($('#tBrake'),'brake');bindPedal($('#tLeft'),'left');bindPedal($('#tRight'),'right');
 addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();if(e.target.tagName==='INPUT')return;initAudio();
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
@@ -2944,7 +3210,10 @@ addEventListener('keydown',e=>{
   if(scene==='drive'){
     if(['arrowright','d','arrowup','w'].includes(k))keys.gas=true;
     if(['arrowleft','a','arrowdown','s',' '].includes(k))keys.brake=true;
-    if(k==='f')tryRefuel();if(k==='c'&&!e.repeat)toggleCruise();if(k==='h'&&!e.repeat)horn();if(k==='p'||k==='escape')togglePause();
+    if(k==='f')tryRefuel();if(k==='z'&&!e.repeat&&!$('#bSleep').hidden)ACT.roadsleep();if(k==='c'&&!e.repeat)toggleCruise();if(k==='h'&&!e.repeat)horn();if(k==='p'||k==='escape')togglePause();
+  }else if(scene==='town'&&$('#modal').hidden){
+    if(['arrowleft','a'].includes(k))keys.left=true;if(['arrowright','d'].includes(k))keys.right=true;
+    if(['e','enter',' ','arrowup','w'].includes(k)&&!e.repeat)townAct();
   }else if(scene==='bench'&&$('#modal').hidden){
     const i='1234567890'.indexOf(k);if(i>=0&&TOOLS[i])setTool(TOOLS[i].id);
     if(k==='r')toggleDir();if(k==='i'&&S.tools.impact){S.impactOn=!S.impactOn;renderToolbar()}
@@ -2952,8 +3221,9 @@ addEventListener('keydown',e=>{
 });
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();
   if(['arrowright','d','arrowup','w'].includes(k))keys.gas=false;
-  if(['arrowleft','a','arrowdown','s',' '].includes(k))keys.brake=false;});
-addEventListener('blur',()=>{keys.gas=keys.brake=touch.gas=touch.brake=false;idle.rev=false;if(scene==='drive'&&!drive.paused&&!drive.over)togglePause()});
+  if(['arrowleft','a','arrowdown','s',' '].includes(k))keys.brake=false;
+  if(['arrowleft','a'].includes(k))keys.left=false;if(['arrowright','d'].includes(k))keys.right=false;});
+addEventListener('blur',()=>{keys.gas=keys.brake=touch.gas=touch.brake=keys.left=keys.right=touch.left=touch.right=false;idle.rev=false;if(scene==='drive'&&!drive.paused&&!drive.over)togglePause()});
 
 /* ================= main loop ================= */
 let last=performance.now(),perfAcc=0,perfN=0,topT=0,frameN=0;
@@ -2964,6 +3234,7 @@ function frame(t){
     musicTick();
     if(scene==='garage'){stepIdle(dt);audioGarage();if(frameN%2===0||idle.on)renderGarage(t);topT+=dt;if(topT>1&&idle.on){topT=0;updateTop()}}
     else if(scene==='bench'){stepBench(dt);renderBench(t)}
+    else if(scene==='town'){stepTown(dt);renderTown(t)}
     else if(scene==='drive'&&drive.route){
       if(!drive.paused&&!drive.over){stepDrive(dt);drive.peakT=Math.max(drive.peakT||0,drive.temp)}
       renderDrive(t);topT+=dt;if(topT>0.25){topT=0;updateTop()}
@@ -2976,7 +3247,7 @@ function frame(t){
 function start(data){
   S=(data&&data.S&&migrate(data.S))||load();const fresh=!S;if(!S)newGame();
   if(S.needJobs||!S.jobs.length){delete S.needJobs;genJobs()}
-  resize();setScene('garage');$('#bMusic').textContent='Music: '+(MUS.on?'on':'off');
+  resize();setScene('garage');
   if(fresh||!S.seenHelp){S.seenHelp=true;helpModal(true);save()}
   requestAnimationFrame(frame);
 }
