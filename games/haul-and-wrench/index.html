@@ -612,12 +612,14 @@ function encounter(e){const d=drive,R=d.route;d.paused=true;d.lock=true;audioSil
     return talk(who,'A giant kapok tree has come down across the road. The trunk is wider than your bumper is tall.',[
       {t:'Cut through it yourself (45 min)',f:()=>{S.clock+=45;S.awake=(S.awake||0)+45;open('Sawdust everywhere, but the road is clear.')}},
       {t:`Pay villagers to drag it off (${money(cost)})`,f:()=>{if(S.money<cost){toast('Not enough cash');return encounter(e)}S.money-=cost;S.clock+=15;open('A dozen villagers and a buffalo clear the road in fifteen minutes.')}},
+      ...(hasPlow()?[{t:'Plow it off the road',f:()=>{plowHit(14);e.plowed=true;SFX.thud(1);open('The plow bites into the trunk and pushes it into the ditch.')}}]:[]),
       ...(heavy?[{t:'Shove it aside with the truck',f:()=>{V().parts.shocks.cond=Math.max(0,V().parts.shocks.cond-12);V().parts.radiator.cond=Math.max(0,V().parts.radiator.cond-8);markStale();SFX.thud(1);open('The trunk grinds aside. Something under the front end did not enjoy that.')}}]:[])])}
   if(e.type==='bandits'){const toll=Math.min(e.toll,Math.max(0,Math.round(S.money))),who={n:'Roadblock',role:'Armed men',face:{...e.p,bg:'#2a2418'}};
     const flee=()=>{e.open=true;banditFire();resumeDrive()};
     return talk(who,`Two men with rifles step out from behind a rusted pickup. “Jungle tax. ${money(e.toll)}, and nobody gets hurt.”`,[
       {t:`Pay ${money(toll)}`,f:()=>{S.money-=toll;e.open=true;e.paid=true;dmsg(`You paid ${money(toll)}. They wave you through.`,'#e9a53a',3);updateTop();resumeDrive()}},
       ...(S.taken.length?[{t:'Offer them a load instead',f:()=>{const j=S.taken.reduce((a,b)=>b.pay<a.pay?b:a);S.taken=S.taken.filter(x=>x!==j);S.rep=clamp(S.rep-0.2,0,5);e.open=true;e.paid=true;dmsg(`They take the ${CARGO[j.cargo].n.toLowerCase()}. Your client won't be happy. Reputation −0.2.`,'#e9a53a',4);resumeDrive()}}]:[]),
+      ...(hasPlow()?[{t:'Plow through them',f:()=>{e.open=true;e.plowed=true;plowHit(12);SFX.thud(1);dmsg('The plow flings their pickup aside. Nobody fires a shot.','#62c06c',4);resumeDrive()}}]:[]),
       {t:'Floor it through the roadblock',f:flee}])}
   if(e.type==='border')return borderCheck(e);
   if(e.type==='hitch'){const pay=Math.round((40+Math.random()*80)*DF().pay/5)*5;if(e.pi==null)e.pi=Math.floor(Math.random()*HITCH.length);const P=HITCH[e.pi],full=riders().length>=MAX_RIDERS;
@@ -653,6 +655,7 @@ function chaseStep(dt,av){const d=drive,R=d.route,Vd=VD(),kmh=av*3.6;
       const lim=limitAt(R,d.x);if(kmh>lim+DF().tol){d.speedT=(d.speedT||0)+dt;if(d.speedT>1.2)startChase(kmh,lim)}else d.speedT=d.speedT<0?Math.min(0,d.speedT+dt):0}
     return false}
   const c=d.chase;c.t+=dt;
+  if(av<0.5&&canHide(c)){d.chase=null;d.speedT=0;dmsg('You pull off under the trees and kill the lights. The patrol rumbles past. You got away.','#62c06c',6);return false}
   if(R.alx==='out'&&d.x>R.len-700){d.chase=null;d.speedT=0;dmsg(`The patrol turns back at the ${CITIES[R.to].n} city limits. You got away.`,'#62c06c',5);return false}
   if(c.t>=30&&c.hx==null&&!c.lost){c.hx=Math.max(0,d.x-Vd.L*K-160);c.hv=26;c.rot=0;SFX.siren();dmsg('The Humvee is right behind you! Stop to surrender, or outrun it.','#e4493b',5)}
   if(c.hx!=null){const gap=d.x-Vd.L*K-c.hx;
@@ -668,6 +671,8 @@ function chaseStep(dt,av){const d=drive,R=d.route,Vd=VD(),kmh=av*3.6;
     if(c.heli.t>15){if(!c.rockets){c.rockets=true;SFX.gun();dmsg('Rockets away!','#e4493b',3)}if(c.heli.t>17.2){alxDeath('An Alterax attack helicopter shot you off the road.');return true}}}
   return false}
 const heliDelay=()=>V().up&&V().up.radarjam?480:180;
+function canHide(c){if(!c)return false;const hum=c.lost||(c.hx!=null&&(drive.x-c.hx)/34.72>120),heli=!c.heli&&heliDelay()-c.t+15>60;return hum&&heli}
+function hideTxt(){drive.chase=null;drive.speedT=0;return '<p style="color:var(--ok)">You lost the patrol long before you stopped, and pulled off the road to hide. Nobody comes for you.</p>'}
 function startChase(kmh,lim,force){const d=drive;
   const sol=riders().find(r=>r.soldier&&!r.vouched);if(sol&&!force){sol.vouched=true;d.speedT=-8;dmsg(`${sol.name} grabs the radio: “Stand down, they’re with me.” Slow down, now!`,'#62c06c',6);return}
   d.chase={t:0,hx:null,hv:0,fire:0,gunCd:0,heli:null};SFX.siren();dmsg(`${Math.round(kmh)} in a ${lim} zone! A patrol Humvee is coming (30 s). Stop to surrender or outrun it: max 125 km/h.`,'#e4493b',7)}
@@ -1006,10 +1011,12 @@ const MODS=[
  {id:'bbk',n:'Big brake kit',cost:900,d:'+25% braking force, and the brakes heat up 30% slower.'},
  {id:'coilover',n:'Coilover suspension',cost:1100,d:'Firmer damping, less body roll, and 40% less cargo damage on potholes.'},
  {id:'radarjam',n:'Radar jammer',cost:1400,d:'Scrambles military radar. If an Alterax pursuit drags on, the attack helicopter needs 8 minutes to find you instead of 3. Does nothing against cameras or the Humvee.'},
- {id:'skimshock',n:'Skimmer shock absorbers',cost:1900,d:'Race-bred hydraulic shocks. Above 100 km/h you skim straight over potholes: no jolt, no cargo or tire damage. Below 100 km/h they work like normal shocks. They wear out twice as fast.'},
+ {id:'plow',n:'Steel plow',cost:1300,d:'A heavy wedge blade bolted to the front. Charge through rivers and fords losing at most ~20 km/h and without flooding the engine, plow fallen trees and gang roadblocks aside at 20+ km/h, and smash the Alterax gate without wrecking your vehicle. The plow takes the hits instead and can be repaired here.'},
+ {id:'skimshock',n:'Skimmer shock absorbers',cost:1900,d:'Race-bred hydraulic shocks. Above 100 km/h you skim straight over potholes: no jolt, and zero cargo or tire damage from them. Below 100 km/h they work like normal shocks. They wear out twice as fast.'},
  {id:'wheels',n:'Forged lightweight wheels',cost:1000,d:'−3% vehicle mass and +5% grip.'},
  {id:'semislick',n:'Performance tires',cost:700,d:'+15% grip for launches and braking. Tires wear 30% faster.'},
 ];
+const plowRepairCost=()=>{const v=V(),m=MODS.find(x=>x.id==='plow');return Math.round(modCost(m)*0.6*(1-(v.plow??100)/100)/10)*10};
 const modCost=m=>Math.round(m.cost*Math.max(0.5,VD().partM)/10)*10;
 const VORDER=['bug','hatch','microbus','pickup','van','reefer','lighttruck','truck','rigid','gt','semi'];
 const CITY_BIOME=['farm','industrial','coast','forest','redrock','farm','jungle'];
@@ -1087,7 +1094,7 @@ function newVehicle(type,mode,conds,paint){
   return veh;
 }
 function newGame(diff){diff=DIFFS[diff]?diff:'normal';
-  S={v:2,diff,awake:0,dayTemp:0,story:{ch:1,flags:{},pages:[]},riders:[],money:DIFFS[diff].money,rep:1,city:0,day:1,clock:8*60,cur:0,vehicles:[newVehicle('bug','starter')],inv:{},sup:{jerry:0,jump:0,jammer:0},
+  S={v:2,diff,awake:0,dayTemp:0,story:{ch:1,flags:{},pages:[]},riders:[],money:DIFFS[diff].money,rep:1,city:0,day:1,clock:8*60,cur:0,vehicles:[newVehicle('bug','starter')],inv:{},sup:{jerry:0,jump:0,jammer:0,wrap:0},
      tools:{impact:false,torque:false,scanner:false,stetho:false},impactOn:true,jobs:[],taken:[],jid:1,loan:0,dayStart:DIFFS[diff].money,jackpot:2500,casinoNet:0,lot:null,
      stats:{deliveries:0,km:0,earned:0},seenHelp:false,pass:null,alx:null,junk:[]};
   genJobs();
@@ -1104,7 +1111,7 @@ function migrate(o){
   for(const v of o.vehicles){if(!VEH[v.type])return null;for(const p of PARTS){const st=v.parts[p.id];if(!st)return null;
     const n=partFs(p.id,v.type).length;if(!Array.isArray(st.fst)||st.fst.length!==n)st.fst=range(n).map(()=>({p:1,tq:0.85,seized:false,soak:0,ang:0}))}}
   o.cur=clamp(o.cur|0,0,o.vehicles.length-1);o.loan=o.loan||0;if(!o.story)o.story={ch:1,flags:{intro:true},pages:[]};o.passenger=null;o.riders=[];if(!DIFFS[o.diff])o.diff='normal';o.awake=o.awake||0;o.dayTemp=o.dayTemp||0;if(o.jackpot==null)o.jackpot=2500;o.casinoNet=o.casinoNet||0;for(const v of o.vehicles){v.up=v.up||{};if(v.up.tune){v.up.ecu=true;delete v.up.tune}if(v.mileage==null)v.mileage=150000}if(o.dayStart==null)o.dayStart=o.money;
-  if(o.inv)for(const k of Object.keys(o.inv)){if(k.split(':').length===2){o.inv[k+':oem']=(o.inv[k+':oem']||0)+o.inv[k];delete o.inv[k]}}o.taken=o.taken||[];o.jobs=o.jobs||[];o.inv=o.inv||{};o.sup=o.sup||{jerry:0,jump:0};o.sup.jammer=o.sup.jammer||0;
+  if(o.inv)for(const k of Object.keys(o.inv)){if(k.split(':').length===2){o.inv[k+':oem']=(o.inv[k+':oem']||0)+o.inv[k];delete o.inv[k]}}o.taken=o.taken||[];o.jobs=o.jobs||[];o.inv=o.inv||{};o.sup=o.sup||{jerry:0,jump:0};o.sup.jammer=o.sup.jammer||0;o.sup.wrap=o.sup.wrap||0;
   o.pass=o.pass||null;o.alx=o.alx||null;o.junk=o.junk||[];
   return o;
 }
@@ -1511,7 +1518,7 @@ function renderGarage(t){
   const vo={paint:V().paint,flatF:V().parts.tiresF.out,flatR:V().parts.tiresR.out,bodyOff:shake,load:usedSlots(),mid:(Vd.wr+Vd.wf)/2};
   if(!lowGfx){ctx.save();ctx.translate(tx,ty+3);ctx.scale(s,-s*0.55);ctx.globalAlpha=0.14;DRAWV[V().type](ctx,vo);ctx.restore();
     const fg=ctx.createLinearGradient(0,ty,0,ty+Vd.h*s*0.55);fg.addColorStop(0,'rgba(58,61,64,0)');fg.addColorStop(1,'rgba(58,61,64,1)');ctx.fillStyle=fg;ctx.fillRect(0,ty+4,VR.w,Vd.h*s*0.55)}
-  ctx.save();ctx.translate(tx,ty);ctx.scale(s,s);DRAWV[V().type](ctx,vo);ctx.restore();
+  ctx.save();ctx.translate(tx,ty);ctx.scale(s,s);DRAWV[V().type](ctx,vo);if(V().up.plow)drawPlow(ctx,Vd,V().plow??100);ctx.restore();
   if(idle.on&&idle.crank<=0&&!lowGfx){const e=EXH[V().type],upw=!!e[2],ex=tx+e[0]*s,ey=ty+e[1]*s;
     const dark=C('plugs')<0.35||C('air')<0.3||C('oil')<0.2;for(let i=0;i<4;i++){const p=((t/600+i/4)%1);ctx.fillStyle=dark?`rgba(40,40,44,${0.45*(1-p)})`:`rgba(200,205,210,${0.25*(1-p)})`;
       circ(ctx,ex+(upw?p*20:-p*40),ey-p*(upw?50:14),6+p*16);ctx.fill()}}
@@ -1587,7 +1594,7 @@ function renderGaragePanel(){
   const issues=roadReady(),Vd=VD(),vs=V(),used=usedSlots(),he=healthEst();
   const warnN=PARTS.filter(p=>{const c=knowCls(p.id);return c==='bad'||c==='warn'}).length,openN=issues.length;
   let h=`<div class="hcard"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h3>Your vehicle</h3><b style="font-size:17px">${Vd.yr} ${Vd.n}</b>
-    <div class="muted mono">${(vs.odo||0).toFixed(1)} km driven · ${Vd.cap} slot${Vd.cap>1?'s':''} · ${Vd.payload.toLocaleString()} kg${Vd.cold?' · reefer':''}${Vd.express?' · express +50%':''}</div></div>
+    <div class="muted mono">${(vs.odo||0).toFixed(1)} km driven · ${Vd.cap} slot${Vd.cap>1?'s':''} · ${Vd.payload.toLocaleString()} kg${Vd.cold?' · reefer':''}${vs.up.plow?` · plow ${Math.round(vs.plow??100)}%`:''}${Vd.express?' · express +50%':''}</div></div>
     <button class="btn" data-act="myveh">Vehicles${S.vehicles.length>1?` (${S.vehicles.length})`:''}</button></div>
     <div class="meters">${meterRow('Fuel',vs.fuel/tankCap(),vs.fuel<tankCap()*0.15?'var(--bad)':'var(--ok)',Math.round(vs.fuel)+' L')}
     ${meterRow('Battery',vs.soc,vs.soc<0.3?'var(--bad)':'var(--ok)',Math.round(vs.soc*100)+'%')}
@@ -1966,7 +1973,7 @@ function startDrive(test,to,opt){opt=opt||{};
   const Vd=VD();
   Object.assign(drive,{route:R,mass:Vd.mass*(V().up.wheels?0.97:1)+(test?0:cargoKg()),g:0,shiftT:0,pitch:0,pv:0,acc:0,lastThr:0,ptc:[],emitAcc:0,spin:false,skid:false,limiter:false,vm:null,traffic:[],x:30,v:0,t:0,camH:0,susY:0,susV:0,rot:0,temp:V().engT!=null?Math.max(V().engT,ambient()):ambient(),amb:ambient(),wind:(Math.random()*2-1)*7,blink:0,fuelUsed:0,distM:0,
     flatF:false,flatR:false,fines:0,over:false,paused:false,revHold:0,misfire:0,missEvt:false,msgs:[],msgCd:{},
-    looseD:{tiresF:0,tiresR:0},prevFw:null,prevRw:null,lastGrade:0,ppm:0,rain:Math.random()<(R.alx?0.12+0.65*jungleDepth(R,30):0.25),rainSeg:0,drops:[],chase:null,dead:0,lock:false,jam:false,zoneMsg:false,speedT:0,
+    looseD:{tiresF:0,tiresR:0},prevFw:null,prevRw:null,lastGrade:0,ppm:0,rain:Math.random()<(R.alx?0.12+0.65*jungleDepth(R,30):0.25),rainSeg:0,drops:[],chase:null,dead:0,lock:false,jam:false,wrap:false,zoneMsg:false,speedT:0,
     flash:0,bt:40,cruise:0,fog:0,stuckT:0,chatNext:20,bp:0,tp:0,engineOn:true,crank:0.5+(1-sp)*1.4,startPow:sp,wobF:0,wobR:0,lampN:0,rpm:0,gear:'N',seized:false,deadBatt:false,wheelOff:false,peakT:0,brakeIn:0});
   for(const p of PARTS)V().parts[p.id].rolled=false;
   for(let i=0;i<70;i++)drive.drops.push({x:Math.random(),y:Math.random(),s:0.6+Math.random()*0.6});
@@ -1974,6 +1981,7 @@ function startDrive(test,to,opt){opt=opt||{};
   const legJobs=test?[]:S.taken.filter(j=>j.to===R.to);
   dmsg(test?'Test drive: loop around town and stop in the yellow bay.':legJobs.length?`${legJobs.length} deliver${legJobs.length>1?'ies':'y'} for ${CITIES[R.to].n}. Park in the yellow bay.`:`Heading to ${CITIES[R.to].n}. Park in the yellow bay.`,'#f2b51c',5);
   if(R.alx==='in')dmsg(`Alterax is ${(R.len/1000).toFixed(1)} km away, through the jungle. Stop at the border with your pass.`,'#9cc7e8',5);
+  if(!test&&S.sup.wrap>0&&S.taken.some(j=>j.to===R.to)){S.sup.wrap--;drive.wrap=true;dmsg(`Load wrapped in bubble wrap: 10% less cargo damage this drive. (${S.sup.wrap} left)`,'#62c06c',5)}
   if(!test&&R.cams.length&&S.sup.jammer>0){S.sup.jammer--;drive.jam=true;dmsg(`Camera jammer on: ${R.cams.length} speed camera${R.cams.length>1?'s':''} on this road won't see you. (${S.sup.jammer} left)`,'#62c06c',5)}
   if(drive.rain)dmsg('Rain on the road. Less grip, longer stops.','#9cc7e8',4);
   else if(hourNow()>=5&&hourNow()<10&&Math.random()<0.4){drive.fog=0.45+Math.random()*0.3;dmsg('Morning fog. Visibility is low, take it easy.','#d6dce2',4)}
@@ -1982,7 +1990,15 @@ function dmsg(text,col='#ece7db',ttl=3.5,key){
   if(key){const t=drive.t;if(drive.msgCd[key]&&t-drive.msgCd[key]<25)return;drive.msgCd[key]=t}
   drive.msgs.push({text,col,ttl});if(drive.msgs.length>4)drive.msgs.shift();
 }
-function addDamage(base){if(drive.route.test)return;const ar=VD().armor||1;for(const j of S.taken)j.dmg=Math.min(100,j.dmg+base*CARGO[j.cargo].frag*DF().dmg*ar)}
+const hasPlow=()=>{const v=V();return !!(v.up&&v.up.plow&&(v.plow??100)>0)};
+function plowHit(n){const v=V();const was=v.plow??100;v.plow=Math.max(0,was-n);if(v.plow<=0&&was>0)dmsg('The plow is wrecked! Repair it at Redline Performance.','#e4493b',5);else if(v.plow<30&&was>=30)dmsg(`Plow badly bent (${Math.round(v.plow)}%).`,'#e9a53a',4)}
+function drawPlow(c,Vd,cond){const x0=Vd.L-6,hb=clamp(Vd.r*2.5,64,140),bent=cond<30;c.save();
+  c.fillStyle='#2a2d30';c.fillRect(x0-14,-hb*0.45,22,8);c.fillRect(x0-14,-hb*0.2,22,8);
+  c.fillStyle=bent?'#4a4540':'#3a3f45';c.beginPath();c.moveTo(x0,-4);c.lineTo(x0+40,-2);c.quadraticCurveTo(x0+24,-hb*0.5,x0+34,-hb);c.lineTo(x0+8,-hb*1.02);c.quadraticCurveTo(x0+2,-hb*0.5,x0,-4);c.closePath();c.fill();
+  c.save();c.clip();c.fillStyle='#f2b51c';for(let y=-hb;y<0;y+=22){c.beginPath();c.moveTo(x0,y);c.lineTo(x0+44,y-14);c.lineTo(x0+44,y-6);c.lineTo(x0,y+8);c.fill()}c.restore();
+  c.strokeStyle='rgba(255,255,255,.25)';c.lineWidth=3;c.beginPath();c.moveTo(x0+34,-hb);c.quadraticCurveTo(x0+24,-hb*0.5,x0+40,-2);c.stroke();
+  if(bent){c.strokeStyle='#1b1b1b';c.lineWidth=2;c.beginPath();c.moveTo(x0+12,-hb*0.7);c.lineTo(x0+24,-hb*0.6);c.lineTo(x0+16,-hb*0.45);c.stroke()}c.restore()}
+function addDamage(base){if(drive.route.test)return;const ar=(VD().armor||1)*(drive.wrap?0.9:1);for(const j of S.taken)j.dmg=Math.min(100,j.dmg+base*CARGO[j.cargo].frag*DF().dmg*ar)}
 const maxDmg=()=>S.taken.reduce((a,j)=>Math.max(a,j.dmg),0);
 const FUEL_SCALE=8;
 function engTorque(Vd,rpm){const pk=Vd.pk,idl=Vd.idle;if(rpm<=pk)return Vd.tq*(0.62+0.38*clamp((rpm-idl)/(pk-idl),0,1));const x=clamp((rpm-pk)/(Vd.red-pk),0,1.2);return Vd.tq*(1-0.38*x*x)}
@@ -2148,23 +2164,27 @@ function stepDrive(dt){
       if(e.open)continue;
       const stopX=e.x-1;
       if(d.x>stopX){const imp=av;
+        if(hasPlow()&&imp*3.6>=20&&(e.type==='tree'||e.type==='bandits')){e.open=true;e.plowed=true;e.asked=true;d.v=imp*(e.type==='tree'?0.75:0.85);SFX.thud(1);SFX.snap();d.flash=0.15;plowHit(e.type==='tree'?18:12);
+          dmsg(e.type==='tree'?'The plow shoves the fallen tree off the road!':'You plow straight through the roadblock! The gang dives into the ferns.','#62c06c',4);continue}
         if(e.type==='border'&&imp*3.6>=180){e.open=true;e.smashed=true;e.passed=true;e.asked=true;d.v*=0.88;d.cruise=0;SFX.snap();SFX.thud(1);d.flash=0.3;
-          vs.parts.lights.cond=Math.max(0,vs.parts.lights.cond-35);vs.parts.radiator.cond=Math.max(0,vs.parts.radiator.cond-12);addDamage(8);markStale();
-          dmsg(`You smash through the Alterax gate at ${Math.round(imp*3.6)} km/h! The garrison is scrambling.`,'#e4493b',6);if(!d.chase)startChase(imp*3.6,60,true);continue}
+          if(hasPlow()){plowHit(35);addDamage(2)}else{vs.parts.lights.cond=Math.max(0,vs.parts.lights.cond-35);vs.parts.radiator.cond=Math.max(0,vs.parts.radiator.cond-12);addDamage(8);markStale()}
+          dmsg(`You smash through the Alterax gate at ${Math.round(imp*3.6)} km/h!${hasPlow()?' The plow took the hit.':''} The garrison is scrambling.`,'#e4493b',6);if(!d.chase)startChase(imp*3.6,60,true);continue}
         d.x=stopX;d.v=0;d.cruise=0;
         if(e.type==='border'&&imp>4.2){alxDeath('You rammed the Alterax border gate. The guards opened fire before you could get out.');return}
         if(e.type==='bandits'&&imp>8.3&&d.mass>=3000){e.open=true;d.v=imp*0.5;SFX.thud(1);addDamage(imp);banditFire();continue}
         if(imp>2){SFX.thud(clamp(imp/10,0.4,1));const k=imp/3;vs.parts.radiator.cond=Math.max(0,vs.parts.radiator.cond-k*4);vs.parts.lights.cond=Math.max(0,vs.parts.lights.cond-k*5);vs.parts.shocks.cond=Math.max(0,vs.parts.shocks.cond-k*2);addDamage(imp*1.5);markStale();
           dmsg(`You hit the ${e.type==='tree'?'fallen tree':e.type==='bandits'?'roadblock':'gate'} at ${Math.round(imp*3.6)} km/h!`,'#e4493b',4)}}
       if(!e.asked&&d.x>e.x-(e.type==='border'?22:16)&&av<0.6){e.asked=true;encounter(e);return}}
-    else if(e.type==='ford'){const inW=d.x>e.x&&d.x-Vd.L*K<e.x+e.len;
-      if(inW){if(av>0.5)d.v*=1-Math.min(0.5,dt*0.12*av);
-        if(!e.splashed&&av*3.6>25+DF().tol){e.splashed=true;vs.parts.air.cond=Math.max(0,vs.parts.air.cond-25);vs.parts.plugs.cond=Math.max(0,vs.parts.plugs.cond-15);d.misfire=1.2;d.missEvt=true;addDamage(6+av*0.4);markStale();SFX.spray();dmsg('Water floods the engine bay! The engine coughs and the cargo gets soaked.','#e4493b',5)}
+    else if(e.type==='ford'){const inW=d.x>e.x&&d.x-Vd.L*K<e.x+e.len,pl=hasPlow();
+      if(!inW)e.entryV=null;
+      if(inW){if(e.entryV==null){e.entryV=av;if(pl){plowHit(2);if(av>4)dmsg('The plow carves through the water.','#62c06c',2.5,'plw')}}
+        if(av>0.5&&!(pl&&av<=e.entryV-20/3.6))d.v*=1-Math.min(0.5,dt*(pl?0.08:0.12)*av);
+        if(!pl&&!e.splashed&&av*3.6>25+DF().tol){e.splashed=true;vs.parts.air.cond=Math.max(0,vs.parts.air.cond-25);vs.parts.plugs.cond=Math.max(0,vs.parts.plugs.cond-15);d.misfire=1.2;d.missEvt=true;addDamage(6+av*0.4);markStale();SFX.spray();dmsg('Water floods the engine bay! The engine coughs and the cargo gets soaked.','#e4493b',5)}
         if(av>2&&!lowGfx&&Math.random()<0.8)for(let i=0;i<2;i++)d.ptc.push({x:d.x-Math.random()*Vd.L*K,h:0.1,vx:d.v*0.3+(Math.random()-0.5)*2,vh:2+Math.random()*2,g:8,life:0.6,max:0.6,r:0.08,gr:0.3,col:'190,215,230',a:0.5})}}
-    else if(e.type==='river'){const inW=d.x>e.x&&d.x-Vd.L*K<e.x+e.len;
-      if(inW){if(!e.inW){e.inW=true;SFX.spray();if(av>3)shot({noise:true,type:'lowpass',f:700,q:0.6,vol:clamp(av/15,0.2,0.7),dur:0.6})}
-        if(av>0.5)d.v*=1-Math.min(0.5,dt*0.2*av);e.spT=(e.spT||0)-dt;if(av>1&&e.spT<=0){e.spT=0.3;shot({noise:true,type:'highpass',f:1800,q:0.5,vol:clamp(av/25,0.04,0.3),dur:0.3})}
-        if(!e.splashed&&av*3.6>35+DF().tol){e.splashed=true;vs.parts.air.cond=Math.max(0,vs.parts.air.cond-20);vs.parts.plugs.cond=Math.max(0,vs.parts.plugs.cond-10);d.misfire=1.4;d.missEvt=true;addDamage(5+av*0.4);markStale();dmsg(`Way too fast through the ${e.name}! Water in the intake and the cargo is soaked.`,'#e4493b',5)}
+    else if(e.type==='river'){const inW=d.x>e.x&&d.x-Vd.L*K<e.x+e.len,pl=hasPlow();
+      if(inW){if(!e.inW){e.inW=true;e.entryV=av;SFX.spray();if(av>3)shot({noise:true,type:'lowpass',f:700,q:0.6,vol:clamp(av/15,0.2,0.7),dur:0.6});if(pl){plowHit(3);if(av>4)dmsg(`The plow throws a wall of water across the ${e.name}!`,'#62c06c',3,'plw')}}
+        if(av>0.5&&!(pl&&av<=e.entryV-20/3.6))d.v*=1-Math.min(0.5,dt*(pl?0.08:0.2)*av);e.spT=(e.spT||0)-dt;if(av>1&&e.spT<=0){e.spT=0.3;shot({noise:true,type:'highpass',f:1800,q:0.5,vol:clamp(av/25,0.04,0.3),dur:0.3})}
+        if(!pl&&!e.splashed&&av*3.6>35+DF().tol){e.splashed=true;vs.parts.air.cond=Math.max(0,vs.parts.air.cond-20);vs.parts.plugs.cond=Math.max(0,vs.parts.plugs.cond-10);d.misfire=1.4;d.missEvt=true;addDamage(5+av*0.4);markStale();dmsg(`Way too fast through the ${e.name}! Water in the intake and the cargo is soaked.`,'#e4493b',5)}
         if(!lowGfx){const n=Math.min(10,1+Math.floor(av/2.5));for(let i=0;i<n;i++){const wx=Math.random()<0.5?d.x-(Vd.L-Vd.wf)*K:d.x-(Vd.L-Vd.wr)*K;
           d.ptc.push({x:wx+(Math.random()-0.5)*0.8,h:0.25,vx:d.v*(0.15+Math.random()*0.5)+(Math.random()-0.5)*3,vh:1.5+Math.random()*(2+av*0.3),g:9,life:0.8+Math.random()*0.4,max:1.1,r:0.07+Math.random()*0.08,gr:0.2,col:'215,236,248',a:0.7})}
           if(av>3)d.ptc.push({x:d.x+0.2,h:0.3,vx:d.v*0.9,vh:0.8+av*0.12,g:6,life:0.5,max:0.5,r:0.3,gr:1.2,col:'200,225,240',a:0.45})}}
@@ -2225,7 +2245,7 @@ function stepParticles(dt){
 }
 function pothole(av,which){
   const d=drive,vs=V();
-  if(vs.up&&vs.up.skimshock&&av*3.6>100){dmsg('The skimmer shocks fly over the potholes.','#62c06c',2.5,'skim');return}SFX.thud(clamp(av/20,0.2,0.9)*(1.5-C('shocks')*0.6));
+  if(vs.up&&vs.up.skimshock&&av*3.6>100){dmsg('Skimmer shocks: flying over the potholes. No cargo damage.','#62c06c',2.5,'skim');return}SFX.thud(clamp(av/20,0.2,0.9)*(1.5-C('shocks')*0.6));
   d.susV-=Math.min(av*0.12,3.2)*(1.4-C('shocks')*0.6);
   if(av>7){
     if(S.taken.length&&!d.route.test){const dm=(av-7)*0.9*(1.6-C('shocks'))*(V().up.coilover?0.6:1);addDamage(dm);dmsg(`Pothole at ${Math.round(av*3.6)} km/h! Cargo damage up to +${Math.round(dm*Math.max(...S.taken.map(j=>CARGO[j.cargo].frag)))}%`,'#e4493b',2.5)}
@@ -2254,7 +2274,7 @@ function arrive(){
   if(R.test){S.clock+=10;modal(`<h2>Test drive done</h2><p>${(R.len/1000).toFixed(1)} km around ${CITIES[S.city].n}. Peak engine temp ${Math.round(d.peakT||d.temp)} °C. Did you hear any knocking, whining, squealing or rattles?</p>
     <div class="row"><button class="btn pri" data-act="toGarage">Back to the bay</button></div>`);return}
   const here=S.taken.filter(j=>j.to===R.to);S.city=R.to;
-  const chaseTxt=d.chase?chaseSurrender(false):'',toAlx=R.to===ALX,escort=toAlx&&riders().some(r=>r.soldier);
+  const chaseTxt=d.chase?(canHide(d.chase)?hideTxt():chaseSurrender(false)):'',toAlx=R.to===ALX,escort=toAlx&&riders().some(r=>r.soldier);
   if(toAlx)S.alx={from:R.from,day:S.day};else if(R.from===ALX)S.alx=null;
   let rows='',total=0,drepT=0,insp='';
   for(const j of here){const dmg=clamp(j.dmg,0,100),late=j.el>j.deadline,cg=CARGO[j.cargo],early=!late&&j.el<j.deadline*0.6;let pay=j.pay*(1-dmg/100);if(dmg>=100)pay=0;if(late)pay*=0.7;if(early)pay*=cg.express?1.3:1.15;if(cg.express&&VD().express)pay*=1.5;pay=Math.round(pay);
@@ -2284,14 +2304,14 @@ function breakdown(){
   if(V().fuel<=0&&!d.seized&&!d.wheelOff){if(S.sup.jerry)opts+=`<button class="btn pri" data-act="jerry">Pour in jerry can <small>10 L · have ${S.sup.jerry}</small></button>`;opts+=`<button class="btn ${S.sup.jerry?'':'pri'}" data-act="fuelsvc">Fuel delivery: 15 L <small>$70</small></button>`}
   if(d.deadBatt&&!d.seized&&!d.wheelOff){if(S.sup.jump)opts+=`<button class="btn pri" data-act="jumppack">Use jump pack <small>have ${S.sup.jump}</small></button>`;opts+=`<button class="btn ${S.sup.jump?'':'pri'}" data-act="jump">Jump start <small>$50</small></button>`}
   opts+=`<button class="btn ${opts?'':'pri'}" data-act="tow">Tow to ${CITIES[R.to].n} <small>${money(tow)}</small></button>`;
-  const cs=d.chase?chaseSurrender(false):'';
+  const cs=d.chase?(canHide(d.chase)?hideTxt():chaseSurrender(false)):'';
   modal(`<h2>Broken down</h2><p>${why}</p>${cs}<p class="muted">${R.test?'Towing ends the test drive.':'Towing still delivers this stop’s cargo, but those clients pay only half.'}</p><div class="row">${opts}</div>`);
   d.towCost=tow;
 }
 function doTow(){
   const d=drive,R=d.route;S.money-=d.towCost;V().engT=d.temp;markStale();
   if(d.seized){V().parts.oil.cond=Math.min(V().parts.oil.cond,5);V().parts.radiator.cond=Math.min(V().parts.radiator.cond,15)}
-  let msg=d.chase?(chaseSurrender(false),'The Alterax patrol fined you for speeding. '):'';
+  let msg=d.chase?(canHide(d.chase)?(hideTxt(),'The patrol never found you. '):(chaseSurrender(false),'The Alterax patrol fined you for speeding. ')):'';
   if(R.alx==='in'&&!(R.events||[]).some(e=>e.type==='border'&&e.open)){S.city=R.from;S.rep=clamp(S.rep-0.1,0,5);msg+=`Tow trucks won't cross the Alterax border: you were towed back to ${CITIES[R.from].n} with your cargo still aboard. Reputation −0.1.`;genJobs()}
   else if(!R.test){const here=S.taken.filter(j=>j.to===R.to);let pay=0;for(const j of here)if(!(R.to===ALX&&CARGO[j.cargo].alxBan))pay+=Math.round(j.pay*0.5*(1-clamp(j.dmg,0,100)/100));if(R.to===ALX)S.alx={from:R.from,day:S.day};else if(R.from===ALX)S.alx=null;
     S.money+=pay;S.rep=clamp(S.rep-0.3,0,5);S.stats.earned+=pay;S.taken=S.taken.filter(j=>j.to!==R.to);msg+=`Clients paid ${money(pay)} (half rate). Reputation −0.3.`;S.city=R.to;genJobs()}
@@ -2450,7 +2470,7 @@ function renderDrive(t){
       drawPerson(toX(e.x+2.4),base(e.x+2.4),ppm,e.p,'gun',t)}
     else if(e.type==='border')drawPerson(toX(e.x+1),base(e.x+1),ppm,e.p,e.open?'wave':'stop',t);
     else if(e.type==='crate'&&!e.taken){ctx.fillStyle=mixHex('#8a6a3e','#16110a',dk);ctx.fillRect(sx-0.6*ppm,sy-1.1*ppm,1.3*ppm,1.1*ppm);ctx.strokeStyle=mixHex('#5a4426','#0c0905',dk);ctx.lineWidth=Math.max(1,0.08*ppm);ctx.strokeRect(sx-0.6*ppm,sy-1.1*ppm,1.3*ppm,1.1*ppm);ctx.beginPath();ctx.moveTo(sx-0.6*ppm,sy-1.1*ppm);ctx.lineTo(sx+0.7*ppm,sy);ctx.stroke();star(ctx,sx+0.05*ppm,sy-0.55*ppm,0.3*ppm,mixHex('#e8c547','#2a2410',dk))}
-    else if(e.type==='bandits'){drawPerson(toX(e.x+2),base(e.x+2),ppm,e.p,e.paid?'wave':'gun',t);drawPerson(toX(e.x+6.5),base(e.x+6.5),ppm,e.p2,e.paid?'wave':'gun',t)}
+    else if(e.type==='bandits'&&!e.plowed){drawPerson(toX(e.x+2),base(e.x+2),ppm,e.p,e.paid?'wave':'gun',t);drawPerson(toX(e.x+6.5),base(e.x+6.5),ppm,e.p2,e.paid?'wave':'gun',t)}
     else if(e.type==='hitch'&&!e.picked)drawPerson(sx,sy,ppm,e.p,'thumb',t);
     else if(e.type==='stranded'){ctx.save();ctx.translate(sx-2.6*ppm,sy+0.1*ppm);ctx.scale(ppm*K,ppm*K);DRAWV[e.car](ctx,{paint:e.paint});ctx.restore();if(Math.floor(t/400)%2){tlGlow.push([sx-2.5*ppm,sy-0.6*ppm,'#ffb21e']);tlGlow.push([sx+0.9*ppm,sy-0.6*ppm,'#ffb21e'])}drawPerson(sx+1.8*ppm,sy,ppm,e.p,'wave',t)}
     else if(e.type==='police'){ctx.save();ctx.translate(sx-3.6*ppm,sy+0.1*ppm);ctx.scale(ppm*K,ppm*K);DRAWV.hatch(ctx,{paint:'#1d3354'});const ph=Math.floor(t/250)%2;ctx.fillStyle=ph?'#ff3b2f':'#3a6bff';ctx.fillRect(110,-124,24,8);ctx.fillStyle=ph?'#3a6bff':'#ff3b2f';ctx.fillRect(134,-124,24,8);ctx.fillStyle='#f4f1ea';ctx.font='900 22px Barlow, sans-serif';ctx.fillText('POLICE',96,-50);ctx.restore();
@@ -2518,6 +2538,7 @@ function renderDrive(t){
   const idleShake=d.engineOn&&d.crank<=0&&Math.abs(d.v)<0.3?Math.sin(t*0.09)*0.8*(1+(1-C('plugs'))*2):0;
   ctx.save();ctx.translate(sr[0],sr[1]);ctx.rotate(ang);ctx.scale(s,s);ctx.translate(-Vd.wr,0);d.vm=ctx.getTransform();
   DRAWV[V().type](ctx,{paint:V().paint,rot:d.rot,bodyOff:d.susY*76+idleShake+(d.misfire>0?2:0),pitch:d.pitch,mid:(Vd.wr+Vd.wf)/2,flatF:d.flatF,flatR:d.flatR,wobF:d.wobF,wobR:d.wobR,lightOn:hr>=20||hr<6.2,load:R.test?0:usedSlots()});
+  if(V().up.plow)drawPlow(ctx,Vd,V().plow??100);
   ctx.restore();
   for(const e of evs)if(e.type==='deer'&&e.t0&&!e.done&&e.y>=RC)drawDeer(toX(e.x),toY(e.x)+e.y*ppm,ppm,t);
   for(const e of evs)if(e.type==='river'&&e.x<viewR&&e.x+e.len>viewL)bandR(e.x,e.x+e.len,RC-0.42,1.95,`rgba(${dk>0.3?'30,58,72':'63,127,148'},.62)`);
@@ -2611,8 +2632,9 @@ function renderHUD(){
    ctx.fillStyle=bv>0.8?'#e4493b':'#b0574a';ctx.fillRect(px2+3,py2+ph-3-(ph-16)*bv,8,(ph-16)*bv);
    ctx.fillStyle='#62c06c';ctx.fillRect(px2+15,py2+ph-3-(ph-16)*gv,8,(ph-16)*gv);
    ctx.fillStyle='#9da5ac';ctx.font='700 9px "Share Tech Mono", monospace';ctx.fillText('B  G',px2+4,py2+10)}
-  if(riders().length){ctx.fillStyle='#bfe3ff';ctx.font='600 11px Barlow, sans-serif';ctx.fillText('Riders: '+riders().map(r=>r.name).join(', '),cx+2,cy+ch+(d.jam?52:36))}
-  if(d.jam){ctx.fillStyle='#62c06c';ctx.font='700 11px "Share Tech Mono", monospace';ctx.fillText('● CAM JAMMER ON',cx+2,cy+ch+36)}
+  {const tg=[];if(d.jam)tg.push('● CAM JAMMER');if(d.wrap)tg.push('● BUBBLE WRAP');if(V().up.plow)tg.push(`● PLOW ${Math.round(V().plow??100)}%`);
+   if(tg.length){ctx.fillStyle=(V().plow??100)<=0&&V().up.plow?'#e9a53a':'#62c06c';ctx.font='700 11px "Share Tech Mono", monospace';ctx.fillText(tg.join('  '),cx+2,cy+ch+36)}
+   if(riders().length){ctx.fillStyle='#bfe3ff';ctx.font='600 11px Barlow, sans-serif';ctx.fillText('Riders: '+riders().map(r=>r.name).join(', '),cx+2,cy+ch+(tg.length?52:36))}}
   if(d.cruise>0){ctx.fillStyle='#62c06c';ctx.font='700 11px "Share Tech Mono", monospace';ctx.fillText('CRUISE '+Math.round(d.cruise*3.6),cx+12,cy+ch-24)}
   let lx=cx;const ly=cy+ch+6;ctx.font='700 10px "Share Tech Mono", monospace';
   for(const [n,on] of (d.lamps||[])){ctx.fillStyle=on?(Math.floor(d.t*3)%2?'#e9a53a':'#e4493b'):'rgba(16,19,22,.8)';ctx.fillRect(lx,ly,40,16);ctx.fillStyle=on?'#16130c':'#4a535c';ctx.fillText(n,lx+5,ly+12);lx+=44}
@@ -2644,7 +2666,7 @@ function renderHUD(){
   {const L=(R.lights||[]).find(L=>L.x>d.x&&L.x-d.x<70);if(L&&!prompt&&lightState(L)!=='green')prompt=(lightState(L)==='red'?'Red light':'Amber light')+` in ${Math.round(L.x-d.x)} m: stop at the line`}
   {const PR={police:'Police checkpoint: stop next to the officer',hitch:'Hitchhiker ahead: stop to pick them up',stranded:'Stranded driver ahead: stop to help',soldier:'Soldier hitching a ride: stop to pick them up',crate:'Supply crate by the road: stop to look',guard:'Alterax guard post ahead: keep to the speed limit',river:'River crossing ahead: slow to 30 km/h',border:'Alterax border control: stop at the gate',ford:'Flooded ford: slow to 20 km/h or the engine floods',tree:'Tree down across the road ahead! Slow down and stop',bandits:'Vehicle blocking the road ahead! Slow down'},DS={river:150,guard:150,border:160,tree:150,bandits:150};
    const e=(R.events||[]).find(e=>PR[e.type]&&!e.done&&!e.open&&!e.asked&&!e.splashed&&e.x>d.x-8&&e.x-d.x<(DS[e.type]||80));if(e&&!prompt)prompt=PR[e.type]}
-  if(d.chase&&!prompt)prompt=d.chase.hx!=null?'Stop to surrender, or outrun the Humvee':'Patrol inbound: stop and wait to surrender';
+  if(d.chase&&!prompt)prompt=canHide(d.chase)?'You lost them! Stop anywhere to hide':d.chase.hx!=null?'Stop to surrender, or outrun the Humvee':'Patrol inbound: stop and wait to surrender';
   if(prompt){ctx.font='700 14px Barlow, sans-serif';const w=ctx.measureText(prompt).width+20;ctx.fillStyle='rgba(242,181,28,.94)';ctx.fillRect(W/2-w/2,H-160,w,26);ctx.fillStyle='#16130c';ctx.textAlign='center';ctx.fillText(prompt,W/2,H-142);ctx.textAlign='left'}
   if(d.paused){ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(0,0,W,H)}
 }
@@ -2673,9 +2695,9 @@ function devCmd(arg){const [c,v]=String(arg).split(':'),vs=V(),d=drive,inDrive=s
    case 'fix':for(const p of PARTS){const st=vs.parts[p.id];st.cond=100;st.out=false;st.fst.forEach(f=>{f.p=1;f.tq=0.85;f.seized=false;f.soak=0});st.know={lvl:3,text:'Measured on bench: 100%',est:100,stale:false}}
      if(inDrive){d.flatF=d.flatR=false;d.seized=false;d.wheelOff=false;d.deadBatt=false;d.engineOn=true;d.temp=Math.min(d.temp,90);d.bt=40}msg='Everything repaired';break;
    case 'fuel':vs.fuel=tankCap();vs.soc=1;msg='Tank and battery full';break;
-   case 'mods':for(const m of MODS)vs.up[m.id]=true;vs.up.tank=true;msg='Every mod fitted';break;
+   case 'mods':for(const m of MODS)vs.up[m.id]=true;vs.plow=100;vs.up.tank=true;msg='Every mod fitted';break;
    case 'tools':for(const t of TOOL_UP)S.tools[t.id]=true;msg='All tools owned';break;
-   case 'sup':S.sup.jerry+=5;S.sup.jump+=5;S.sup.jammer=(S.sup.jammer||0)+5;vs.spare+=5;msg='+5 jerry cans, jump packs, cam jammers and spares';break;
+   case 'sup':S.sup.jerry+=5;S.sup.jump+=5;S.sup.jammer=(S.sup.jammer||0)+5;S.sup.wrap=(S.sup.wrap||0)+5;vs.spare+=5;msg='+5 jerry cans, jump packs, cam jammers and spares';break;
    case 'veh':{const nv=newVehicle(v,'new');S.vehicles.push(nv);if(!S.taken.length&&!inDrive){stopIdle(true);S.cur=S.vehicles.length-1;selPart='oil'}msg=`${VEH[v].n} added${S.taken.length||inDrive?' (switch after your deliveries)':''}`;break}
    case 'pass':S.pass={ok:v==='ok',flaw:v==='ok'?null:'seal',serial:'AX-'+String(100000+Math.floor(Math.random()*900000)),day:S.day,until:S.day+7,used:false};msg=v==='ok'?'Valid pass in your pocket':'Forged pass (no seal)';break;
    case 'alxjobs':if(S.city===ALX){msg='You are in Alterax: every job here already pays +75%';break}genJobs();S.jobs.slice(0,3).forEach(j=>{const km=distKm(S.city,ALX);j.pay=Math.round(j.pay/j.km*km*ALX_PAY/5)*5;j.to=ALX;j.km=km;j.deadline=Math.round(km*1000/15*1.7*DF().dl)});msg='3 Alterax jobs on the board';break;
@@ -2909,6 +2931,7 @@ function shopModal(tab,venue){if(venue!==undefined)shopVenue=venue;
      <tr><td><b>Jerry can, 10 L</b> (have ${S.sup.jerry})<br><span class="muted">Pour it in if you run dry instead of paying for fuel delivery.</span></td><td style="text-align:right"><button class="btn pri" data-act="buysup" data-arg="jerry" ${S.money<30?'disabled':''}>$30</button></td></tr>
      ${true?'':`<tr><td><b>Alterax pass</b> (${S.pass?'have one':'none'})<br><span class="muted">Required at the Alterax border. Good for one trip there and back. Forgeries circulate: inspect it.</span></td><td style="text-align:right">${S.pass?'<button class="btn" data-act="passview">Inspect</button>':`<button class="btn pri" data-act="buypass" data-arg="shop" ${S.money<ALX_PASS?'disabled':''}>${money(ALX_PASS)}</button>`}</td></tr>`}
      <tr><td><b>Jump pack</b> (have ${S.sup.jump})<br><span class="muted">One-shot booster for a flat battery, at the roadside or in the bay.</span></td><td style="text-align:right"><button class="btn pri" data-act="buysup" data-arg="jump" ${S.money<80?'disabled':''}>$80</button></td></tr>
+     <tr><td><b>Bubble wrap</b> (have ${S.sup.wrap||0})<br><span class="muted">Wrap the load: 10% less cargo damage for one drive. Used up automatically on your next drive with cargo aboard.</span></td><td style="text-align:right"><button class="btn pri" data-act="buysup" data-arg="wrap" ${S.money<SUP_COST.wrap?'disabled':''}>${money(SUP_COST.wrap)}</button></td></tr>
      <tr><td><b>Speed camera jammer</b> (have ${S.sup.jammer||0})<br><span class="muted">Blinds every speed camera for one drive. Switches on by itself on the next drive that passes a camera, then burns out. It does nothing against Alterax guard posts.</span></td><td style="text-align:right"><button class="btn pri" data-act="buysup" data-arg="jammer" ${S.money<SUP_COST.jammer?'disabled':''}>${money(SUP_COST.jammer)}</button></td></tr></table>`;
   }else if(shopTab==='sell'){const junk=S.junk||[],shelf=Object.keys(S.inv).filter(k=>S.inv[k]>0);
     h+=`<p class="muted">Old parts you take off on the bench go in your trunk. The shop buys them for scrap or rebuilding: the better the condition, the more they pay. Unused parts on your shelf sell back for half price.</p>`;
@@ -2973,7 +2996,8 @@ function perfModal(tab){perfTab=tab||perfTab;const Vd=VD(),up=V().up;
   if(perfTab==='mods'){
     h+=`<p class="muted">Bolt-on upgrades, fitted on the spot. They stay with this vehicle.</p><table>`;
     for(const m of MODS){const c=modCost(m),own=up[m.id],lock=m.req&&!up[m.req];
-      h+=`<tr><td><b>${m.n}</b><br><span class="muted">${m.d}</span></td><td style="text-align:right;white-space:nowrap">${own?'<span class="tag hot">fitted</span>':lock?`<span class="lock">Needs ${MODS.find(x=>x.id===m.req).n}</span>`:`<button class="btn pri" data-act="buymod" data-arg="${m.id}" ${S.money<c?'disabled':''}>${money(c)}</button>`}</td></tr>`}
+      const pr=m.id==='plow'&&own?plowRepairCost():0;
+      h+=`<tr><td><b>${m.n}</b>${m.id==='plow'&&own?` <span class="tag">${Math.round(V().plow??100)}%</span>`:''}<br><span class="muted">${m.d}</span></td><td style="text-align:right;white-space:nowrap">${pr?`<button class="btn pri" data-act="repairplow" ${S.money<pr?'disabled':''}>Repair ${money(pr)}</button>`:own?'<span class="tag hot">fitted</span>':lock?`<span class="lock">Needs ${MODS.find(x=>x.id===m.req).n}</span>`:`<button class="btn pri" data-act="buymod" data-arg="${m.id}" ${S.money<c?'disabled':''}>${money(c)}</button>`}</td></tr>`}
     h+=`</table>`;
   }else{
     h+=`<p class="muted">Performance-grade replacement parts for your ${Vd.n}: new, 100% condition, and they wear 40% slower than OEM. They go on your shelf; fit them on the bench.</p><table><tr><th>Part</th><th>On shelf</th><th></th></tr>`;
@@ -3095,7 +3119,7 @@ function helpModal(first){
 }
 
 /* ================= actions ================= */
-const SUP_COST={jerry:30,jump:80,jammer:90};
+const SUP_COST={jerry:30,jump:80,jammer:90,wrap:25};
 function buy(cost){if(S.money<cost){toast('Not enough cash');return false}S.money-=cost;SFX.cash();return true}
 /* Alterax pass: $100, one trip there and back. About 1 in 20 is a forgery with one visible flaw. */
 function buyPass(){if(S.city===ALX){toast('Passes are sold outside Alterax');return false}if(S.pass){toast('You already have an Alterax pass');return false}if(!buy(ALX_PASS))return false;
@@ -3191,6 +3215,7 @@ const ACT={
   jumppack:()=>{S.sup.jump--;V().soc=0.45;resumeAfterService();updateTop()},
   toGarage:()=>toGarage(),
   dev:(a)=>devCmd(a),
+  repairplow:()=>{const c=plowRepairCost();if(!c||!buy(c))return;V().plow=100;perfModal();updateTop();save();toast('Plow straightened and welded: 100%')},
   town:()=>{if(scene==='town')setScene('garage');else if(scene!=='drive')enterTown()},townat:(id)=>enterTown(id),townnpc:()=>enterTown('npc'),tact:()=>townAct(),tgarage:()=>{closeModal();setScene('garage')},
   myveh:()=>shopModal('vehicles','garage'),
   selljunk:(a)=>{const J=S.junk||[];let got=0;if(a==='all'){for(const j of J)got+=junkValue(j);S.junk=[]}else{const j=J[+a];if(!j)return;got=junkValue(j);J.splice(+a,1)}S.money+=got;SFX.cash();toast(`Sold for ${money(got)}`);shopModal('sell');updateTop();save()},
@@ -3214,7 +3239,7 @@ const ACT={
   bcdead:()=>{BC.done=true;const w=BC.why;alxDeath(w==='none'?'You tried to enter Alterax without a pass. The border guards opened fire.':w==='expired'?'Your Alterax pass had expired. The border guards opened fire.':'Your Alterax pass was a forgery. The border guards opened fire.',true)},
   harddeath:()=>{closeModal();setTimeout(()=>{if($('#modal').hidden&&!S.story.flags.intro)talkTo('rosa')},400)},
   perf:(tab)=>{stopIdle(true);perfModal(tab||'mods')},
-  buymod:(id)=>{const m=MODS.find(x=>x.id===id);if(!m||V().up[id]||(m.req&&!V().up[m.req]))return;if(!buy(modCost(m)))return;V().up[id]=true;perfModal();updateTop();save();toast(`${m.n} fitted to your ${VD().n}`)},
+  buymod:(id)=>{const m=MODS.find(x=>x.id===id);if(!m||V().up[id]||(m.req&&!V().up[m.req]))return;if(!buy(modCost(m)))return;V().up[id]=true;if(id==='plow')V().plow=100;perfModal();updateTop();save();toast(`${m.n} fitted to your ${VD().n}`)},
   buyperf:(id)=>{if(!buy(Math.round(pprice(id)*TIERS.perf.m)))return;const k=invKey(id,'perf');S.inv[k]=(S.inv[k]||0)+1;perfModal();updateTop();save();if(scene==='bench')renderBenchPanel()},
   casino:(tab)=>{stopIdle(true);casinoModal(tab)},cbet:(v)=>{casino.bet=+v;casinoModal()},spin:()=>spinWheel(),
   bjdeal:()=>{bjDeal();casinoModal()},bjhit:()=>{bjHit();casinoModal()},bjstand:()=>{bjFinish();casinoModal()},bjdouble:()=>{bjDouble();casinoModal()},
