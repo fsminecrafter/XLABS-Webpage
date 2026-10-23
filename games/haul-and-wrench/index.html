@@ -200,6 +200,7 @@ h3{font-size:15px;color:var(--dim);font-weight:700}
     <span class="stat"><i>At</i><b id="sCity">-</b></span>
     <span class="stat"><i>Day</i><b id="sClock">-</b></span>
     <span class="stat"><i>Fuel</i><b id="sFuel">-</b></span>
+    <span class="stat" id="sAmmo" hidden><i>Ammo</i><b id="sAmmoCount">-</b></span>
     <span class="stat"><i>Mode</i><b id="sDiff">-</b></span>
     <span class="sp"></span>
     <button class="btn pri" data-act="town" id="bTownTop">Town</button>
@@ -715,8 +716,9 @@ const ESC={gold:{lead:'kodiak',paint:'#4b5a32',raider:'pickup',rpaint:'#7a4a2a',
  prisoner:{lead:null,paint:null,raider:'pickup',rpaint:'#3a3228',rv:42,rhp:8,what:'the prisoner',lost:'The gang rams you off the road and springs the prisoner.'}};
 function gunStep(dt){const d=drive;d.gunCd=(d.gunCd||0)-dt;if(d.tracer){d.tracer.t-=dt;if(d.tracer.t<=0)d.tracer=null}
   const want=S.mg&&(keys.fire||touch.fire)&&!d.over;if(!want){d.burst=0;return}
-  if(S.mg.ammo<=0){dmsg('Out of ammo. Refill at the Alterax military police.','#e9a53a',3,'ammo');return}
-  while(d.gunCd<=0&&S.mg.ammo>0){d.gunCd+=0.075;S.mg.ammo--;d.burst=(d.burst||0)+1; // 800 rounds a minute, fully automatic
+  const unlimited=!!S.mission;
+  if(!unlimited&&S.mg.ammo<=0){dmsg('Out of ammo. Refill at the Alterax military police.','#e9a53a',3,'ammo');return}
+  while(d.gunCd<=0&&(unlimited||S.mg.ammo>0)){d.gunCd+=0.075;if(!unlimited){S.mg.ammo--;updateTop()}d.burst=(d.burst||0)+1; // 800 rounds a minute, fully automatic
     if(d.burst%2)shot({f:700+Math.random()*500,q:0.7,vol:0.34,dur:0.06,rate:0.8+Math.random()*0.3});else shot({tone:120,toneTo:55,vol:0.16,dur:0.05,wave:'square'});
     const Vd=VD(),rear=d.x-Vd.L*K,tg=[],c=d.chase;
     if(c&&c.hx!=null)tg.push({dist:rear-c.hx,hit:()=>{c.hp-=0.25},vm:c.vm,T:VEH[c.u.type]});
@@ -747,11 +749,13 @@ function missionStep(dt,av){const d=drive,R=d.route,Vd=VD();
     cv.att=cv.att.filter(a=>a.hp>0&&d.x-a.x<900);
     if(S.mission&&S.mission.type==='convoy')S.mission.hp=Math.max(0,cv.hp);
     if(cv.hp<=0){cv.on=false;cv.att=[];S.taken=S.taken.filter(j=>j.special!==MSPECIAL[cv.kind]);missionFail(E.lost)}}}
-function missionWin(txt){const m=S.mission;if(!m)return 0;S.money+=m.reward;S.cop.done++;S.cop.stay=Math.min(10,1+5*S.cop.done);S.mission=null;SFX.cash();
+const AMMO_CAP=1600;
+function endMission(){if(!S.mission)return;const hasLoaner=S.vehicles.some(v=>v.loan);S.mission=null;if(S.mg)S.mg.ammo=AMMO_CAP;if(hasLoaner)toast('Mission ended. Your loaner stays with you until you return it.',3500);updateTop()}
+function missionWin(txt){const m=S.mission;if(!m)return 0;S.money+=m.reward;S.cop.done++;S.cop.stay=Math.min(10,1+5*S.cop.done);endMission();SFX.cash();
   if(txt)dmsg(`${txt} Job done: +${money(m.reward)}. Your Alterax permit now allows ${S.cop.stay} nights.`,'#62c06c',8);updateTop();save();return m.reward}
-function missionFail(txt){S.mission=null;dmsg(`${txt} Job failed.`,'#e4493b',7);save()}
+function missionFail(txt){endMission();dmsg(`${txt} Job failed.`,'#e4493b',7);save()}
 const CAPTAIN={skin:'#a8704a',hair:'#111111',shirt:'#2f3a4a',hat:true,hatc:'#1b1d1f',bg:'#1e2630'};
-const ammoCost=()=>Math.ceil((800-S.mg.ammo)*0.1);
+const ammoCost=()=>Math.ceil((AMMO_CAP-S.mg.ammo)*0.1);
 const MTYPES={hunt:'Fugitive hunt',smuggler:'Smuggler intercept',gold:'Treasury convoy',vip:'VIP escort',prisoner:'Prisoner transfer',courier:'Urgent dispatch'};
 function genOffers(){const r=Math.random,others=CITIES.map((c,i)=>i).filter(i=>i!==ALX),pool=Object.keys(MTYPES).sort(()=>r()-0.5).slice(0,4);S.cop.offers={day:S.day,list:[]};
   const SUSN=['“Fox” Danek','Mara Tull','the Ilic brothers','Big Oskar','Juno Reyes','“Ledger” Sorran','Pell the forger','Kit Varga'],VIPN=['Minister Hale-Varn','Treasurer Ossa','General Brek','Envoy Tamsin Lo'];
@@ -772,14 +776,14 @@ function offerText(o){switch(o.kind){
   case 'courier':return `<b>Urgent dispatch to ${CITIES[o.to].n}</b><br><span class="muted">Sealed orders, ${distKm(ALX,o.to)} km in ${fmtT(o.secs)} or less. You’re on duty: speed limits don’t apply.</span>`}}
 function policeModal(){const who={n:'Capt. Ivo Kadra',role:'Alterax military police',face:CAPTAIN};
   if(S.bounty>0)return talk(who,`You have a ${money(S.bounty)} bounty on your head and you walk into MY office? Pay it, or I arrest you myself.`,[{t:`Pay the bounty (${money(S.bounty)})`,f:()=>{ACT.paybounty();policeModal()}},{t:'Leave quietly',f:()=>{}}]);
-  if(!S.cop.joined)return talk(who,'Your stars, your reviews, your reputation: Alterax doesn’t care. Your name isn’t on our list, and that’s all I need. Hunts, intercepts, convoys, escorts, prisoner transfers, dispatches. You get a roof gun, 800 rounds, and nobody in Alterax will chase you for speeding. Every job adds five nights to your permit, up to ten. Interested?',
-    [{t:'Sign me up',f:()=>{S.cop.joined=true;S.mg=S.mg||{ammo:800};save();toast('You joined the Alterax military police. Hold Space (or FIRE) for the roof gun.',4500);policeModal()}},{t:'Not today',f:()=>{}}]);
+  if(!S.cop.joined)return talk(who,'Your stars, your reviews, your reputation: Alterax doesn’t care. Your name isn’t on our list, and that’s all I need. Hunts, intercepts, convoys, escorts, prisoner transfers, dispatches. You get a roof gun, 1,600 rounds outside a job and unlimited ammunition on Alterax missions. Every job adds five nights to your permit, up to ten. Interested?',
+    [{t:'Sign me up',f:()=>{S.cop.joined=true;S.mg=S.mg||{ammo:AMMO_CAP};save();toast('You joined the Alterax military police. Hold Space (or FIRE) for the roof gun.',4500);policeModal()}},{t:'Not today',f:()=>{}}]);
   if(!S.cop.offers||S.cop.offers.day!==S.day||!S.cop.offers.list.every(o=>o.kind))genOffers();
   const ok=ALXV.includes(V().type),m=S.mission,loan=V().loan;
-  let h=`<div class="talk"><img class="face" src="${faceImg(CAPTAIN)}" alt=""><div class="pinfo"><b style="font-size:17px">Capt. Ivo Kadra</b> <span class="tag">Alterax military police</span><p>${m?'Finish the job you already have.':'Pick a job. Any job. Bring the vehicle back in one piece.'}</p></div></div>
-   <div class="kv"><span>Jobs completed</span><b>${S.cop.done}</b><span>Your Alterax permit</span><b>${S.cop.stay} night${S.cop.stay>1?'s':''}</b><span>Roof gun ammo</span><b>${S.mg.ammo} / 800</b><span>Approved vehicle</span><b style="color:${ok?'var(--ok)':'var(--warn)'}">${ok?VD().n+(loan?' (loaner)':''):'No: you need an Alterax vehicle'}</b></div>
+  let h=`<div class="talk"><img class="face" src="${faceImg(CAPTAIN)}" alt=""><div class="pinfo"><b style="font-size:17px">Capt. Ivo Kadra</b> <span class="tag">Alterax military police</span><p>${m?'Finish the job you already have.':'Pick a job. Any job. Your loaner stays with you after the job until you choose to return it.'}</p></div></div>
+   <div class="kv"><span>Jobs completed</span><b>${S.cop.done}</b><span>Your Alterax permit</span><b>${S.cop.stay} night${S.cop.stay>1?'s':''}</b><span>Roof gun ammo</span><b>${m?'Unlimited on mission':`${S.mg.ammo} / ${AMMO_CAP}`}</b><span>Approved vehicle</span><b style="color:${ok?'var(--ok)':'var(--warn)'}">${ok?VD().n+(loan?' (loaner)':''):'No: you need an Alterax vehicle'}</b></div>
    <p class="muted">Members aren’t chased by Alterax patrols or guard posts for speeding. On an active job, speed cameras anywhere can’t fine you either, and the border waves your police ID through.</p>
-   <div class="row">${S.mg.ammo<800?`<button class="btn" data-act="ammo" ${S.money<ammoCost()?'disabled':''}>Refill ammo ${money(ammoCost())}</button>`:''}${loan?`<button class="btn" data-act="returnloan" ${S.taken.length?'disabled':''}>Return the loaner</button>`:ok?'':`<button class="btn pri" data-act="loan" ${S.taken.length||S.money<150?'disabled':''}>Loan a Jaguar 4×4 ($150)</button><button class="btn" data-act="townat" data-arg="dealer">Buy one at the army dealer</button>`}</div><h3>Jobs today</h3>`;
+   <div class="row">${S.mg.ammo<AMMO_CAP?`<button class="btn" data-act="ammo" ${S.money<ammoCost()?'disabled':''}>Refill ammo ${money(ammoCost())}</button>`:''}${loan?`<button class="btn" data-act="returnloan" ${S.taken.length||m?'disabled':''}>Return the loaner</button>`:ok?'':`<button class="btn pri" data-act="loan" ${S.taken.length||S.money<150?'disabled':''}>Loan a Jaguar 4×4 ($150)</button><button class="btn" data-act="townat" data-arg="dealer">Buy one at the army dealer</button>`}</div><h3>Jobs today</h3>`;
   for(const o of S.cop.offers.list)h+=`<div class="job-li"><div class="pinfo"><span class="tag alx">${MTYPES[o.kind]}</span> ${offerText(o)}</div>
     <div class="row"><b class="mono" style="color:var(--hazard)">${money(o.reward)}</b><button class="btn pri" data-act="takemission" data-arg="${o.id}" ${m||!ok?'disabled':''}>${m?'Busy':!ok?'Need vehicle':'Accept'}</button></div></div>`;
   h+=`<div class="row"><button class="btn" data-act="close">Back to the street</button></div>`;modal(h)}
@@ -790,14 +794,14 @@ function takeMission(o){const freeOk=kg=>VD().cap-usedSlots()>=1&&cargoKg()+kg<=
    case 'vip':S.taken.push(job('vip',o.to,0,0));S.mission={type:'convoy',kind:'vip',to:o.to,name:o.name,reward:o.reward,hp:100};break;
    case 'prisoner':if(!freeOk(90)){toast('Needs 1 free seat (cargo slot)');return false}S.mission={type:'convoy',kind:'prisoner',city:o.city,to:ALX,name:o.name,reward:o.reward,hp:100,stage:'travel'};break;
    case 'courier':S.taken.push(job('dispatch',o.to,2,0,o.secs));S.mission={type:'courier',to:o.to,reward:o.reward,secs:o.secs};break}
-  return true}
+  updateTop();return true}
 function missionCard(){const m=S.mission;if(!m)return '';let b='',t='';
   if(m.type==='hunt'){if(S.city!==m.city){t=`${m.kind==='smuggler'?'Intercept':'Hunt down'} <b>${m.name}</b> in <b>${CITIES[m.city].n}</b>. Drive there first.`;b=`<button class="btn pri" data-act="gohome" data-arg="${m.city}">Drive to ${CITIES[m.city].n} <small>${distKm(S.city,m.city)} km</small></button>`}
     else{t=`<b>${m.name}</b> is in ${CITIES[m.city].n}. Once you start, they bolt for the next town: box them in from behind for 3 seconds, or shoot them to a standstill.`;b=`<button class="btn pri" data-act="starthunt">Start the chase</button>`}}
   else if(m.type==='convoy'&&m.kind==='prisoner'&&m.stage==='travel'){if(S.city!==m.city){t=`Collect the prisoner <b>${m.name}</b> in <b>${CITIES[m.city].n}</b>, then drive them to Alterax.`;b=`<button class="btn pri" data-act="gohome" data-arg="${m.city}">Drive to ${CITIES[m.city].n} <small>${distKm(S.city,m.city)} km</small></button>`}
     else{t=`<b>${m.name}</b> is in the cells here, waiting for you.`;b=`<button class="btn pri" data-act="loadprisoner">Load the prisoner</button>`}}
   else{const sp=m.type==='courier'?'dispatch':MSPECIAL[m.kind],j=S.taken.find(x=>x.special===sp);
-    if(!j){S.mission=null;return `<div class="card alxcard"><h3>Alterax job</h3><div class="muted">The job is over: what you were carrying is no longer aboard.</div></div>`}
+    if(!j){endMission();return `<div class="card alxcard"><h3>Alterax job</h3><div class="muted">The job is over: what you were carrying is no longer aboard.</div></div>`}
     t=m.type==='courier'?`Get the sealed dispatch to <b>${CITIES[m.to].n}</b>. Time left: <b class="mono">${fmtT(Math.max(0,j.deadline-j.el))}</b>. Speed limits don’t apply on duty.`:m.kind==='vip'?`Escort <b>${m.name}</b> to <b>${CITIES[m.to].n}</b>. Stay right behind the black Veloce. Car integrity ${Math.round(m.hp)}%.`:m.kind==='prisoner'?`Drive <b>${m.name}</b> to <b>Alterax</b>. Their gang will try to spring them. Security ${Math.round(m.hp)}%.`:`Escort treasury gold to <b>${CITIES[m.to].n}</b>. Raiders will hit the convoy. Convoy integrity ${Math.round(m.hp)}%.`;
     b=`<button class="btn pri" data-act="go" data-arg="${j.to}">Drive to ${CITIES[j.to].n}</button>`}
   return `<div class="card alxcard"><h3>Alterax job · ${MTYPES[m.kind||m.type]||'Job'} · ${money(m.reward)}</h3><div class="muted" style="color:var(--fg)">${t}</div><div class="row">${b}<button class="btn" data-act="abandonm">Abandon</button></div></div>`}
@@ -810,7 +814,7 @@ function alxDeathModal(cause){const R=drive.route,home=!R?S.city:R.alx==='in'?R.
   if(S.diff==='hard'){newGame('hard');S.seenHelp=true;save();drive.route=null;setScene('garage');
     modal(`<h2 style="color:var(--bad)">Killed in Alterax</h2><p>${cause}</p><p>Hard mode has no second chances. Haul &amp; Wrench is finished. You start again from Walt’s dusty garage and his tired old Bug.</p><div class="row"><button class="btn danger" data-act="harddeath">Start over</button></div>`);return}
   const lost=S.taken.length,bill=Math.round(350*DF().costs/5)*5,vs=V(),drep=lost?0.5:0.25;
-  S.taken=[];S.riders=[];S.pass=null;S.alx=null;S.bounty=0;S.bountyLvl=0;S.mission=null;S.rep=clamp(S.rep-drep,0,5);S.money-=bill;
+  S.taken=[];S.riders=[];S.pass=null;S.alx=null;S.bounty=0;S.bountyLvl=0;endMission();S.rep=clamp(S.rep-drep,0,5);S.money-=bill;
   for(const p of [...PARTS].sort(()=>Math.random()-0.5).slice(0,4))vs.parts[p.id].cond=Math.max(0,vs.parts[p.id].cond-(25+Math.random()*25));
   markStale();vs.fuel=Math.max(vs.fuel,tankCap()*0.25);vs.engT=null;
   S.city=home;S.clock+=8*60;while(S.clock>=1440){S.clock-=1440;S.day++}S.awake=0;genJobs();save();drive.route=null;setScene('garage');
@@ -906,10 +910,10 @@ function hitDeer(av){const d=drive,vs=V();vs.parts.lights.cond=Math.max(0,vs.par
 function arriveHooks(here){let h='';const st=S.story;
   {const m=S.mission;if(m&&m.type==='hunt'&&R.to===m.city&&m.stage==='travel'){m.stage='ready';h+=`<p style="color:#f0dc8a">You're in ${CITIES[m.city].n}. ${m.name} is somewhere in town. Start the chase from your garage when you're ready.</p>`}
    if(m&&m.kind==='prisoner'&&m.stage==='travel'&&R.to===m.city)h+=`<p style="color:#f0dc8a">You're in ${CITIES[m.city].n}. Load the prisoner from your garage.</p>`;
-   if(m&&m.type==='hunt'&&m.stage==='chasing'){S.mission=null;h+='<p style="color:var(--bad)">The suspect got away. Mission failed.</p>'}}
+   if(m&&m.type==='hunt'&&m.stage==='chasing'){endMission();h+='<p style="color:var(--bad)">The suspect got away. Mission failed.</p>'}}
   for(const j of here){const M=S.mission;
     if(M&&M.type==='convoy'&&j.special===MSPECIAL[M.kind||'gold']){const r=missionWin('');h+=`<p style="color:var(--ok)">${M.kind==='vip'?`${M.name} steps out unharmed.`:M.kind==='prisoner'?`${M.name} is handed over to the garrison.`:'The treasury gold is delivered intact.'} +${money(r)}. Your Alterax permit now allows ${S.cop.stay} nights.</p>`}
-    if(M&&M.type==='courier'&&j.special==='dispatch'){if(j.el<=j.deadline){const r=missionWin('');h+=`<p style="color:var(--ok)">Dispatch delivered with ${fmtT(j.deadline-j.el)} to spare. +${money(r)}. Permit: ${S.cop.stay} nights.</p>`}else{S.mission=null;h+=`<p style="color:var(--bad)">The dispatch arrived ${fmtT(j.el-j.deadline)} late. The orders are worthless now. Job failed.</p>`}}
+    if(M&&M.type==='courier'&&j.special==='dispatch'){if(j.el<=j.deadline){const r=missionWin('');h+=`<p style="color:var(--ok)">Dispatch delivered with ${fmtT(j.deadline-j.el)} to spare. +${money(r)}. Permit: ${S.cop.stay} nights.</p>`}else{endMission();h+=`<p style="color:var(--bad)">The dispatch arrived ${fmtT(j.el-j.deadline)} late. The orders are worthless now. Job failed.</p>`}}
     if(j.special==='crate'){resolveDebt('paid');h+=`<p style="color:var(--warn)">A man at Ashford Jct takes the crate without a word. Vince’s debt is settled.</p>`}
     if(st&&st.ch===5&&j.slots>=10&&S.rep>=3&&!st.flags.bigHaul){st.flags.bigHaul=true;h+=`<p style="color:var(--ok)">That was the big festival load! Tell Rosa in Millbrook.</p>`}}
   for(const p of riders()){if(p.pay){S.money+=p.pay;S.rep=clamp(S.rep+0.1,0,5)}
@@ -1297,6 +1301,8 @@ function updateTop(){
   $('#sCity').textContent=scene==='drive'&&drive.route?('→ '+CITIES[drive.route.to].n):CITIES[S.city].n;
   const h=Math.floor(S.clock/60)%24,m=Math.floor(S.clock%60);
   $('#sClock').textContent=`${S.day} · ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  $('#sAmmo').hidden=!S.mg;
+  if(S.mg)$('#sAmmoCount').textContent=S.mission?'∞':`${S.mg.ammo} / ${AMMO_CAP}`;
   $('#sFuel').textContent=Math.round(V().fuel)+' L';$('#sDiff').textContent=DF().n;
   $('#bTownTop').hidden=scene==='drive';$('#bTownTop').textContent=scene==='town'?'Garage':'Town';
 }
@@ -2795,7 +2801,7 @@ function renderHUD(){
    ctx.fillStyle=bv>0.8?'#e4493b':'#b0574a';ctx.fillRect(px2+3,py2+ph-3-(ph-16)*bv,8,(ph-16)*bv);
    ctx.fillStyle='#62c06c';ctx.fillRect(px2+15,py2+ph-3-(ph-16)*gv,8,(ph-16)*gv);
    ctx.fillStyle='#9da5ac';ctx.font='700 9px "Share Tech Mono", monospace';ctx.fillText('B  G',px2+4,py2+10)}
-  {const tg=[];if(onDuty())tg.push('● ON DUTY: NO SPEED LIMIT');if(d.rocket)tg.push(d.rkOn?'● ROCKET BURNING':'● ROCKET ARMED');if(S.bounty>0){ctx.fillStyle='#e4493b';ctx.font='700 12px "Share Tech Mono", monospace';ctx.fillText(`● WANTED ${money(S.bounty)}`,cx+2,cy+ch+68)}if(S.mg)tg.push(`● MG ${S.mg.ammo}`);if(d.jam)tg.push('● CAM JAMMER');if(d.wrap)tg.push('● BUBBLE WRAP');if(V().up.plow)tg.push(`● PLOW ${Math.round(V().plow??100)}%`);
+  {const tg=[];if(onDuty())tg.push('● ON DUTY: NO SPEED LIMIT');if(d.rocket)tg.push(d.rkOn?'● ROCKET BURNING':'● ROCKET ARMED');if(S.bounty>0){ctx.fillStyle='#e4493b';ctx.font='700 12px "Share Tech Mono", monospace';ctx.fillText(`● WANTED ${money(S.bounty)}`,cx+2,cy+ch+68)}  if(S.mg)tg.push(S.mission?'● AMMO ∞ (MISSION)':`● AMMO ${S.mg.ammo} / ${AMMO_CAP}`);if(d.jam)tg.push('● CAM JAMMER');if(d.wrap)tg.push('● BUBBLE WRAP');if(V().up.plow)tg.push(`● PLOW ${Math.round(V().plow??100)}%`);
    if(tg.length){ctx.fillStyle=(V().plow??100)<=0&&V().up.plow?'#e9a53a':'#62c06c';ctx.font='700 11px "Share Tech Mono", monospace';ctx.fillText(tg.join('  '),cx+2,cy+ch+36)}
    if(riders().length){ctx.fillStyle='#bfe3ff';ctx.font='600 11px Barlow, sans-serif';ctx.fillText('Riders: '+riders().map(r=>r.name).join(', '),cx+2,cy+ch+(tg.length?52:36))}}
   if(d.cruise>0){ctx.fillStyle='#62c06c';ctx.font='700 11px "Share Tech Mono", monospace';ctx.fillText('CRUISE '+Math.round(d.cruise*3.6),cx+12,cy+ch-24)}
@@ -2869,7 +2875,7 @@ function devCmd(arg){const [c,v]=String(arg).split(':'),vs=V(),d=drive,inDrive=s
    case 'bounty':S.bounty=(S.bounty||0)+1000;msg=`Bounty ${money(S.bounty)}`;break;
    case 'clearb':S.bounty=0;S.bountyLvl=0;msg='Bounty cleared';break;
    case 'huntlvl':S.bountyLvl=Math.min(UNITS.length-1,(S.bountyLvl||0)+1);msg=`Next hunters: ${UNITS[S.bountyLvl].n}`;break;
-   case 'cop':S.cop.joined=true;S.mg={ammo:800};msg='Military police member, 800 rounds';break;
+   case 'cop':S.cop.joined=true;S.mg={ammo:AMMO_CAP};msg='Military police member, 1,600 rounds';break;
    case 'hunt':if(inDrive&&!d.chase){if(!(S.bounty>0))S.bounty=1000;startHunt();msg='Hunters on their way'}else msg='Only in a drive without a pursuit';break;
    case 'pass':S.pass={ok:v==='ok',flaw:v==='ok'?null:'seal',serial:'AX-'+String(100000+Math.floor(Math.random()*900000)),day:S.day,until:S.day+7,used:false};msg=v==='ok'?'Valid pass in your pocket':'Forged pass (no seal)';break;
    case 'alxjobs':if(S.city===ALX){msg='You are in Alterax: every job here already pays +75%';break}genJobs();S.jobs.slice(0,3).forEach(j=>{const km=distKm(S.city,ALX);j.pay=Math.round(j.pay/j.km*km*ALX_PAY/5)*5;j.to=ALX;j.km=km;j.deadline=Math.round(km*1000/15*1.7*DF().dl)});msg='3 Alterax jobs on the board';break;
@@ -3283,7 +3289,7 @@ function helpModal(first){
   <li><b>Upgrade.</b> Buy used cars on the lot (inspect first: some sellers lie) or brand new from the dealer, and tune them at Redline Performance. Feeling lucky? The Lucky Lugnut Casino has a jackpot wheel and blackjack.</li>
   <li><b>Real-world rules.</b> Stop at red lights in town. Each vehicle has a payload limit. Cold engines are weak and thirsty until warm, wind changes your speed and fuel use, and staying awake too long makes you nod off at the wheel. Sleep resets it.</li>
   <li><b>Run a business.</b> Buy parts as Used, OEM or Performance. Chilled loads need the reefer van; express loads pay extra for early delivery. Insurance is charged each night, and the bank lends against your reputation.</li>
-  <li><b>Bounties and police work.</b> Escape an Alterax patrol and you get a bounty (the value of that trip’s deliveries, at least $1,000, plus 10%). Hunters then find you on every drive, anywhere, in faster and better-armed vehicles each time you get away. Pay it off at an Alterax pass office. With a clean name, the Alterax military police will hire you, whatever your reputation: drive an Alterax vehicle (buy or loan one) and take hunts, smuggler intercepts, treasury convoys, VIP escorts, prisoner transfers and urgent dispatches; and use the fully automatic roof gun (hold Space or FIRE, 800 rounds a minute, 800-round belt). Members aren’t chased for speeding in Alterax, and on an active job no speed limit applies anywhere. Each finished job adds 5 nights to your Alterax permit, up to 10.</li>
+  <li><b>Bounties and police work.</b> Escape an Alterax patrol and you get a bounty (the value of that trip’s deliveries, at least $1,000, plus 10%). Hunters then find you on every drive, anywhere, in faster and better-armed vehicles each time you get away. Pay it off at an Alterax pass office. With a clean name, the Alterax military police will hire you, whatever your reputation: drive an Alterax vehicle (buy or loan one) and take hunts, smuggler intercepts, treasury convoys, VIP escorts, prisoner transfers and urgent dispatches; and use the fully automatic roof gun (hold Space or FIRE, 800 rounds a minute, 1,600-round belt outside missions and unlimited ammo during Alterax jobs). Loaners remain yours after a mission until you return them at the military police. Members aren’t chased for speeding in Alterax, and on an active job no speed limit applies anywhere. Each finished job adds 5 nights to your Alterax permit, up to 10.</li>
   <li><b>Walk around town.</b> Press <i>Town</i> (or “Walk into …” in the garage) to step out onto the street. Walk with ←/→ or A/D and press E at a door or next to someone: parts shop (buy, and sell old parts from your trunk), used car lot, dealer, Redline Performance, the freight depot, the diner, the casino, the Alterax pass office, and the locals.</li>
   <li><b>On the road.</b> Up to two hitchhikers can ride with you. Stopped and tired? Sleep in the cab, but about 1 in 20 nights a thief takes 10% of your cash (1 in 5 and 25% on the jungle road to Alterax). Settings has volume up to 200%.</li>
   <li><b>Alterax.</b> A military city deep in the jungle, ${ALX_KM} km past Port Dunmore. Jobs to and from it pay +75%, and it sells parts and vehicles 10% cheaper, plus army vehicles you can’t buy anywhere else. You need a ${money(ALX_PASS)} pass for each trip there and back (about 1 in 20 is a forgery: inspect yours). There are no speed cameras out there: guard posts watch the road instead, and anyone they catch speeding gets chased. Stop at the border, keep under 60 km/h in the military zone, don’t bring contraband, and expect to leave after one night. Dying there sends you back to your garage on Easy and Normal; on Hard it ends the game.</li>
@@ -3394,15 +3400,15 @@ const ACT={
   rocket:()=>{const d=drive;if(scene!=='drive'||!d.route||d.over||!V().up.rocket)return;d.rocket=!d.rocket;SFX.click();dmsg(d.rocket?'ROCKET ARMED: hold the gas to burn. Twice the fuel!':'Rocket off.','#ff9a3a',2.5)},
   paybounty:(a)=>{if(!(S.bounty>0))return;if(S.money<S.bounty){toast('Not enough cash');return}S.money-=S.bounty;toast(`Bounty of ${money(S.bounty)} paid. Your name is off the list.`,3500);S.bounty=0;S.bountyLvl=0;SFX.cash();updateTop();save();if(a==='office')passOffice();if(scene==='garage')renderGaragePanel()},
   goalxw:(to)=>startDrive(false,to,{wanted:true}),
-  ammo:()=>{if(!S.mg||!buy(ammoCost()))return;S.mg.ammo=800;updateTop();save();policeModal()},
-  loan:()=>{if(S.taken.length||!buy(150))return;const nv=newVehicle('jaguar','new');nv.loan=true;nv.paint='#4b5a32';S.loanPrev=S.cur;S.vehicles.push(nv);stopIdle(true);S.cur=S.vehicles.length-1;selPart='oil';save();updateTop();toast('Loaner Jaguar 4×4 assigned. Bring it back when you’re done.',3500);policeModal()},
-  returnloan:()=>{if(!V().loan||S.taken.length)return;S.vehicles.splice(S.cur,1);S.cur=clamp(S.loanPrev??0,0,S.vehicles.length-1);save();updateTop();toast('Loaner returned.');policeModal()},
+  ammo:()=>{if(!S.mg||!buy(ammoCost()))return;S.mg.ammo=AMMO_CAP;updateTop();save();policeModal()},
+  loan:()=>{if(S.taken.length||!buy(150))return;const nv=newVehicle('jaguar','new');nv.loan=true;nv.paint='#4b5a32';S.loanPrev=S.cur;S.vehicles.push(nv);stopIdle(true);S.cur=S.vehicles.length-1;selPart='oil';save();updateTop();toast('Loaner Jaguar 4×4 assigned. Keep it after missions and return it when you choose.',3500);policeModal()},
+  returnloan:()=>{if(!V().loan||S.taken.length||S.mission)return;S.vehicles.splice(S.cur,1);S.cur=clamp(S.loanPrev??0,0,S.vehicles.length-1);save();updateTop();toast('Loaner returned.');policeModal()},
   takemission:(id)=>{const o=S.cop.offers&&S.cop.offers.list.find(x=>x.id===+id);if(!o||S.mission||!ALXV.includes(V().type))return;if(!takeMission(o))return;S.cop.offers.list=S.cop.offers.list.filter(x=>x!==o);save();closeModal();toast('Job accepted. Details are in your garage.',3000)},
   starthunt:()=>{const m=S.mission;if(!m||m.type!=='hunt'||S.city!==m.city)return;if(!ALXV.includes(V().type)){toast('You need an Alterax vehicle for this job');return}if(S.taken.length){toast('Deliver your cargo first');return}
     const Y=rpick(CITIES.map((c,i)=>i).filter(i=>i!==m.city&&i!==ALX));startDrive(false,Y,{free:true,hunt:true})},
   loadprisoner:()=>{const m=S.mission;if(!m||m.kind!=='prisoner'||S.city!==m.city)return;if(VD().cap-usedSlots()<1){toast('You need 1 free slot for the prisoner');return}
     S.taken.push({id:S.jid++,to:ALX,from:S.city,cargo:CARGO.findIndex(c=>c.mission==='prisoner'),slots:1,kg:90,km:distKm(S.city,ALX),pay:0,deadline:99999,el:0,dmg:0,special:'prisoner'});m.stage='escort';save();renderGaragePanel();toast(`${m.name} is cuffed in the back. Next stop: Alterax.`,3000)},
-  abandonm:()=>{const m=S.mission;if(m)S.taken=S.taken.filter(j=>!['gold','vip','prisoner','dispatch'].includes(j.special));S.mission=null;save();renderGaragePanel();toast('Job abandoned.')},
+  abandonm:()=>{const m=S.mission;if(m)S.taken=S.taken.filter(j=>!['gold','vip','prisoner','dispatch'].includes(j.special));endMission();save();renderGaragePanel();toast('Job abandoned.')},
   repairplow:()=>{const c=plowRepairCost();if(!c||!buy(c))return;V().plow=100;perfModal();updateTop();save();toast('Plow straightened and welded: 100%')},
   town:()=>{if(scene==='town')setScene('garage');else if(scene!=='drive')enterTown()},townat:(id)=>enterTown(id),townnpc:()=>enterTown('npc'),tact:()=>townAct(),trun:()=>{TOWN.run=!TOWN.run;$('#tRun').textContent='Run: '+(TOWN.run?'on':'off');$('#tRun').classList.toggle('pri',TOWN.run)},tgarage:()=>{closeModal();setScene('garage')},
   myveh:()=>shopModal('vehicles','garage'),
