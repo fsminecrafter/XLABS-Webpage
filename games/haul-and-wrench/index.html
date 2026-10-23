@@ -219,6 +219,7 @@ h3{font-size:15px;color:var(--dim);font-weight:700}
     <button class="btn pri" data-act="spare" id="bSpare" hidden>Fit spare</button>
     <button class="btn pri" data-act="push" id="bPush" hidden>Roadside push $25</button>
     <button class="btn" data-act="roadsleep" id="bSleep" hidden>Sleep here (Z)</button>
+    <button class="btn danger" id="bFire" hidden>Fire (Space)</button>
   </div>
   <div id="townbtns" hidden>
     <button class="pedal" id="tLeft" aria-label="Walk left">◀</button>
@@ -631,7 +632,7 @@ function encounter(e){const d=drive,R=d.route;d.paused=true;d.lock=true;audioSil
   if(e.type==='stranded'){const bd=e.bd,opts=[bd.a,...bd.w].sort(()=>Math.random()-0.5),who={n:e.p.n,role:'Stranded driver',face:e.p};
     return talk(who,`Oh, thank goodness! ${bd.s} Do you know cars? What do you think it is?`,[
       ...opts.map(id=>({t:`It's the ${PMAP[id].name.toLowerCase()}.`,f:()=>{
-        if(id===bd.a){const rw=Math.round((60+Math.random()*90)*DF().pay/5)*5;S.money+=rw;S.rep=clamp(S.rep+0.1,0,5);S.clock+=10;SFX.cash();
+        if(id===bd.a){const rw=Math.round((60+Math.random()*90)*DF().pay/5)*5;S.money+=rw;S.rep=clamp(S.rep+0.2,0,5);S.clock+=10;SFX.cash();
           talk(who,`You were right! It's running again. Here's ${money(rw)}, and I'll tell everyone about Haul & Wrench.`,[{t:'Drive safe!',f:()=>{updateTop();resumeDrive()}}])}
         else talk(who,"Hmm… we tried that and it still won't go. I'll call a tow. Thanks for stopping anyway.",[{t:'Sorry about that',f:resumeDrive}])}})),
       {t:'Sorry, I can’t stop',f:resumeDrive}])}
@@ -641,53 +642,133 @@ function encounter(e){const d=drive,R=d.route;d.paused=true;d.lock=true;audioSil
     const crate=S.taken.find(j=>j.special==='crate');let fine=0;
     if(crate){fine+=300;S.taken=S.taken.filter(j=>j!==crate);S.rep=clamp(S.rep-0.5,0,5)}
     for(const x of def)fine+=x[1];fine=Math.round(fine*DF().fine);if(fine){S.money-=fine;d.fines+=fine}
-    let text;if(!def.length&&!crate){S.rep=clamp(S.rep+0.05,0,5);text="License and registration… Lights work, tires look fine, load is secure. Everything checks out. Drive safe out there."}
+    let text;if(!def.length&&!crate){S.rep=clamp(S.rep+0.1,0,5);text="License and registration… Lights work, tires look fine, load is secure. Everything checks out. Drive safe out there."}
     else text=`${crate?"And what's in the sealed crate? …Cigars. Untaxed ones. That's confiscated. ":''}${def.length?`I'm writing you up for ${def.map(x=>x[0]).join(', ')}. `:''}Total fine: ${money(fine)}.`;
     if(crate)resolveDebt('seized');
     return talk({n:e.p.n,role:'Highway patrol',face:e.p},text,[{t:fine?'Yes, officer':'Thanks, officer',f:()=>{updateTop();resumeDrive()}}])}
 }
 /* ---------- Alterax: military zone pursuit, death, border control ---------- */
 const SOLDIER_LINES=["The colonel says the jungle keeps us honest. I think it just keeps us wet.","Sixty in the zone. They mean it. Last month a rally driver tried a hundred.","See the towers? Somebody up there is watching you right now.","Bandits on this road are getting bolder. Don’t stop for anyone you don’t know. Except me.","The Humvees top out at 125. The helicopter doesn’t."];
+/* pursuits: the zone patrol (one Humvee) and bounty hunters, who come back stronger every time you escape them */
+const UNITS=[
+ {n:'Humvee',type:'jaguar',vmax:125/3.6,hp:18,kill:5,paint:'#4b5a32'},
+ {n:'armored gun van',type:'strider',vmax:145/3.6,hp:26,kill:4.5,paint:'#3e4a34'},
+ {n:'heavy gun van',type:'strider',vmax:165/3.6,hp:34,kill:4,paint:'#2d3238'},
+ {n:'Veloce interceptor',type:'gt',vmax:210/3.6,hp:20,kill:4,paint:'#3a4230'},
+ {n:'interceptor squad leader',type:'gt',vmax:235/3.6,hp:28,kill:3,paint:'#1d2024'},
+];
+const HUNT_HELI=[Infinity,300,240,180,150];
+function newChase(kind,lvl,heliAt,spawn){const u=UNITS[lvl];return{kind,u,lvl,t:0,spawn,heliAt,hx:null,hv:0,hp:u.hp,fire:0,gunCd:0,heli:null,lost:false,dead:false,rot:0}}
 function chaseStep(dt,av){const d=drive,R=d.route,Vd=VD(),kmh=av*3.6;
   if(!d.chase){
-    if(inZone(R,d.x)&&(R.alx==='out'||d.x>R.border)){
+    if(S.bounty>0&&!R.test&&d.huntAt&&d.t>d.huntAt){d.huntAt=0;startHunt();return false}
+    if(R.alx&&inZone(R,d.x)&&(R.alx==='out'||d.x>R.border)){
       if(!d.zoneMsg){d.zoneMsg=true;dmsg('Alterax military zone: 60 km/h. Speeders get chased.','#e9a53a',5)}
       const lim=limitAt(R,d.x);if(kmh>lim+DF().tol){d.speedT=(d.speedT||0)+dt;if(d.speedT>1.2)startChase(kmh,lim)}else d.speedT=d.speedT<0?Math.min(0,d.speedT+dt):0}
     return false}
-  const c=d.chase;c.t+=dt;
-  if(av<0.5&&canHide(c)){d.chase=null;d.speedT=0;dmsg('You pull off under the trees and kill the lights. The patrol rumbles past. You got away.','#62c06c',6);return false}
-  if(R.alx==='out'&&d.x>R.len-700){d.chase=null;d.speedT=0;dmsg(`The patrol turns back at the ${CITIES[R.to].n} city limits. You got away.`,'#62c06c',5);return false}
-  if(c.t>=30&&c.hx==null&&!c.lost){c.hx=Math.max(0,d.x-Vd.L*K-160);c.hv=26;c.rot=0;SFX.siren();dmsg('The Humvee is right behind you! Stop to surrender, or outrun it.','#e4493b',5)}
+  const c=d.chase,u=c.u;c.t+=dt;
+  if(av<0.5&&canHide(c)){endChase('hid');return false}
+  if(c.kind==='zone'&&R.alx==='out'&&d.x>R.len-700){endChase('limits');return false}
+  if(c.t>=c.spawn&&c.hx==null&&!c.lost&&!c.dead){c.hx=Math.max(0,d.x-Vd.L*K-160);c.hv=Math.min(u.vmax,Math.max(26,Math.abs(d.v)));SFX.siren();dmsg(`The ${u.n} is right behind you! Stop to surrender, or ${c.kind==='bounty'?'lose them':'outrun it'}.`,'#e4493b',5)}
   if(c.hx!=null){const gap=d.x-Vd.L*K-c.hx;
-    c.hv=Math.min(34.72,c.hv+5*dt);if(gap<12)c.hv=Math.min(c.hv,Math.max(0,d.v)+Math.max(0,gap-3)*0.8);
-    c.hx+=c.hv*dt;c.rot+=c.hv*dt/(VEH.jaguar.r*K);
+    c.hv=Math.min(u.vmax,c.hv+(u.vmax>45?8:5)*dt);if(gap<12)c.hv=Math.min(c.hv,Math.max(0,d.v)+Math.max(0,gap-3)*0.8);
+    c.hx+=c.hv*dt;c.rot+=c.hv*dt/(VEH[u.type].r*K);
+    if(c.hp<=0){boom(c.hx-VEH[u.type].L*K/2);c.hx=null;c.dead=true;c.firing=false;dmsg(`The ${u.n} is out of action!`,'#62c06c',4);return false}
     if(gap<20&&av<0.5){chaseSurrender(true);return true}
     c.firing=gap<36&&av>=0.5;
     if(c.firing){c.fire+=dt;c.gunCd-=dt;if(c.gunCd<=0){c.gunCd=0.5;SFX.gun();if(Math.random()<0.6){const id=rpick(['lights','radiator','tiresR','battery','fuelf']);V().parts[id].cond=Math.max(0,V().parts[id].cond-4);addDamage(1.5)}}
-      dmsg('Machine-gun fire! Stop now or they will kill you!','#e4493b',2,'mg');if(c.fire>5){alxDeath('The Humvee gunner opened fire on your vehicle. You did not survive.');return true}}
-    if(gap>1200){c.hx=null;c.lost=true;c.firing=false;dmsg('You lost the Humvee. They will not let it go that easily…','#e9a53a',5)}}
-  if(c.t>=heliDelay()&&!c.heli){c.heli={t:0};SFX.siren();dmsg('Attack helicopter scrambled! It will be on you in 15 seconds.','#e4493b',6)}
+      dmsg('Machine-gun fire! Stop now or they will kill you!','#e4493b',2,'mg');if(c.fire>u.kill){alxDeath(c.kind==='bounty'?`Alterax bounty hunters in a ${u.n} caught up with you. You did not survive.`:'The Humvee gunner opened fire on your vehicle. You did not survive.');return true}}
+    if(gap>1200){c.hx=null;c.lost=true;c.firing=false;dmsg(`You lost the ${u.n}. They will not let it go that easily…`,'#e9a53a',5)}}
+  if(c.t>=c.heliAt&&!c.heli){c.heli={t:0};SFX.siren();dmsg('Attack helicopter scrambled! It will be on you in 15 seconds.','#e4493b',6)}
   if(c.heli){c.heli.t+=dt;c.chop=(c.chop||0)-dt;if(c.chop<=0){c.chop=0.11;shot({noise:true,type:'lowpass',f:260,q:0.8,vol:clamp(c.heli.t/15,0.05,1)*0.25,dur:0.08})}
-    if(c.heli.t>15){if(!c.rockets){c.rockets=true;SFX.gun();dmsg('Rockets away!','#e4493b',3)}if(c.heli.t>17.2){alxDeath('An Alterax attack helicopter shot you off the road.');return true}}}
+    if(c.heli.t>15){if(!c.rockets){c.rockets=true;SFX.gun();dmsg('Rockets away!','#e4493b',3)}if(c.heli.t>17.2){alxDeath(c.kind==='bounty'?'A bounty-hunter helicopter shot you off the road.':'An Alterax attack helicopter shot you off the road.');return true}}}
   return false}
 const heliDelay=()=>V().up&&V().up.radarjam?480:180;
-function canHide(c){if(!c)return false;const hum=c.lost||(c.hx!=null&&(drive.x-c.hx)/34.72>120),heli=!c.heli&&heliDelay()-c.t+15>60;return hum&&heli}
-function hideTxt(){drive.chase=null;drive.speedT=0;return '<p style="color:var(--ok)">You lost the patrol long before you stopped, and pulled off the road to hide. Nobody comes for you.</p>'}
+function canHide(c){if(!c)return false;const hum=c.lost||c.dead||(c.hx!=null&&(drive.x-c.hx)/c.u.vmax>120),heli=!c.heli&&c.heliAt-c.t+15>60;return hum&&heli}
+function endChase(how){const d=drive,c=d.chase;if(!c)return;d.chase=null;d.speedT=0;
+  if(c.kind==='bounty'){S.bountyLvl=Math.min(UNITS.length-1,(S.bountyLvl||0)+1);dmsg(how==='hid'?'You hide off the road. The hunters lose your trail… for now. Next time they send something bigger.':'You shook the hunters. Next time they send something bigger.','#62c06c',6)}
+  else{dmsg(how==='hid'?'You pull off under the trees and kill the lights. The patrol rumbles past. You got away.':`The patrol turns back at the ${CITIES[d.route.to].n} city limits. You got away.`,'#62c06c',6);addBounty()}}
+function addBounty(){const add=Math.round(Math.max(1000,drive.legPay||0)*1.1/10)*10;S.bounty=(S.bounty||0)+add;dmsg(`WANTED: Alterax puts a ${money(add)} bounty on your head (total ${money(S.bounty)}). Hunters will follow you anywhere.`,'#e4493b',7);SFX.siren()}
+function hideTxt(){endChase('hid');return '<p style="color:var(--ok)">You lost your pursuers long before you stopped, and pulled off the road to hide. Nobody comes for you.</p>'}
 function startChase(kmh,lim,force){const d=drive;
   const sol=riders().find(r=>r.soldier&&!r.vouched);if(sol&&!force){sol.vouched=true;d.speedT=-8;dmsg(`${sol.name} grabs the radio: “Stand down, they’re with me.” Slow down, now!`,'#62c06c',6);return}
-  d.chase={t:0,hx:null,hv:0,fire:0,gunCd:0,heli:null};SFX.siren();dmsg(`${Math.round(kmh)} in a ${lim} zone! A patrol Humvee is coming (30 s). Stop to surrender or outrun it: max 125 km/h.`,'#e4493b',7)}
-function chaseSurrender(stopped){const d=drive;if(!d.chase)return '';const f=Math.round(450*DF().fine);S.money-=f;d.fines+=f;S.rep=clamp(S.rep-0.3,0,5);d.chase=null;d.speedT=0;
-  const text=`“Hands where I can see them!” …Speeding in a military zone. They search your vehicle at gunpoint. Fine: ${money(f)}. Reputation −0.3.`;
+  d.chase=newChase('zone',0,heliDelay(),30);SFX.siren();dmsg(`${Math.round(kmh)} in a ${lim} zone! A patrol Humvee is coming (30 s). Stop to surrender or outrun it: max 125 km/h.`,'#e4493b',7)}
+function startHunt(){const d=drive,lvl=Math.min(UNITS.length-1,S.bountyLvl||0),u=UNITS[lvl];d.chase=newChase('bounty',lvl,HUNT_HELI[lvl]+(V().up&&V().up.radarjam?300:0),20);SFX.siren();
+  dmsg(`Alterax bounty hunters found you (${money(S.bounty)} on your head)! A ${u.n} is 20 s out, top speed ${Math.round(u.vmax*3.6)} km/h.`,'#e4493b',7)}
+function chaseSurrender(stopped){const d=drive,c=d.chase;if(!c)return '';let text;
+  if(c.kind==='bounty'){const b=S.bounty||0;S.money-=b;S.bounty=0;S.bountyLvl=0;text=`“End of the road.” The hunters cuff you and wire your bounty of ${money(b)} straight out of your account. Your name is off the list.`}
+  else{const f=Math.round(450*DF().fine);S.money-=f;d.fines+=f;S.rep=clamp(S.rep-0.3,0,5);text=`“Hands where I can see them!” …Speeding in a military zone. They search your vehicle at gunpoint. Fine: ${money(f)}. Reputation −0.3.`}
+  d.chase=null;d.speedT=0;
   if(stopped){d.paused=true;d.lock=true;audioSilence();keys.gas=keys.brake=false;
-    talk({n:'Cpl. '+rpick(ALX_NAMES),role:'Alterax patrol',face:{skin:rpick(SKINS),hair:'#111111',shirt:'#4b5a32',hat:true,hatc:'#3a4230',bg:'#24301e'}},text+' “Now drive slowly.”',[{t:'Yes, sir',f:()=>{updateTop();resumeDrive()}}])}
-  return `<p style="color:var(--warn)">The Alterax patrol caught up with you. ${text}</p>`}
+    talk({n:(c.kind==='bounty'?'Hunter ':'Cpl. ')+rpick(ALX_NAMES),role:c.kind==='bounty'?'Alterax bounty hunter':'Alterax patrol',face:{skin:rpick(SKINS),hair:'#111111',shirt:c.kind==='bounty'?'#2b2d30':'#4b5a32',hat:true,hatc:'#3a4230',bg:'#24301e'}},text+(c.kind==='bounty'?'':' “Now drive slowly.”'),[{t:'…Fine',f:()=>{updateTop();resumeDrive()}}])}
+  return `<p style="color:var(--warn)">${c.kind==='bounty'?'The bounty hunters caught up with you.':'The Alterax patrol caught up with you.'} ${text}</p>`}
+function boom(x){const d=drive;SFX.boom();if(lowGfx)return;for(let i=0;i<24;i++)d.ptc.push({x:x+(Math.random()-0.5)*3,h:0.5+Math.random(),vx:(Math.random()-0.5)*4,vh:1+Math.random()*4,g:-0.4,life:1.6,max:1.6,r:0.3,gr:1.6,col:i%3?'60,58,55':'255,150,60',a:0.6})}
+/* working for Alterax: hunts, money transports, and the roof machine gun (80 rounds a minute from an 800-round belt) */
+function gunStep(dt){const d=drive;d.gunCd=(d.gunCd||0)-dt;if(d.tracer){d.tracer.t-=dt;if(d.tracer.t<=0)d.tracer=null}
+  if(!S.mg||!(keys.fire||touch.fire)||d.gunCd>0||d.over)return;
+  if(S.mg.ammo<=0){dmsg('Out of ammo. Refill at the Alterax military police.','#e9a53a',3,'ammo');return}
+  d.gunCd=0.75;S.mg.ammo--;shot({f:900,q:0.8,vol:0.42,dur:0.1,rate:0.9});shot({tone:150,toneTo:60,vol:0.16,dur:0.08});
+  const Vd=VD(),rear=d.x-Vd.L*K,tg=[],c=d.chase;
+  if(c&&c.hx!=null)tg.push({dist:rear-c.hx,hit:()=>{c.hp--},vm:c.vm,T:VEH[c.u.type]});
+  if(d.sus&&!d.sus.done)tg.push({dist:d.sus.x-VEH[d.sus.type].L*K-d.x,hit:()=>{d.sus.hp--},vm:d.sus.vm,T:VEH[d.sus.type]});
+  if(d.convoy)for(const a of d.convoy.att)tg.push({dist:rear-a.x,hit:()=>{a.hp--},vm:a.vm,T:VEH.pickup});
+  const t=tg.filter(x=>x.dist>-3&&x.dist<75).sort((a,b)=>a.dist-b.dist)[0];if(!t){d.tracer=null;return}
+  const p=t.vm?t.vm.transformPoint(new DOMPoint(t.T.L*0.5,-t.T.h*0.45)):null;if(p)d.tracer={t:0.12,x:p.x+(Math.random()-0.5)*8,y:p.y+(Math.random()-0.5)*8};
+  if(Math.random()<clamp(1-t.dist/110,0.3,0.92))t.hit()}
+function missionStep(dt,av){const d=drive,R=d.route,Vd=VD();
+  const s=d.sus;if(s&&!s.gone){const T=VEH[s.type];
+    if(!s.done){const tgt=s.vmax*(0.85+0.15*Math.sin(d.t*0.37+s.ph));s.v+=clamp(tgt-s.v,-5*dt,(s.vmax>45?6:4)*dt);s.x+=s.v*dt;s.rot+=s.v*dt/(T.r*K);const rear=s.x-T.L*K;
+      if(d.x>rear-0.4){d.x=rear-0.4;if(d.v>s.v){if(d.v-s.v>3)SFX.thud(0.4);d.v=s.v}}
+      if(rear-d.x<2.5&&av>2)s.boxT+=dt;else s.boxT=Math.max(0,s.boxT-dt*0.5);if(s.boxT>0.5)dmsg('Boxing them in…','#62c06c',1.5,'box');
+      if(s.hp<=0||s.boxT>3){s.done=true;s.v=0;if(s.hp<=0)boom(s.x-T.L*K/2);missionWin(s.hp<=0?`${s.name}'s car is shot to pieces. They crawl out with their hands up.`:`You box ${s.name} in against the verge. They give up.`)}
+      else if(s.x>R.len-40){s.done=true;s.gone=true;missionFail(`${s.name} reached ${CITIES[R.to].n} and vanished into the streets.`)}}
+    else{s.goneT=(s.goneT||0)+dt;if(s.goneT>3)s.gone=true}}
+  const cv=d.convoy;if(cv&&cv.on){cv.x=Math.min(R.len+150,d.x+12+VEH.kodiak.L*K);cv.rot+=Math.abs(d.v)*dt/(VEH.kodiak.r*K);
+    for(const w of cv.waves)if(!w.done&&d.x>w.x){w.done=true;const n=1+(Math.random()<0.5?1:0);for(let i=0;i<n;i++)cv.att.push({x:d.x-Vd.L*K-120-i*18,v:Math.max(20,av),hp:8,rot:0,vmax:40+Math.random()*4,cd:0});SFX.siren();dmsg(`Raiders! ${n} armed pickup${n>1?'s are':' is'} closing on the convoy.`,'#e4493b',5)}
+    let firing=0;for(const a of cv.att){const gap=d.x-Vd.L*K-a.x,want=gap>22?a.vmax:Math.max(0,d.v)+(gap-18)*0.4;a.v+=clamp(want-a.v,-6*dt,5*dt);a.x+=a.v*dt;a.rot+=a.v*dt/(VEH.pickup.r*K);
+      if(d.x-Vd.L*K-a.x<4)a.x=d.x-Vd.L*K-4;if(gap<45){firing++;a.cd-=dt;if(a.cd<=0){a.cd=0.6;SFX.gun()}}}
+    if(firing){cv.hp-=firing*3.2*dt;dmsg('The raiders are shooting at the convoy!','#e4493b',2,'raid');if(Math.random()<dt*firing*0.3){const id=rpick(['lights','tiresR','radiator','battery']);V().parts[id].cond=Math.max(0,V().parts[id].cond-3)}}
+    for(const a of cv.att)if(a.hp<=0){boom(a.x-2.5);dmsg('Raider down!','#62c06c',2)}
+    cv.att=cv.att.filter(a=>a.hp>0&&d.x-a.x<900);
+    if(S.mission&&S.mission.type==='convoy')S.mission.hp=Math.max(0,cv.hp);
+    if(cv.hp<=0){cv.on=false;cv.att=[];S.taken=S.taken.filter(j=>j.special!=='gold');missionFail('The raiders crack the lead truck open and drive off with the treasury gold.')}}}
+function missionWin(txt){const m=S.mission;if(!m)return 0;S.money+=m.reward;S.cop.done++;S.cop.stay=Math.min(10,1+5*S.cop.done);S.mission=null;SFX.cash();
+  if(txt)dmsg(`${txt} Mission complete: +${money(m.reward)}. Your Alterax permit now allows ${S.cop.stay} nights.`,'#62c06c',8);updateTop();save();return m.reward}
+function missionFail(txt){S.mission=null;dmsg(`${txt} Mission failed.`,'#e4493b',7);save()}
+const CAPTAIN={skin:'#a8704a',hair:'#111111',shirt:'#2f3a4a',hat:true,hatc:'#1b1d1f',bg:'#1e2630'};
+const ammoCost=()=>Math.ceil((800-S.mg.ammo)*0.25);
+function genOffers(){const r=Math.random,others=CITIES.map((c,i)=>i).filter(i=>i!==ALX);S.cop.offers={day:S.day,list:[]};
+  const SUSN=['“Fox” Danek','Mara Tull','the Ilic brothers','Big Oskar','Juno Reyes','“Ledger” Sorran','Pell the forger','Kit Varga'],tys=['hatch','pickup','gt','van'];
+  for(let i=0;i<2;i++){const ty=rpick(tys);S.cop.offers.list.push({type:'hunt',id:S.jid++,city:rpick(others),name:rpick(SUSN),sus:ty,vmax:(ty==='gt'?165:ty==='hatch'?140:120)/3.6,hp:ty==='van'?16:10,reward:Math.round((700+r()*900)/50)*50})}
+  S.cop.offers.list.push({type:'convoy',id:S.jid++,to:rpick(others),reward:Math.round((1600+r()*1600)/50)*50})}
+function policeModal(){const who={n:'Capt. Ivo Kadra',role:'Alterax military police',face:CAPTAIN};
+  if(S.bounty>0)return talk(who,`You have a ${money(S.bounty)} bounty on your head and you walk into MY office? Pay it, or I arrest you myself.`,[{t:`Pay the bounty (${money(S.bounty)})`,f:()=>{ACT.paybounty();policeModal()}},{t:'Leave quietly',f:()=>{}}]);
+  if(!S.cop.joined)return talk(who,'Your stars, your reviews, your reputation: Alterax doesn’t care. Your name isn’t on our list, and that’s all I need. We hunt fugitives and we move treasury gold. You get a roof gun and 800 rounds. Every job you finish adds five nights to your permit, up to ten. Interested?',
+    [{t:'Sign me up',f:()=>{S.cop.joined=true;S.mg=S.mg||{ammo:800};save();toast('You joined the Alterax military police. Roof gun fitted: Space (or FIRE) to shoot.',4500);policeModal()}},{t:'Not today',f:()=>{}}]);
+  if(!S.cop.offers||S.cop.offers.day!==S.day)genOffers();
+  const ok=ALXV.includes(V().type),m=S.mission,loan=V().loan;
+  let h=`<div class="talk"><img class="face" src="${faceImg(CAPTAIN)}" alt=""><div class="pinfo"><b style="font-size:17px">Capt. Ivo Kadra</b> <span class="tag">Alterax military police</span><p>${m?'Finish the job you already have.':'Pick a job. Any job. Bring the vehicle back in one piece.'}</p></div></div>
+   <div class="kv"><span>Jobs completed</span><b>${S.cop.done}</b><span>Your Alterax permit</span><b>${S.cop.stay} night${S.cop.stay>1?'s':''}</b><span>Roof gun ammo</span><b>${S.mg.ammo} / 800</b><span>Approved vehicle</span><b style="color:${ok?'var(--ok)':'var(--warn)'}">${ok?VD().n+(loan?' (loaner)':''):'No: you need an Alterax vehicle'}</b></div>
+   <div class="row">${S.mg.ammo<800?`<button class="btn" data-act="ammo" ${S.money<ammoCost()?'disabled':''}>Refill ammo ${money(ammoCost())}</button>`:''}${loan?`<button class="btn" data-act="returnloan" ${S.taken.length?'disabled':''}>Return the loaner</button>`:ok?'':`<button class="btn pri" data-act="loan" ${S.taken.length||S.money<150?'disabled':''}>Loan a Jaguar 4×4 ($150)</button><button class="btn" data-act="townat" data-arg="dealer">Buy one at the army dealer</button>`}</div><h3>Jobs</h3>`;
+  for(const o of S.cop.offers.list)h+=`<div class="job-li"><div class="pinfo">${o.type==='hunt'?`<b>Hunt: ${o.name}</b><br><span class="muted">Hiding in ${CITIES[o.city].n}. Drive there, then run them down. Fleeing in a ${VEH[o.sus].n} at up to ${Math.round(o.vmax*3.6)} km/h.</span>`:`<b>Money transport to ${CITIES[o.to].n}</b><br><span class="muted">Lead a treasury convoy and defend it from raiders on the way. Needs 1 free cargo slot.</span>`}</div>
+    <div class="row"><b class="mono" style="color:var(--hazard)">${money(o.reward)}</b><button class="btn pri" data-act="takemission" data-arg="${o.id}" ${m||!ok?'disabled':''}>${m?'Busy':!ok?'Need vehicle':'Accept'}</button></div></div>`;
+  h+=`<div class="row"><button class="btn" data-act="close">Back to the street</button></div>`;modal(h)}
+function missionCard(){const m=S.mission;if(!m)return '';let b='',t='';
+  if(m.type==='hunt'){if(S.city!==m.city){t=`Hunt down <b>${m.name}</b>, last seen in <b>${CITIES[m.city].n}</b>. Drive there first.`;b=`<button class="btn pri" data-act="gohome" data-arg="${m.city}">Drive to ${CITIES[m.city].n} <small>${distKm(S.city,m.city)} km</small></button>`}
+    else{t=`<b>${m.name}</b> is hiding in ${CITIES[m.city].n}. Once you start, they bolt for the next town: box them in from behind for 3 seconds, or shoot their car to pieces.`;b=`<button class="btn pri" data-act="starthunt">Start the chase</button>`}}
+  else{if(!S.taken.some(j=>j.special==='gold')){S.mission=null;return `<div class="card alxcard"><h3>Alterax mission</h3><div class="muted">The treasury gold is no longer aboard. The job is over.</div></div>`}
+    t=`Escort treasury gold to <b>${CITIES[m.to].n}</b>. Raiders will hit the convoy on the way. Convoy integrity ${Math.round(m.hp)}%.`;b=`<button class="btn pri" data-act="go" data-arg="${m.to}">Drive the convoy to ${CITIES[m.to].n}</button>`}
+  return `<div class="card alxcard"><h3>Alterax job · ${m.type==='hunt'?'Hunt':'Money transport'} · ${money(m.reward)}</h3><div class="muted" style="color:var(--fg)">${t}</div><div class="row">${b}<button class="btn" data-act="abandonm">Abandon</button></div></div>`}
+function bountyCard(){if(!(S.bounty>0))return '';const nx=UNITS[Math.min(UNITS.length-1,S.bountyLvl||0)];
+  return `<div class="card" style="border-color:var(--bad)"><h3 style="color:var(--bad)">Wanted by Alterax · ${money(S.bounty)}</h3><div class="muted" style="color:var(--fg)">Bounty hunters will find you on every drive, in every district, and they come back stronger each time you get away (next: a ${nx.n}, ${Math.round(nx.vmax*3.6)} km/h). Pay at an Alterax pass office to clear your name. Entering Alterax while wanted gets you shot at the border.</div>
+   <div class="row"><button class="btn pri" data-act="townat" data-arg="${S.city===ALX?'police':'passoffice'}">${S.city===ALX?'Military police':'Go to the pass office'}</button></div></div>`}
 function alxDeath(cause,quick){const d=drive;if(d.dead)return;d.dead=performance.now();d.over=true;d.paused=false;d.lock=true;audioSilence();
   if(quick)return alxDeathModal(cause);closeModal();SFX.gun();setTimeout(()=>SFX.boom(),350);setTimeout(()=>alxDeathModal(cause),1700)}
 function alxDeathModal(cause){const R=drive.route,home=!R?S.city:R.alx==='in'?R.from:R.alx==='out'?R.to:S.city;
   if(S.diff==='hard'){newGame('hard');S.seenHelp=true;save();drive.route=null;setScene('garage');
     modal(`<h2 style="color:var(--bad)">Killed in Alterax</h2><p>${cause}</p><p>Hard mode has no second chances. Haul &amp; Wrench is finished. You start again from Walt’s dusty garage and his tired old Bug.</p><div class="row"><button class="btn danger" data-act="harddeath">Start over</button></div>`);return}
   const lost=S.taken.length,bill=Math.round(350*DF().costs/5)*5,vs=V(),drep=lost?0.5:0.25;
-  S.taken=[];S.riders=[];S.pass=null;S.alx=null;S.rep=clamp(S.rep-drep,0,5);S.money-=bill;
+  S.taken=[];S.riders=[];S.pass=null;S.alx=null;S.bounty=0;S.bountyLvl=0;S.mission=null;S.rep=clamp(S.rep-drep,0,5);S.money-=bill;
   for(const p of [...PARTS].sort(()=>Math.random()-0.5).slice(0,4))vs.parts[p.id].cond=Math.max(0,vs.parts[p.id].cond-(25+Math.random()*25));
   markStale();vs.fuel=Math.max(vs.fuel,tankCap()*0.25);vs.engT=null;
   S.city=home;S.clock+=8*60;while(S.clock>=1440){S.clock-=1440;S.day++}S.awake=0;genJobs();save();drive.route=null;setScene('garage');
@@ -697,7 +778,7 @@ function alxDeathModal(cause){const R=drive.route,home=!R?S.city:R.alx==='in'?R.
 /* border control: a short animated scene inside the booth while Sergeant Draskel checks your pass */
 const BC={};
 function borderCheck(e){const d=drive;d.paused=true;d.lock=true;audioSilence();keys.gas=keys.brake=false;
-  const P=S.pass,why=!P?'none':!P.ok?'fake':S.day>P.until?'expired':'';
+  const P=S.pass,why=!P?'none':S.bounty>0?'wanted':!P.ok?'fake':S.day>P.until?'expired':'';
   Object.assign(BC,{e,why,t0:performance.now(),vt:why==='none'?2.6:4.6,done:false,stamped:false,shot:false,alarm:false,txt:'',btn:''});
   modal(`<div class="row" style="justify-content:space-between"><h2>Alterax border control</h2><span class="tag">Sgt. Kova Draskel</span></div>
    <canvas id="borderCv" class="bcv" width="640" height="340" aria-label="Inside the border booth: Sergeant Draskel checks your pass"></canvas>
@@ -708,7 +789,7 @@ function borderFrame(now){const el=document.getElementById('borderCv');if(!el||B
   if(why==='none')txt=u<1.3?'“Pass.” Sergeant Draskel holds out his hand.':u<vt?'“…No pass?” He looks at you for a long moment.':'';
   else txt=u<1.2?'“Pass.” You hand it over. Sergeant Draskel takes it without a word.':u<3.2?'He studies your pass under the lamp, line by line…':u<vt?`He picks up the radio: “Serial ${P.serial}. Confirm.” The radio crackles.`:'';
   if(u>=vt){if(!why){txt='“Welcome to Alterax. Sixty kilometres an hour inside the zone. We will be watching.”';if(!BC.stamped&&u>vt+0.45){BC.stamped=true;SFX.thud(0.9)}}
-    else{txt=why==='none'?'“No pass, no entry. And nobody turns around at my border.” He reaches for his pistol.':why==='expired'?`“This pass expired on day ${P.until}.” He reaches for his pistol. Behind you, rifles cock.`:'“This is a forgery.” He reaches for his pistol. Behind you, rifles cock.';
+    else{txt=why==='none'?'“No pass, no entry. And nobody turns around at my border.” He reaches for his pistol.':why==='wanted'?`“Your pass is fine. Your face is on my wall.” A ${money(S.bounty)} bounty. He reaches for his pistol.`:why==='expired'?`“This pass expired on day ${P.until}.” He reaches for his pistol. Behind you, rifles cock.`:'“This is a forgery.” He reaches for his pistol. Behind you, rifles cock.';
       if(!BC.alarm){BC.alarm=true;SFX.siren()}if(!BC.shot&&u>vt+2){BC.shot=true;SFX.gun();setTimeout(()=>SFX.boom(),250)}}}
   if(txt!==BC.txt){BC.txt=txt;const t=document.getElementById('bcText');if(t)t.textContent=txt||' '}
   const btn=u<vt?'':!why?(u>vt+0.7?'ok':''):(u>vt+2.3?'dead':'');
@@ -779,9 +860,12 @@ function drawBorderRoom(c,u,B){const W2=640,H2=340,why=B.why,vt=B.vt,sv=u-vt,fai
 function hitDeer(av){const d=drive,vs=V();vs.parts.lights.cond=Math.max(0,vs.parts.lights.cond-35);vs.parts.radiator.cond=Math.max(0,vs.parts.radiator.cond-20*Math.min(1,av/15));
   addDamage(av*1.2);d.v*=0.55;d.susV-=2;SFX.thud(1);SFX.snap();dmsg(`You hit a deer at ${Math.round(av*3.6)} km/h! Headlight and radiator damaged.`,'#e4493b',5)}
 function arriveHooks(here){let h='';const st=S.story;
-  for(const j of here){if(j.special==='crate'){resolveDebt('paid');h+=`<p style="color:var(--warn)">A man at Ashford Jct takes the crate without a word. Vince’s debt is settled.</p>`}
+  {const m=S.mission;if(m&&m.type==='hunt'&&R.to===m.city&&m.stage==='travel'){m.stage='ready';h+=`<p style="color:#f0dc8a">You're in ${CITIES[m.city].n}. ${m.name} is somewhere in town. Start the chase from your garage when you're ready.</p>`}
+   if(m&&m.type==='hunt'&&m.stage==='chasing'){S.mission=null;h+='<p style="color:var(--bad)">The suspect got away. Mission failed.</p>'}}
+  for(const j of here){if(j.special==='gold'&&S.mission&&S.mission.type==='convoy'){const r=missionWin('');h+=`<p style="color:var(--ok)">The treasury gold is delivered intact. +${money(r)}. Your Alterax permit now allows ${S.cop.stay} nights.</p>`}
+    if(j.special==='crate'){resolveDebt('paid');h+=`<p style="color:var(--warn)">A man at Ashford Jct takes the crate without a word. Vince’s debt is settled.</p>`}
     if(st&&st.ch===5&&j.slots>=10&&S.rep>=3&&!st.flags.bigHaul){st.flags.bigHaul=true;h+=`<p style="color:var(--ok)">That was the big festival load! Tell Rosa in Millbrook.</p>`}}
-  for(const p of riders()){if(p.pay){S.money+=p.pay;S.rep=clamp(S.rep+0.05,0,5)}
+  for(const p of riders()){if(p.pay){S.money+=p.pay;S.rep=clamp(S.rep+0.1,0,5)}
     const bye=p.lou?'Lou presses a folded page into your hand: “Walt wrote this the night before he got sick.”':p.soldier?'“Order before comfort. Thanks, driver.”':p.pi!=null?`“${HITCH[p.pi].bye}”`:'“Thanks for the ride!”';
     h+=`<p>${p.name} gets out${p.pay?` and pays you ${money(p.pay)}`:''}. ${bye}</p>`;
     if(p.lou&&st&&!st.pages.includes('lou')){st.pages.push('lou');storyToast(`Notebook page found (${st.pages.length}/5)`)}}
@@ -987,7 +1071,7 @@ Object.assign(VEH,{
   eng:{base:0.95,cut:680,clatter:0.1,vol:1.1},horn:[[300,0.4],[380,0.4]],names:{},paints:['#3e4a34','#5a5e52','#2d3238'],
   desc:'A 2010 armored courier van built for the Alterax treasury. Six slots and a steel-lined cargo box that halves cargo damage. Heavy and thirsty.',
   hot:{oil:[384,-38],air:[362,-122],plugs:[398,-102],alt:[396,-68],radiator:[424,-66],lights:[430,-102],battery:[340,-80],shocks:[322,-50],brakes:[352,-32],tiresF:[380,-12],tiresR:[114,-12],fuelf:[226,-48]}},
- kodiak:{n:'Kodiak M-70 6×6',yr:1996,cap:14,rep:2,mass:9500,drag:4.0,top:95,brake:7,tank:220,fuelM:1.15,partM:1.1,price:21000,tough:0.75,alx:true,
+ kodiak:{n:'Kodiak M-70 6×6',yr:1996,cap:14,mass:9500,drag:4.0,top:95,brake:7,tank:220,fuelM:1.15,partM:1.1,price:21000,tough:0.75,alx:true,
   L:806,wr:200,wf:680,r:50,h:362,ly:150,tl:130,cyl:6,lugsF:8,lugsR:8,lugTool:'w19',idle:600,red:2400,tq:1350,pk:1300,gears:[12,22,34,48,62,78,98],drv:0.85,shift:0.5,
   eng:{base:0.88,cut:500,clatter:0.1,vol:1.2},horn:[[180,0.9],[220,0.9]],names:{tiresR:'Rear bogie tires'},paints:['#4b5a32','#6b6a48','#3a4230'],
   desc:'A 1996 ex-army 6×6 cargo truck with a canvas-covered bed. Fourteen slots, a 10 t payload, all-wheel drive, and parts that wear 25% slower. Slow, but nothing stops it.',
@@ -1036,7 +1120,8 @@ const CARGO=[
   {n:'Frozen food',s:[2,6],kg:200,frag:0.6,pay:1.6,cold:true},{n:'Ice cream',s:[1,3],kg:120,frag:0.7,pay:1.85,cold:true,tight:true},
   {n:'Luxury goods',s:[2,4],kg:150,frag:1.7,pay:2.3,rep:3,alxBan:'decadent foreign luxuries'},{n:'Bulk grain',s:[10,16],kg:1100,frag:0.1,pay:1.15},
   {n:'Shipping container',s:[16,20],kg:1000,frag:0.3,pay:1.35,rep:3},
-  {n:'Sealed crate',s:[1,1],kg:40,frag:0.5,pay:0,hidden:true}
+  {n:'Sealed crate',s:[1,1],kg:40,frag:0.5,pay:0,hidden:true},
+  {n:'Treasury gold',s:[1,1],kg:300,frag:0.2,pay:0,hidden:true,gold:true}
 ];
 const TIERS={used:{n:'Used',m:0.4,d:'45–70% condition'},oem:{n:'OEM',m:1,d:'new, 100%'},perf:{n:'Performance',m:1.8,d:'new, wears 40% slower'}};
 const insurance=v=>Math.round((8+12*VEH[v.type].partM)*DF().costs);
@@ -1096,7 +1181,7 @@ function newVehicle(type,mode,conds,paint){
 function newGame(diff){diff=DIFFS[diff]?diff:'normal';
   S={v:2,diff,awake:0,dayTemp:0,story:{ch:1,flags:{},pages:[]},riders:[],money:DIFFS[diff].money,rep:1,city:0,day:1,clock:8*60,cur:0,vehicles:[newVehicle('bug','starter')],inv:{},sup:{jerry:0,jump:0,jammer:0,wrap:0},
      tools:{impact:false,torque:false,scanner:false,stetho:false},impactOn:true,jobs:[],taken:[],jid:1,loan:0,dayStart:DIFFS[diff].money,jackpot:2500,casinoNet:0,lot:null,
-     stats:{deliveries:0,km:0,earned:0},seenHelp:false,pass:null,alx:null,junk:[]};
+     stats:{deliveries:0,km:0,earned:0},seenHelp:false,pass:null,alx:null,junk:[],bounty:0,bountyLvl:0,cop:{joined:false,done:0,stay:1},mg:null,mission:null};
   genJobs();
 }
 function migrate(o){
@@ -1112,7 +1197,7 @@ function migrate(o){
     const n=partFs(p.id,v.type).length;if(!Array.isArray(st.fst)||st.fst.length!==n)st.fst=range(n).map(()=>({p:1,tq:0.85,seized:false,soak:0,ang:0}))}}
   o.cur=clamp(o.cur|0,0,o.vehicles.length-1);o.loan=o.loan||0;if(!o.story)o.story={ch:1,flags:{intro:true},pages:[]};o.passenger=null;o.riders=[];if(!DIFFS[o.diff])o.diff='normal';o.awake=o.awake||0;o.dayTemp=o.dayTemp||0;if(o.jackpot==null)o.jackpot=2500;o.casinoNet=o.casinoNet||0;for(const v of o.vehicles){v.up=v.up||{};if(v.up.tune){v.up.ecu=true;delete v.up.tune}if(v.mileage==null)v.mileage=150000}if(o.dayStart==null)o.dayStart=o.money;
   if(o.inv)for(const k of Object.keys(o.inv)){if(k.split(':').length===2){o.inv[k+':oem']=(o.inv[k+':oem']||0)+o.inv[k];delete o.inv[k]}}o.taken=o.taken||[];o.jobs=o.jobs||[];o.inv=o.inv||{};o.sup=o.sup||{jerry:0,jump:0};o.sup.jammer=o.sup.jammer||0;o.sup.wrap=o.sup.wrap||0;
-  o.pass=o.pass||null;o.alx=o.alx||null;o.junk=o.junk||[];
+  o.pass=o.pass||null;o.alx=o.alx||null;o.junk=o.junk||[];o.bounty=o.bounty||0;o.bountyLvl=o.bountyLvl||0;o.cop=o.cop||{joined:false,done:0,stay:1};o.mg=o.mg||null;o.mission=o.mission||null;if(o.mission&&o.mission.stage==='chasing')o.mission=null;
   return o;
 }
 function save(){try{localStorage.setItem('haulwrench_v1',JSON.stringify(S))}catch(e){}}
@@ -1608,8 +1693,9 @@ function renderGaragePanel(){
      h+=`<div class="card story"><h3>${si.t}</h3><div class="muted" style="color:var(--fg)">${si.o}</div>
       <div class="row"><img src="${faceImg(np)}" alt="" style="width:44px;height:44px;border-radius:6px"><div class="pinfo"><b>${np.n}</b><br><span class="muted">${np.role} · ${CITIES[S.city].n}</span></div>
       <button class="btn ${hot?'pri':''}" data-act="townnpc">${hot?'Find in town  ●':'Find in town'}</button></div></div>`}
-    if(S.city===ALX){const home=S.alx&&S.alx.from!=null?S.alx.from:ALX_GATE;
-      h+=`<div class="card alxcard"><h3>Alterax · garrison city</h3><div class="muted" style="color:var(--fg)">Parts and vehicles are 10% cheaper here, and the army dealer sells vehicles you can’t buy anywhere else. Visitors may stay <b>one night</b>: after you sleep, the garrison sends you home.</div>
+    h+=bountyCard()+missionCard();
+    if(S.city===ALX){const home=S.alx&&S.alx.from!=null?S.alx.from:ALX_GATE,stay=(S.cop&&S.cop.stay)||1,left=stay-((S.alx&&S.alx.nights)||0);
+      h+=`<div class="card alxcard"><h3>Alterax · garrison city</h3><div class="muted" style="color:var(--fg)">Parts and vehicles are 10% cheaper here, and the army dealer sells vehicles you can’t buy anywhere else. Your permit: <b>${left} more night${left===1?'':'s'}</b> (${stay} in total). When it runs out, the garrison sends you home. Work for the military police to extend it.</div>
        ${S.taken.length?'':`<div class="row"><button class="btn" data-act="gohome" data-arg="${home}" ${issues.length?'disabled':''}>Drive home to ${CITIES[home].n} <small>${distKm(ALX,home)} km</small></button></div>`}</div>`}
     else if(S.pass||S.taken.some(j=>j.to===ALX))h+=passCard();
     h+=`<div class="card job"><h3>Deliveries aboard</h3>`;
@@ -1628,7 +1714,7 @@ function renderGaragePanel(){
     h+=`</div><div class="grid2">
       <button class="btn" data-act="gfuel" ${vs.fuel>=tankCap()-0.5?'disabled':''}>Refuel <small>${money((tankCap()-vs.fuel)*fuelPrice())}</small></button>
       <button class="btn" data-act="charge" ${vs.soc>0.95?'disabled':''}>Charge batt. <small>$15</small></button>
-      <button class="btn" data-act="sleep">${S.city===ALX?'Sleep & leave':'Sleep'} <small>−${money(S.vehicles.reduce((a,v)=>a+insurance(v),0))}</small></button>
+      <button class="btn" data-act="sleep">${S.city===ALX&&((S.alx&&S.alx.nights)||0)+1>=((S.cop&&S.cop.stay)||1)?'Sleep & leave':'Sleep'} <small>−${money(S.vehicles.reduce((a,v)=>a+insurance(v),0))}</small></button>
       <button class="btn" data-act="gtab" data-arg="repair">Diagnose →</button></div>
       <div class="muted mono" style="color:${(S.awake||0)/60*DF().fatigue>14?'var(--warn)':''}">Awake ${Math.floor((S.awake||0)/60)} h · Air ${Math.round(ambient())}°C · Fuel here $${fuelPrice().toFixed(2)}/L</div>
       <div class="muted mono">Spares ${vs.spare} · Jerry cans ${S.sup.jerry} · Jump packs ${S.sup.jump} · Cam jammers ${S.sup.jammer||0}</div>`;
@@ -1930,7 +2016,7 @@ function renderBenchPanel(){
 
 /* ================= DRIVE ================= */
 const drive={route:null};
-const keys={gas:false,brake:false,left:false,right:false},touch={gas:false,brake:false,left:false,right:false};
+const keys={gas:false,brake:false,left:false,right:false,fire:false},touch={gas:false,brake:false,left:false,right:false,fire:false};
 function makeRoute(from,to,test){
   const seed=test?from*991+17:from*131+to*17+(from<to?0:5000);const r=mulberry(seed+999);
   const len=test?1600:distKm(from,to)*1000;
@@ -1965,6 +2051,8 @@ function startDrive(test,to,opt){opt=opt||{};
     modal(`<h2>Click… click…</h2><p>The starter barely turns. The battery is too weak to crank the engine (charge ${Math.round(V().soc*100)}%, battery condition ${V().parts.battery.know.lvl===3?pct(V().parts.battery.cond):'unknown'}).</p>
       <div class="row"><button class="btn pri" data-act="charge">Charge battery $15</button>${S.sup.jump?'<button class="btn" data-act="jumpself">Use jump pack</button>':''}<button class="btn" data-act="close">Close</button></div>`);return}
   if(!test&&!opt.free&&!S.taken.some(j=>j.to===+to)){toast('No cargo for that stop');return}
+  if(!test&&+to===ALX&&S.bounty>0&&!opt.wanted){modal(`<h2 style="color:var(--bad)">You're wanted in Alterax</h2><p>There's a ${money(S.bounty)} bounty on your head. Sergeant Draskel has your face on the wall: the border guards will shoot you on sight. Pay the bounty at a pass office first.</p>
+    <div class="row"><button class="btn pri" data-act="townat" data-arg="passoffice">Go to the pass office</button><button class="btn danger" data-act="goalxw" data-arg="${to}">Drive there anyway</button><button class="btn" data-act="close">Cancel</button></div>`);return}
   if(!test&&+to===ALX&&!S.pass&&!opt.nopass){modal(`<h2>No Alterax pass</h2><p>The Alterax border guards shoot anyone who turns up without a valid pass. A pass costs ${money(ALX_PASS)} and covers one trip there and back.</p>
     <div class="row"><button class="btn pri" data-act="townat" data-arg="passoffice">Go to the pass office</button><button class="btn danger" data-act="goalx" data-arg="${to}">Drive without one</button><button class="btn" data-act="close">Cancel</button></div>`);return}
   if(!test&&S.city===ALX){S.pass=null;S.alx=null} // the pass covers one trip there and back
@@ -1981,6 +2069,12 @@ function startDrive(test,to,opt){opt=opt||{};
   const legJobs=test?[]:S.taken.filter(j=>j.to===R.to);
   dmsg(test?'Test drive: loop around town and stop in the yellow bay.':legJobs.length?`${legJobs.length} deliver${legJobs.length>1?'ies':'y'} for ${CITIES[R.to].n}. Park in the yellow bay.`:`Heading to ${CITIES[R.to].n}. Park in the yellow bay.`,'#f2b51c',5);
   if(R.alx==='in')dmsg(`Alterax is ${(R.len/1000).toFixed(1)} km away, through the jungle. Stop at the border with your pass.`,'#9cc7e8',5);
+  Object.assign(drive,{legPay:legJobs.reduce((a,j)=>a+j.pay,0),huntAt:!test&&S.bounty>0?35+Math.random()*45:0,sus:null,convoy:null,tracer:null,gunCd:0});
+  if(S.bounty>0&&!test)dmsg(`You're wanted (${money(S.bounty)}). Expect bounty hunters on this road.`,'#e4493b',5);
+  const M=S.mission;
+  if(!test&&opt.hunt&&M&&M.type==='hunt'){R.events=(R.events||[]).filter(e=>!['hitch','stranded','police','soldier','crate'].includes(e.type));
+    drive.sus={name:M.name,type:M.sus,paint:rpick(VEH[M.sus].paints),x:170,v:12,vmax:M.vmax,hp:M.hp,hp0:M.hp,rot:0,boxT:0,ph:Math.random()*6};M.stage='chasing';dmsg(`${M.name} bolts out of town in a ${VEH[M.sus].n}! After them!`,'#e4493b',6);SFX.siren()}
+  if(!test&&M&&M.type==='convoy'&&S.taken.some(j=>j.special==='gold'&&j.to===R.to)){drive.convoy={on:true,hp:M.hp??100,x:0,rot:0,att:[],waves:[0.25,0.5,0.78].map(f=>({x:R.len*f+(Math.random()-0.5)*R.len*0.08,done:false}))};dmsg(`Treasury convoy rolling to ${CITIES[R.to].n}. Stay close to the lead truck and watch your mirrors.`,'#f0dc8a',6)}
   if(!test&&S.sup.wrap>0&&S.taken.some(j=>j.to===R.to)){S.sup.wrap--;drive.wrap=true;dmsg(`Load wrapped in bubble wrap: 10% less cargo damage this drive. (${S.sup.wrap} left)`,'#62c06c',5)}
   if(!test&&R.cams.length&&S.sup.jammer>0){S.sup.jammer--;drive.jam=true;dmsg(`Camera jammer on: ${R.cams.length} speed camera${R.cams.length>1?'s':''} on this road won't see you. (${S.sup.jammer} left)`,'#62c06c',5)}
   if(drive.rain)dmsg('Rain on the road. Less grip, longer stops.','#9cc7e8',4);
@@ -2192,7 +2286,8 @@ function stepDrive(dt){
     else if(e.type==='works'){const mx=e.x+e.len/2;if(!e.fined&&ox<mx&&d.x>=mx&&av*3.6>30+DF().tol+3){e.fined=true;const f=Math.round((60+(av*3.6-30)*3)*DF().fine);S.money-=f;d.fines+=f;d.flash=0.3;dmsg(`Speeding through roadworks! Fine ${money(f)}.`,'#e4493b',4)}}}
   if(R.alx){const seg=Math.floor(d.x/800);if(seg!==d.rainSeg){d.rainSeg=seg;const p=0.12+0.65*jungleDepth(R,d.x),was=d.rain;d.rain=was?Math.random()<Math.min(0.95,p+0.25):Math.random()<p;
     if(d.rain&&!was)dmsg('Rain sweeps in through the canopy. Less grip.','#9cc7e8',4);else if(!d.rain&&was)dmsg('The rain eases off.','#9cc7e8',3)}}
-  if(R.alx&&chaseStep(dt,av))return;
+  if((R.alx||d.chase||S.bounty>0)&&chaseStep(dt,av))return;
+  missionStep(dt,av);gunStep(dt);$('#bFire').hidden=!S.mg;
   if(riders().length&&d.t>(d.chatNext||0)){d.chatNext=d.t+24+Math.random()*18;const rs=riders();
     if(rs.length>1&&Math.random()<0.3){const q=rpick(DUO);dmsg(`${rs[0].name}: “${q[0]}”`,'#bfe3ff',6);dmsg(`${rs[1].name}: “${q[1]}”`,'#d6c8ff',6)}
     else{const p=rpick(rs),pool=p.lou?LOU_LINES:p.soldier?SOLDIER_LINES:p.pi!=null?HITCH[p.pi].ride.concat(CHATTER.slice(0,3)):CHATTER;dmsg(`${p.name}: “${rpick(pool)}”`,'#bfe3ff',6)}}
@@ -2281,7 +2376,7 @@ function arrive(){
     const ban=toAlx&&cg.alxBan&&!escort;
     if(ban){pay=0;const f=Math.round(250*DF().fine);S.money-=f;d.fines+=f;insp+=`<li style="color:var(--bad)">✘ <b>${cg.n}</b>: banned (${cg.alxBan}). Confiscated, no pay, fine ${money(f)}.</li>`}
     else if(toAlx)insp+=`<li style="color:var(--ok)">✔ ${cg.n}: cleared${escort&&cg.alxBan?' (your soldier passenger talked them out of it)':''}</li>`;
-    const drep=ban?-0.3:dmg<5&&!late?0.15:(late||dmg>40)?-0.25:0;total+=pay;drepT+=drep;
+    const drep=ban?-0.3:dmg<15&&!late?(early?0.4:0.3):(late||dmg>40)?-0.25:0.1;total+=pay;drepT+=drep;
     rows+=`<tr><td>${CARGO[j.cargo].n}<br><span class="muted">${j.slots} slot${j.slots>1?'s':''}</span></td><td class="mono">${money(j.pay)}</td><td class="mono" style="color:${dmg>10?'var(--bad)':'var(--fg)'}">${Math.round(dmg)}%</td>
       <td class="mono" style="color:${late||ban?'var(--bad)':'var(--ok)'}">${ban?'confiscated':late?'late −30%':early?(cg.express?'early +30%':'early +15%'):'on time'}${cg.express&&VD().express?' · GT +50%':''}</td><td class="mono" style="color:var(--hazard)"><b>${money(pay)}</b></td></tr>`}
   const extra=arriveHooks(here);
@@ -2291,7 +2386,7 @@ function arrive(){
   modal(`<h2>${here.length?'Delivered to':'Arrived in'} ${CITIES[R.to].n}</h2>
     ${toAlx&&here.length?`<div class="card"><h3>Cargo inspection</h3><ul class="insp">${insp}</ul></div>`:''}
     ${rows?`<table><tr><th>Load</th><th>Rate</th><th>Damage</th><th>Time</th><th>Paid</th></tr>${rows}</table>`:''}
-    ${chaseTxt}${extra}${toAlx?'<p class="muted">Welcome to Alterax: parts and vehicles are 10% cheaper here. You may stay one night; after you sleep, the garrison sends you home.</p>':''}<p>Total <b class="mono" style="color:var(--hazard)">${money(total)}</b> · fines on this leg ${money(d.fines)} · reputation ${drepT>=0?'+':''}${drepT.toFixed(2)} → ${S.rep.toFixed(2)} ★</p>
+    ${chaseTxt}${extra}${toAlx?`<p class="muted">Welcome to Alterax: parts and vehicles are 10% cheaper here. Your permit allows ${(S.cop&&S.cop.stay)||1} night${((S.cop&&S.cop.stay)||1)>1?'s':''}. The military police hire anyone with a clean record.</p>`:''}<p>Total <b class="mono" style="color:var(--hazard)">${money(total)}</b> · fines on this leg ${money(d.fines)} · reputation ${drepT>=0?'+':''}${drepT.toFixed(2)} → ${S.rep.toFixed(2)} ★</p>
     ${S.taken.length?`<p class="muted">${S.taken.length} load${S.taken.length>1?'s':''} still aboard. You can keep going or stop at the bay here first (job timers pause in the bay).</p>`:'<p class="muted">Parts wore down on the way. Your old readings are out of date.</p>'}
     <div class="row">${nextStopButtons()}<button class="btn ${S.taken.length?'':'pri'}" data-act="toGarage">Service bay in ${CITIES[R.to].n}</button></div>`);
   save();
@@ -2331,9 +2426,10 @@ const RC=1.05; // depth of the driving lane inside the road band, in metres from
 function renderDrive(t){
   const d=drive,R=d.route,hr=hourNow(),Vd=VD();
   const targetPpm=clamp(W*0.3,170,360)/Math.max(8,Math.min(Vd.L*K,11))*(1-0.32*clamp(Math.abs(d.v)/28,0,1));
-  const chaseCam=!!(d.chase&&d.chase.hx!=null&&d.x-d.chase.hx<140); // pull the camera forward so the Humvee behind you is on screen
-  d.camS=lerp(d.camS||0.24,chaseCam?0.58:0.24,0.03);
-  d.ppm=d.ppm?lerp(d.ppm,targetPpm*(chaseCam?0.6:1),0.04):targetPpm;const ppm=d.ppm;
+  // frame the action: pursuers or raiders behind you pull the camera forward, a suspect ahead pulls it back
+  const chaseCam=!!((d.chase&&d.chase.hx!=null&&d.x-d.chase.hx<140)||(d.convoy&&d.convoy.att.length)),susCam=!!(d.sus&&!d.sus.gone&&d.sus.x-d.x<120);
+  d.camS=lerp(d.camS||0.24,chaseCam?0.58:susCam?0.1:0.24,0.03);
+  d.ppm=d.ppm?lerp(d.ppm,targetPpm*(chaseCam||susCam?0.6:1),0.04):targetPpm;const ppm=d.ppm;
   const tsx=W*d.camS,gy=H*0.6,midX=d.x-(Vd.L-(Vd.wr+Vd.wf)/2)*K;
   d.camH=lerp(d.camH,roadH(R,midX),0.08);
   const toY=wx=>gy-(roadH(R,wx)-d.camH)*ppm, toX=wx=>tsx+(wx-midX)*ppm;
@@ -2524,13 +2620,17 @@ function renderDrive(t){
     const a=[toX(rx),toY(rx)+0.34*ppm],b=[toX(fx),toY(fx)+0.34*ppm],an=Math.atan2(a[1]-b[1],a[0]-b[0]);
     ctx.save();ctx.translate(a[0],a[1]);ctx.rotate(an);ctx.fillStyle=`rgba(0,0,0,${0.22-dk*0.1})`;ctx.beginPath();ctx.ellipse(-((T.wr+T.wf)/2-T.wr)*tsc,ppm*0.04,T.L*tsc*0.55,ppm*0.14,0,0,Math.PI*2);ctx.fill();
     ctx.scale(-tsc,tsc);ctx.translate(-T.wr,0);c.vm=ctx.getTransform();DRAWV[c.type](ctx,{paint:c.paint,rot:c.rot,lightOn:hr>=20||hr<6.2,mid:(T.wr+T.wf)/2});ctx.restore()}
-  // Alterax patrol Humvee chasing in your lane
-  const ch=d.chase;if(ch){ch.vm=null;if(ch.hx!=null){const T=VEH.jaguar,ts=ppm*K,hrw=ch.hx-(T.L-T.wr)*K,hfw=ch.hx-(T.L-T.wf)*K;
-    if(ch.hx>viewL-10&&hrw<viewR+10){const a1=[toX(hrw),toY(hrw)+RC*ppm],a2=[toX(hfw),toY(hfw)+RC*ppm];
-      ctx.save();ctx.translate(a1[0],a1[1]);ctx.rotate(Math.atan2(a2[1]-a1[1],a2[0]-a1[0]));ctx.fillStyle=`rgba(0,0,0,${0.3-dk*0.15})`;ctx.beginPath();ctx.ellipse(((T.wr+T.wf)/2-T.wr)*ts,ppm*0.06,T.L*ts*0.56,ppm*0.2,0,0,Math.PI*2);ctx.fill();
-      ctx.scale(ts,ts);ctx.translate(-T.wr,0);ch.vm=ctx.getTransform();DRAWV.jaguar(ctx,{paint:'#4b5a32',rot:ch.rot,turret:true,lightOn:true,mid:(T.wr+T.wf)/2});
-      const ph=Math.floor(t/170)%2;ctx.fillStyle=ph?'#ff3b2f':'#3a6bff';ctx.fillRect(250,-182,20,8);ctx.restore();
-      const lp=ch.vm.transformPoint(new DOMPoint(260,-180));tlGlow.push([lp.x,lp.y,ph?'#ff3b2f':'#3a6bff'])}}}
+  // vehicles in your lane: pursuers behind, a fleeing suspect or the convoy lead truck ahead, convoy raiders behind
+  const drawFoe=(front,type,paint,rot,o)=>{const T=VEH[type],ts=ppm*K,rx=front-(T.L-T.wr)*K,fx=front-(T.L-T.wf)*K;if(front<viewL-10||rx>viewR+10)return null;
+    const a1=[toX(rx),toY(rx)+RC*ppm],a2=[toX(fx),toY(fx)+RC*ppm];ctx.save();ctx.translate(a1[0],a1[1]);ctx.rotate(Math.atan2(a2[1]-a1[1],a2[0]-a1[0]));
+    ctx.fillStyle=`rgba(0,0,0,${0.3-dk*0.15})`;ctx.beginPath();ctx.ellipse(((T.wr+T.wf)/2-T.wr)*ts,ppm*0.06,T.L*ts*0.56,ppm*0.2,0,0,Math.PI*2);ctx.fill();
+    ctx.scale(ts,ts);ctx.translate(-T.wr,0);const vm=ctx.getTransform();DRAWV[type](ctx,{paint,rot,turret:o.gun&&type==='jaguar',lightOn:o.lights||hr>=20||hr<6.2,mid:(T.wr+T.wf)/2,load:o.load||0});
+    if(o.gun&&type!=='jaguar')drawTurret(ctx,T);
+    if(o.bar){const ph=Math.floor(t/170)%2,bx=type==='jaguar'?250:T.L*0.42,by=type==='jaguar'?-182:-T.h-8;ctx.fillStyle=ph?'#ff3b2f':'#3a6bff';ctx.fillRect(bx,by,20,8);const lp=vm.transformPoint(new DOMPoint(bx+10,by));tlGlow.push([lp.x,lp.y,ph?'#ff3b2f':'#3a6bff'])}
+    ctx.restore();return vm};
+  const ch=d.chase;if(ch){ch.vm=ch.hx!=null?drawFoe(ch.hx,ch.u.type,ch.u.paint,ch.rot,{gun:true,bar:true,lights:true}):null}
+  if(d.sus&&!d.sus.gone)d.sus.vm=drawFoe(d.sus.x,d.sus.type,d.sus.paint,d.sus.rot,{lights:true});
+  if(d.convoy){const cv=d.convoy;cv.vm=drawFoe(cv.x,'kodiak','#4b5a32',cv.rot,{bar:true,load:14});for(const a of cv.att)a.vm=drawFoe(a.x,'pickup','#7a4a2a',a.rot,{gun:true})}
   // vehicle: wheels sit on the lane line; its transform is reused for its lights
   const rwx=d.x-(Vd.L-Vd.wr)*K,fwx=d.x-(Vd.L-Vd.wf)*K,sr=[toX(rwx),toY(rwx)+RC*ppm],sf=[toX(fwx),toY(fwx)+RC*ppm];
   const ang=Math.atan2(sf[1]-sr[1],sf[0]-sr[0]),s=ppm*K;
@@ -2538,7 +2638,7 @@ function renderDrive(t){
   const idleShake=d.engineOn&&d.crank<=0&&Math.abs(d.v)<0.3?Math.sin(t*0.09)*0.8*(1+(1-C('plugs'))*2):0;
   ctx.save();ctx.translate(sr[0],sr[1]);ctx.rotate(ang);ctx.scale(s,s);ctx.translate(-Vd.wr,0);d.vm=ctx.getTransform();
   DRAWV[V().type](ctx,{paint:V().paint,rot:d.rot,bodyOff:d.susY*76+idleShake+(d.misfire>0?2:0),pitch:d.pitch,mid:(Vd.wr+Vd.wf)/2,flatF:d.flatF,flatR:d.flatR,wobF:d.wobF,wobR:d.wobR,lightOn:hr>=20||hr<6.2,load:R.test?0:usedSlots()});
-  if(V().up.plow)drawPlow(ctx,Vd,V().plow??100);
+  if(V().up.plow)drawPlow(ctx,Vd,V().plow??100);if(S.mg)drawTurret(ctx,Vd,true);
   ctx.restore();
   for(const e of evs)if(e.type==='deer'&&e.t0&&!e.done&&e.y>=RC)drawDeer(toX(e.x),toY(e.x)+e.y*ppm,ppm,t);
   for(const e of evs)if(e.type==='river'&&e.x<viewR&&e.x+e.len>viewL)bandR(e.x,e.x+e.len,RC-0.42,1.95,`rgba(${dk>0.3?'30,58,72':'63,127,148'},.62)`);
@@ -2579,7 +2679,7 @@ function renderDrive(t){
   {const th=(S.awake||0)/60*DF().fatigue;if(th>14&&!lowGfx){const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.35,W/2,H/2,Math.max(W,H)*0.7);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,`rgba(0,0,0,${clamp((th-14)/8,0,0.6)})`);ctx.fillStyle=vg;ctx.fillRect(0,0,W,H)}
    if(d.blink>0){const k=Math.sin(clamp(d.blink/0.9,0,1)*Math.PI),hh=H*0.5*k;ctx.fillStyle='#000';ctx.fillRect(0,0,W,hh);ctx.fillRect(0,H-hh,W,hh)}}
   if(d.flash>0){ctx.fillStyle=`rgba(255,255,255,${d.flash*2})`;ctx.fillRect(0,0,W,H)}
-  if(ch||d.dead)drawPursuit(t,ppm,gy,tsx);
+  if(ch||d.dead||d.tracer)drawPursuit(t,ppm,gy,tsx);
   renderHUD();
 }
 /* tracers from the Humvee, the attack helicopter and its rockets, and the explosion when you die */
@@ -2592,9 +2692,13 @@ function drawHeli(x,y,s,t){ctx.save();ctx.translate(x,y);ctx.scale(s,s);
   const ph=(t*0.06)%2,rw=Math.abs(Math.cos(t*0.05))*92+8;ctx.fillStyle='rgba(20,22,24,.75)';ctx.fillRect(-rw,-29,rw*2,3);
   ctx.strokeStyle='rgba(20,22,24,.6)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(130,-12,12,ph*Math.PI,ph*Math.PI+0.6);ctx.stroke();ctx.beginPath();ctx.arc(130,-12,12,ph*Math.PI+Math.PI,ph*Math.PI+Math.PI+0.6);ctx.stroke();
   ctx.fillStyle=Math.floor(t/300)%2?'#ff3b2f':'#5a1a14';circ(ctx,40,12,2.5);ctx.fill();ctx.restore()}
+function drawTurret(c,T,mine){const x=T.L*(mine?0.42:0.48),y=-(T.h||150)+(mine?4:0);c.fillStyle='#2b2e2a';c.fillRect(x-16,y-14,32,14);c.fillStyle='#1b1d1f';c.fillRect(x-4,y-26,6,14);c.fillRect(x-2,y-28,74,6);c.fillRect(x+66,y-32,8,12)}
+const muzzleOf=(type)=>type==='jaguar'?[312,-212]:[VEH[type].L*0.48+74,-(VEH[type].h||150)-25];
 function drawPursuit(t,ppm,gy,tsx){const d=drive,ch=d.chase,Vd=VD();
+  if(d.tracer&&d.vm){const tr=d.tracer,m=d.vm.transformPoint(new DOMPoint(Vd.L*0.42+74,-(Vd.h||150)-21));ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle='rgba(255,230,140,.95)';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(tr.x,tr.y);ctx.stroke();
+    const fl=ctx.createRadialGradient(m.x,m.y,1,m.x,m.y,0.8*ppm);fl.addColorStop(0,'rgba(255,240,170,.9)');fl.addColorStop(1,'rgba(255,160,40,0)');ctx.fillStyle=fl;ctx.fillRect(m.x-ppm,m.y-ppm,2*ppm,2*ppm);ctx.restore()}
   const tgt=d.vm?d.vm.transformPoint(new DOMPoint(Vd.L*0.45,-Vd.h*0.45)):new DOMPoint(tsx,gy);
-  if(ch&&ch.firing&&ch.vm){const m=ch.vm.transformPoint(new DOMPoint(312,-212));ctx.save();ctx.globalCompositeOperation='lighter';
+  if(ch&&ch.firing&&ch.vm){const mz=muzzleOf(ch.u.type),m=ch.vm.transformPoint(new DOMPoint(mz[0],mz[1]));ctx.save();ctx.globalCompositeOperation='lighter';
     const fl=ctx.createRadialGradient(m.x,m.y,1,m.x,m.y,0.9*ppm);fl.addColorStop(0,`rgba(255,235,150,${0.5+Math.random()*0.5})`);fl.addColorStop(1,'rgba(255,160,40,0)');ctx.fillStyle=fl;ctx.fillRect(m.x-ppm,m.y-ppm,2*ppm,2*ppm);
     ctx.strokeStyle='rgba(255,220,120,.85)';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<4;i++){const k=((t*0.004+i/4)%1),jx=(Math.random()-0.5)*0.8*ppm,jy=(Math.random()-0.5)*0.8*ppm,ax=m.x+(tgt.x+jx-m.x)*k,ay=m.y+(tgt.y+jy-m.y)*k,bx=m.x+(tgt.x+jx-m.x)*Math.min(1,k+0.08),by=m.y+(tgt.y+jy-m.y)*Math.min(1,k+0.08);ctx.moveTo(ax,ay);ctx.lineTo(bx,by)}ctx.stroke();ctx.restore()}
   if(ch&&ch.heli){const p=clamp(ch.heli.t/15,0,1),e=1-Math.pow(1-p,2),hx=lerp(W+300,Math.min(W-160,tgt.x+W*0.22),e),hy=lerp(gy*0.3,gy*0.66,e)+Math.sin(t*0.003)*6,hs=clamp(ppm/20,1,2);drawHeli(hx,hy,hs,t);
@@ -2632,7 +2736,7 @@ function renderHUD(){
    ctx.fillStyle=bv>0.8?'#e4493b':'#b0574a';ctx.fillRect(px2+3,py2+ph-3-(ph-16)*bv,8,(ph-16)*bv);
    ctx.fillStyle='#62c06c';ctx.fillRect(px2+15,py2+ph-3-(ph-16)*gv,8,(ph-16)*gv);
    ctx.fillStyle='#9da5ac';ctx.font='700 9px "Share Tech Mono", monospace';ctx.fillText('B  G',px2+4,py2+10)}
-  {const tg=[];if(d.jam)tg.push('● CAM JAMMER');if(d.wrap)tg.push('● BUBBLE WRAP');if(V().up.plow)tg.push(`● PLOW ${Math.round(V().plow??100)}%`);
+  {const tg=[];if(S.bounty>0){ctx.fillStyle='#e4493b';ctx.font='700 12px "Share Tech Mono", monospace';ctx.fillText(`● WANTED ${money(S.bounty)}`,cx+2,cy+ch+68)}if(S.mg)tg.push(`● MG ${S.mg.ammo}`);if(d.jam)tg.push('● CAM JAMMER');if(d.wrap)tg.push('● BUBBLE WRAP');if(V().up.plow)tg.push(`● PLOW ${Math.round(V().plow??100)}%`);
    if(tg.length){ctx.fillStyle=(V().plow??100)<=0&&V().up.plow?'#e9a53a':'#62c06c';ctx.font='700 11px "Share Tech Mono", monospace';ctx.fillText(tg.join('  '),cx+2,cy+ch+36)}
    if(riders().length){ctx.fillStyle='#bfe3ff';ctx.font='600 11px Barlow, sans-serif';ctx.fillText('Riders: '+riders().map(r=>r.name).join(', '),cx+2,cy+ch+(tg.length?52:36))}}
   if(d.cruise>0){ctx.fillStyle='#62c06c';ctx.font='700 11px "Share Tech Mono", monospace';ctx.fillText('CRUISE '+Math.round(d.cruise*3.6),cx+12,cy+ch-24)}
@@ -2652,9 +2756,11 @@ function renderHUD(){
   const sx=cx+cw+60,sy=top;ctx.fillStyle='#fff';circ(ctx,sx,sy+18,22);ctx.fill();ctx.strokeStyle='#d0302a';ctx.lineWidth=5;circ(ctx,sx,sy+18,19);ctx.stroke();
   ctx.fillStyle='#111';ctx.font='900 17px Barlow, sans-serif';ctx.textAlign='center';ctx.fillText(lim,sx,sy+24);ctx.textAlign='left';
   if(d.chase){const c=d.chase,cw2=Math.min(W-24,460),cx2=(W-cw2)/2,cy2=top+60+(W<700?40:0),fl=Math.floor(d.t*4)%2;ctx.fillStyle=fl?'rgba(150,22,16,.94)':'rgba(30,44,130,.94)';rr(ctx,cx2,cy2,cw2,28,5);ctx.fill();
-    const hum=c.hx==null?(c.lost?'Humvee lost':`Humvee in ${Math.max(0,Math.ceil(30-c.t))} s`):`Humvee ${Math.max(0,Math.round(d.x-Vd.L*K-c.hx))} m behind`,heli=c.heli?(c.heli.t<15?`HELICOPTER IN ${Math.ceil(15-c.heli.t)} s`:'HELICOPTER OVERHEAD'):`heli in ${fmtT(Math.max(0,heliDelay()-c.t))}`;
-    ctx.fillStyle='#fff';ctx.font='700 13px "Share Tech Mono", monospace';ctx.textAlign='center';ctx.fillText(`PURSUIT · ${hum} · ${heli}`,W/2,cy2+19);ctx.textAlign='left'}
-  let my=top+70+(W<700?40:0)+(d.chase?36:0);ctx.font='600 15px Barlow, sans-serif';ctx.textAlign='center';
+    const un=c.u.n,hum=c.dead?`${un} destroyed`:c.hx==null?(c.lost?`${un} lost`:`${un} in ${Math.max(0,Math.ceil(c.spawn-c.t))} s`):`${un} ${Math.max(0,Math.round(d.x-Vd.L*K-c.hx))} m behind`,heli=c.heli?(c.heli.t<15?`HELICOPTER IN ${Math.ceil(15-c.heli.t)} s`:'HELICOPTER OVERHEAD'):c.heliAt===Infinity?'no air support':`heli in ${fmtT(Math.max(0,c.heliAt-c.t))}`;
+    ctx.fillStyle='#fff';ctx.font='700 13px "Share Tech Mono", monospace';ctx.textAlign='center';ctx.fillText(`${c.kind==='bounty'?'BOUNTY HUNT':'PURSUIT'} · ${hum} · ${heli}`,W/2,cy2+19);ctx.textAlign='left'}
+  {const sus=d.sus,cv=d.convoy,txt=sus&&!sus.done?`HUNT · ${sus.name} ${Math.max(0,Math.round(sus.x-VEH[sus.type].L*K-d.x))} m ahead · damage ${Math.round(100-sus.hp/sus.hp0*100)}%`:cv&&cv.on?`CONVOY · integrity ${Math.round(cv.hp)}% · raiders ${cv.att.length}`:'';
+   if(txt){const cw2=Math.min(W-24,460),cx2=(W-cw2)/2,cy2=top+60+(W<700?40:0)+(d.chase?32:0);ctx.fillStyle='rgba(40,70,30,.94)';rr(ctx,cx2,cy2,cw2,28,5);ctx.fill();ctx.fillStyle='#f0dc8a';ctx.font='700 13px "Share Tech Mono", monospace';ctx.textAlign='center';ctx.fillText(txt,W/2,cy2+19);ctx.textAlign='left'}}
+  let my=top+70+(W<700?40:0)+(d.chase?36:0)+((d.sus&&!d.sus.done)||(d.convoy&&d.convoy.on)?32:0);ctx.font='600 15px Barlow, sans-serif';ctx.textAlign='center';
   for(const m of d.msgs){ctx.globalAlpha=clamp(m.ttl,0,1);const w=ctx.measureText(m.text).width+20;ctx.fillStyle='rgba(16,19,22,.88)';ctx.fillRect(W/2-w/2,my-17,w,24);ctx.fillStyle=m.col;ctx.fillText(m.text,W/2,my);my+=28}
   ctx.globalAlpha=1;ctx.textAlign='left';
   const near=R.stations.find(s=>Math.abs(d.x-s)<60);
@@ -2666,7 +2772,9 @@ function renderHUD(){
   {const L=(R.lights||[]).find(L=>L.x>d.x&&L.x-d.x<70);if(L&&!prompt&&lightState(L)!=='green')prompt=(lightState(L)==='red'?'Red light':'Amber light')+` in ${Math.round(L.x-d.x)} m: stop at the line`}
   {const PR={police:'Police checkpoint: stop next to the officer',hitch:'Hitchhiker ahead: stop to pick them up',stranded:'Stranded driver ahead: stop to help',soldier:'Soldier hitching a ride: stop to pick them up',crate:'Supply crate by the road: stop to look',guard:'Alterax guard post ahead: keep to the speed limit',river:'River crossing ahead: slow to 30 km/h',border:'Alterax border control: stop at the gate',ford:'Flooded ford: slow to 20 km/h or the engine floods',tree:'Tree down across the road ahead! Slow down and stop',bandits:'Vehicle blocking the road ahead! Slow down'},DS={river:150,guard:150,border:160,tree:150,bandits:150};
    const e=(R.events||[]).find(e=>PR[e.type]&&!e.done&&!e.open&&!e.asked&&!e.splashed&&e.x>d.x-8&&e.x-d.x<(DS[e.type]||80));if(e&&!prompt)prompt=PR[e.type]}
-  if(d.chase&&!prompt)prompt=canHide(d.chase)?'You lost them! Stop anywhere to hide':d.chase.hx!=null?'Stop to surrender, or outrun the Humvee':'Patrol inbound: stop and wait to surrender';
+  if(d.chase&&!prompt)prompt=canHide(d.chase)?'You lost them! Stop anywhere to hide':d.chase.hx!=null?(S.mg?'Stop to surrender, outrun them, or fire back (Space)':`Stop to surrender, or outrun the ${d.chase.u.n}`):'Pursuers inbound: stop and wait to surrender, or keep going';
+  if(!prompt&&d.sus&&!d.sus.done)prompt=S.mg?'Catch the suspect: box them in or shoot (Space)':'Catch the suspect: box them in from behind';
+  if(!prompt&&d.convoy&&d.convoy.att.length)prompt=S.mg?'Raiders on the convoy! Shoot them (Space)':'Raiders on the convoy! Keep moving';
   if(prompt){ctx.font='700 14px Barlow, sans-serif';const w=ctx.measureText(prompt).width+20;ctx.fillStyle='rgba(242,181,28,.94)';ctx.fillRect(W/2-w/2,H-160,w,26);ctx.fillStyle='#16130c';ctx.textAlign='center';ctx.fillText(prompt,W/2,H-142);ctx.textAlign='left'}
   if(d.paused){ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(0,0,W,H)}
 }
@@ -2682,8 +2790,8 @@ function devMenu(){const d=drive,inDrive=scene==='drive'&&d.route&&!d.over;if(in
    <h3>Money &amp; reputation</h3><div class="row">${B('money:1000','+$1,000')}${B('money:10000','+$10,000')}${B('money:100000','+$100,000')}${B('debt','Clear loan')}${B('rep:1','+1 ★')}${B('rep:5','Max ★')}</div>
    <h3>Vehicle</h3><div class="row">${B('fix','Repair everything')}${B('fuel','Fill tank &amp; battery')}${B('mods','All mods on this vehicle')}${B('tools','All workshop tools')}${B('sup','+5 of every supply')}</div>
    <div class="muted">Get a brand-new vehicle:</div><div class="row">${[...VORDER,...ALXV].map(t=>B('veh:'+t,VEH[t].n)).join('')}</div>
-   <h3>Alterax</h3><div class="row">${B('pass:ok','Valid pass')}${B('pass:fake','Forged pass')}${B('alxjobs','Alterax jobs on the board')}</div>
-   ${inDrive?`<h3>This drive</h3><div class="row">${B('tp:border','Jump to the border')}${B('tp:end','Jump to the destination')}${B('chase','Start a pursuit')}${B('heli','Send the helicopter')}${B('calm','Call off pursuit')}${B('stop','Stop the vehicle')}</div>`:
+   <h3>Alterax</h3><div class="row">${B('bounty','+$1,000 bounty')}${B('clearb','Clear bounty')}${B('huntlvl','Hunters +1 tier')}${B('cop','Join military police')}${B('pass:ok','Valid pass')}${B('pass:fake','Forged pass')}${B('alxjobs','Alterax jobs on the board')}</div>
+   ${inDrive?`<h3>This drive</h3><div class="row">${B('hunt','Send bounty hunters')}${B('tp:border','Jump to the border')}${B('tp:end','Jump to the destination')}${B('chase','Start a pursuit')}${B('heli','Send the helicopter')}${B('calm','Call off pursuit')}${B('stop','Stop the vehicle')}</div>`:
      `<h3>Teleport</h3><div class="row">${CITIES.map((c,i)=>B('city:'+i,c.n,i===S.city?'pri':'')).join('')}</div>`}
    <h3>Time &amp; story</h3><div class="row">${B('time:8','Morning')}${B('time:13','Noon')}${B('time:22','Night')}${B('rest','Fully rested')}${B('story','Next story chapter')}${B('lot','New used-car lot')}</div></div>
    <div class="row"><button class="btn pri" data-act="setdone">Close</button></div>`)}
@@ -2699,12 +2807,17 @@ function devCmd(arg){const [c,v]=String(arg).split(':'),vs=V(),d=drive,inDrive=s
    case 'tools':for(const t of TOOL_UP)S.tools[t.id]=true;msg='All tools owned';break;
    case 'sup':S.sup.jerry+=5;S.sup.jump+=5;S.sup.jammer=(S.sup.jammer||0)+5;S.sup.wrap=(S.sup.wrap||0)+5;vs.spare+=5;msg='+5 jerry cans, jump packs, cam jammers and spares';break;
    case 'veh':{const nv=newVehicle(v,'new');S.vehicles.push(nv);if(!S.taken.length&&!inDrive){stopIdle(true);S.cur=S.vehicles.length-1;selPart='oil'}msg=`${VEH[v].n} added${S.taken.length||inDrive?' (switch after your deliveries)':''}`;break}
+   case 'bounty':S.bounty=(S.bounty||0)+1000;msg=`Bounty ${money(S.bounty)}`;break;
+   case 'clearb':S.bounty=0;S.bountyLvl=0;msg='Bounty cleared';break;
+   case 'huntlvl':S.bountyLvl=Math.min(UNITS.length-1,(S.bountyLvl||0)+1);msg=`Next hunters: ${UNITS[S.bountyLvl].n}`;break;
+   case 'cop':S.cop.joined=true;S.mg={ammo:800};msg='Military police member, 800 rounds';break;
+   case 'hunt':if(inDrive&&!d.chase){if(!(S.bounty>0))S.bounty=1000;startHunt();msg='Hunters on their way'}else msg='Only in a drive without a pursuit';break;
    case 'pass':S.pass={ok:v==='ok',flaw:v==='ok'?null:'seal',serial:'AX-'+String(100000+Math.floor(Math.random()*900000)),day:S.day,until:S.day+7,used:false};msg=v==='ok'?'Valid pass in your pocket':'Forged pass (no seal)';break;
    case 'alxjobs':if(S.city===ALX){msg='You are in Alterax: every job here already pays +75%';break}genJobs();S.jobs.slice(0,3).forEach(j=>{const km=distKm(S.city,ALX);j.pay=Math.round(j.pay/j.km*km*ALX_PAY/5)*5;j.to=ALX;j.km=km;j.deadline=Math.round(km*1000/15*1.7*DF().dl)});msg='3 Alterax jobs on the board';break;
    case 'city':if(inDrive){msg='Finish the drive first';break}S.city=+v;S.alx=+v===ALX?{from:ALX_GATE,day:S.day}:null;S.taken=[];genJobs();TOWN.city=-1;if(scene!=='garage')setScene('garage');msg=`Now in ${CITIES[+v].n}`;break;
    case 'tp':if(!inDrive)break;{const R=d.route,g=(R.events||[]).find(e=>e.type==='border');d.x=v==='border'&&g?g.x-60:R.len-40;d.v=0;d.cruise=0;msg=v==='border'?(g?'60 m before the border':'No border on this road'):'Just before the depot'}break;
    case 'chase':if(inDrive&&R0()&&!d.chase){startChase(99,60,true);msg='Pursuit started'}else msg='Only on an Alterax road';break;
-   case 'heli':if(inDrive&&d.chase){d.chase.t=Math.max(d.chase.t,heliDelay());msg='Helicopter scrambled'}else msg='Start a pursuit first';break;
+   case 'heli':if(inDrive&&d.chase){if(d.chase.heliAt===Infinity)d.chase.heliAt=d.chase.t;d.chase.t=Math.max(d.chase.t,d.chase.heliAt);msg='Helicopter scrambled'}else msg='Start a pursuit first';break;
    case 'calm':if(d.chase){d.chase=null;d.speedT=0;msg='Pursuit called off'}break;
    case 'stop':if(inDrive){d.v=0;d.cruise=0}break;
    case 'time':S.clock=+v*60;msg=`Clock set to ${v}:00`;break;
@@ -2727,6 +2840,7 @@ const VENUE={
  passoffice:{n:'Alterax pass office',sign:'ALTERAX PASSES',body:'#3a4a34',signc:'#e8c547',w:230,h:190},
  diner:{n:'Diner',sign:'DINER',body:'#8a6a4a',signc:'#ff9a6a',w:240,h:180},
  museum:{n:'Museum of the Republic',sign:'MUSEUM OF THE REPUBLIC',body:'#6b6a58',signc:'#e8c547',w:340,h:240},
+ police:{n:'Military police (work for Alterax)',sign:'MILITARY POLICE',body:'#2f3a4a',signc:'#9cc7e8',w:270,h:230},
  hq:{n:'Garrison office',sign:'GARRISON',body:'#4b5a32',signc:'#e8c547',w:260,h:230},
 };
 const venueName=id=>S.city===ALX?({dealer:'Army dealer',diner:'Mess hall',lot:'Army surplus lot'}[id]||VENUE[id].n):VENUE[id].n;
@@ -2746,7 +2860,7 @@ const LORE=[
  {t:'The Border Act · 1994',x:'Every outsider needs a pass, and every pass is checked by hand at the gate. Passes are printed by private contractors in Port Dunmore, which is why a few are not quite right. Sergeant Kova Draskel has guarded the gate since the first day. He has never taken a day off.'},
  {t:'The Republic Today',x:'Colonel Varn is eighty-one and rarely seen. The city runs on trade it pretends not to need: outside freight pays well because so few drivers dare the jungle road, the guard posts and the gate. Visitors may stay one night. The garrison prefers it that way.'},
 ];
-function townVenues(c){return c===ALX?['garage','depot','parts','hq','museum','dealer','lot','redline','diner']:['garage','depot','parts','diner','lot','dealer','redline','passoffice','casino']}
+function townVenues(c){return c===ALX?['garage','depot','parts','hq','police','museum','dealer','lot','redline','diner']:['garage','depot','parts','diner','lot','dealer','redline','passoffice','casino']}
 function buildTown(){const c=S.city;TOWN.city=c;let x=160;
   TOWN.venues=townVenues(c).map(id=>{const v=VENUE[id],o={id,x,w:v.w,door:x+v.w/2};x+=v.w+70;return o});TOWN.w=x+120;
   const at=TOWN.venues.find(v=>v.id===(c===ALX?'hq':'diner'));TOWN.npcX=at.x+at.w+32;
@@ -2773,7 +2887,7 @@ function townAct(){const n=TOWN.near;if(scene!=='town'||!n||!$('#modal').hidden)
 function openVenue(id){switch(id){
   case 'garage':return setScene('garage');case 'depot':return jobsModal();case 'parts':return shopModal('parts','parts');case 'lot':return shopModal('used','lot');
   case 'dealer':return shopModal('vehicles','dealer');case 'redline':return perfModal('mods');case 'casino':return casinoModal('wheel');case 'passoffice':return passOffice();
-  case 'diner':return dinerModal();case 'museum':return loreModal(0);case 'hq':return garrisonModal()}}
+  case 'diner':return dinerModal();case 'museum':return loreModal(0);case 'hq':return garrisonModal();case 'police':return policeModal()}}
 const dinerItems=()=>S.city===ALX?[['Mess-hall ration',5,90,'Rice, beans and something grey. Filling.'],['Strong tea',3,45,'Black, sweet, and alarmingly strong.']]:[['Coffee & pie',8,90,'The pie is always cherry. Nobody asks why.'],['Full breakfast',15,180,'Eggs, toast, bacon, regret.']];
 function dinerModal(){const alx=S.city===ALX;modal(`<h2>${alx?'Garrison mess hall':'Diner'}</h2><p class="muted">Food and coffee push your tiredness back. You’ve been awake ${Math.floor((S.awake||0)/60)} h.</p>
   <table>${dinerItems().map((it,i)=>`<tr><td><b>${it[0]}</b><br><span class="muted">${it[3]} −${it[2]/60} h tiredness</span></td><td style="text-align:right"><button class="btn pri" data-act="eat" data-arg="${i}" ${S.money<it[1]?'disabled':''}>${money(it[1])}</button></td></tr>`).join('')}</table>
@@ -2781,6 +2895,7 @@ function dinerModal(){const alx=S.city===ALX;modal(`<h2>${alx?'Garrison mess hal
 function passOffice(){const P=S.pass;modal(`<div class="talk"><img class="face" src="${faceImg({skin:'#e0b48f',hair:'#2a1a12',shirt:'#3a4a34',long:true,bg:'#2a3a2a'})}" alt=""><div class="pinfo"><b style="font-size:17px">Clerk Ana Vey</b> <span class="tag">Alterax pass office</span>
   <p>${P?'You already have a pass. One per traveller. If you want my opinion on it, I don’t have one. Not my department.':`One pass, one trip there and back. ${money(ALX_PASS)}. Fill in the form, sign here, here and here. Next.`}</p></div></div>
   <p class="muted">The passes come from private printers by the harbour. About one in twenty is… not quite right. Inspect yours before you drive.</p>
+  ${S.bounty>0?`<div class="card" style="border-color:var(--bad)"><b style="color:var(--bad)">Bounty on your name: ${money(S.bounty)}</b><div class="muted">“I can take that. Cash only. The hunters get the message within the hour.”</div><div class="row"><button class="btn danger" data-act="paybounty" data-arg="office" ${S.money<S.bounty?'disabled':''}>Pay ${money(S.bounty)}</button></div></div>`:''}
   <div class="row">${P?'<button class="btn" data-act="passview">Inspect your pass</button>':`<button class="btn pri" data-act="buypass" data-arg="office" ${S.money<ALX_PASS?'disabled':''}>Buy a pass ${money(ALX_PASS)}</button>`}<button class="btn" data-act="close">Back to the street</button></div>`)}
 function loreModal(i){i=clamp(i|0,0,LORE.length-1);const L=LORE[i];modal(`<h2>Museum of the Republic</h2><div class="card alxcard"><h3>Exhibit ${i+1} of ${LORE.length} · ${L.t}</h3><p style="color:var(--fg)">${L.x}</p></div>
   <div class="row">${i>0?`<button class="btn" data-act="lore" data-arg="${i-1}">← Previous</button>`:''}${i<LORE.length-1?`<button class="btn pri" data-act="lore" data-arg="${i+1}">Next exhibit →</button>`:''}<button class="btn" data-act="close">Back to the street</button></div>`)}
@@ -2821,7 +2936,7 @@ function drawFacade(v,x,gy,w,h,sc,t,dk,alx){const id=v.id,V2=VENUE[id],D=c=>mixH
     if(id==='museum'){ctx.fillStyle=D('#c8c2b0');for(let i=0;i<5;i++)ctx.fillRect(x+20*sc+i*(w-50*sc)/4,top+50*sc,12*sc,h-50*sc);ctx.beginPath();ctx.moveTo(x-6*sc,top);ctx.lineTo(x+w/2,top-34*sc);ctx.lineTo(x+w+6*sc,top);ctx.fill();
       ctx.fillStyle=D('#7a7a70');ctx.fillRect(x+w+8*sc,gy-26*sc,26*sc,26*sc);drawWalker(ctx,x+w+21*sc,gy-26*sc,32*sc,{skin:D('#8a8a80'),hair:D('#6a6a60'),shirt:D('#7a7a70'),hat:true,hatc:D('#6a6a60')},0,-1)}
     if(id==='casino'){const on=Math.floor(t/300)%2;ctx.fillStyle=on?'#ffd06a':'#7a5a20';for(let i=0;i<14;i++){circ(ctx,x+(i+0.5)*w/14,top+6*sc,3.5*sc);ctx.fill()}}
-    if(id==='passoffice'||id==='hq'||(alx&&id==='garage')){ctx.fillStyle='#8a8f88';ctx.fillRect(x+w-24*sc,top-70*sc,4*sc,70*sc);alxFlag(ctx,x+w-20*sc,top-70*sc,52*sc,32*sc,t*0.003+v.x)}
+    if(id==='passoffice'||id==='hq'||id==='police'||(alx&&id==='garage')){ctx.fillStyle='#8a8f88';ctx.fillRect(x+w-24*sc,top-70*sc,4*sc,70*sc);alxFlag(ctx,x+w-20*sc,top-70*sc,52*sc,32*sc,t*0.003+v.x)}
     if(id==='hq'){ctx.fillStyle=D('#a08a5a');for(let i=0;i<4;i++)for(let k=0;k<2;k++){ctx.beginPath();ctx.ellipse(x+14*sc+i*20*sc+k*10*sc,gy-(6+k*11)*sc,11*sc,6*sc,0,0,Math.PI*2);ctx.fill()}}
     const txt=venueSign(id);ctx.font=`900 ${Math.round(Math.min(26*sc,w/txt.length*1.5))}px "Big Shoulders Display", Impact, sans-serif`;const tw=ctx.measureText(txt).width+20*sc;
     ctx.fillStyle=D('#16130c');ctx.fillRect(x+w/2-tw/2,top+10*sc,tw,30*sc);ctx.fillStyle=V2.signc;ctx.textAlign='center';ctx.fillText(txt,x+w/2,top+33*sc);ctx.textAlign='left';
@@ -3108,6 +3223,7 @@ function helpModal(first){
   <li><b>Upgrade.</b> Buy used cars on the lot (inspect first: some sellers lie) or brand new from the dealer, and tune them at Redline Performance. Feeling lucky? The Lucky Lugnut Casino has a jackpot wheel and blackjack.</li>
   <li><b>Real-world rules.</b> Stop at red lights in town. Each vehicle has a payload limit. Cold engines are weak and thirsty until warm, wind changes your speed and fuel use, and staying awake too long makes you nod off at the wheel. Sleep resets it.</li>
   <li><b>Run a business.</b> Buy parts as Used, OEM or Performance. Chilled loads need the reefer van; express loads pay extra for early delivery. Insurance is charged each night, and the bank lends against your reputation.</li>
+  <li><b>Bounties and police work.</b> Escape an Alterax patrol and you get a bounty (the value of that trip’s deliveries, at least $1,000, plus 10%). Hunters then find you on every drive, anywhere, in faster and better-armed vehicles each time you get away. Pay it off at an Alterax pass office. With a clean name, the Alterax military police will hire you, whatever your reputation: drive an Alterax vehicle (buy or loan one), hunt fugitives or escort treasury gold, and use the roof machine gun (Space or FIRE, 80 rounds a minute, 800-round belt). Each finished job adds 5 nights to your Alterax permit, up to 10.</li>
   <li><b>Walk around town.</b> Press <i>Town</i> (or “Walk into …” in the garage) to step out onto the street. Walk with ←/→ or A/D and press E at a door or next to someone: parts shop (buy, and sell old parts from your trunk), used car lot, dealer, Redline Performance, the freight depot, the diner, the casino, the Alterax pass office, and the locals.</li>
   <li><b>On the road.</b> Up to two hitchhikers can ride with you. Stopped and tired? Sleep in the cab, but about 1 in 20 nights a thief takes 10% of your cash (1 in 5 and 25% on the jungle road to Alterax). Settings has volume up to 200%.</li>
   <li><b>Alterax.</b> A military city deep in the jungle, ${ALX_KM} km past Port Dunmore. Jobs to and from it pay +75%, and it sells parts and vehicles 10% cheaper, plus army vehicles you can’t buy anywhere else. You need a ${money(ALX_PASS)} pass for each trip there and back (about 1 in 20 is a forgery: inspect yours). There are no speed cameras out there: guard posts watch the road instead, and anyone they catch speeding gets chased. Stop at the border, keep under 60 km/h in the military zone, don’t bring contraband, and expect to leave after one night. Dying there sends you back to your garage on Easy and Normal; on Hard it ends the game.</li>
@@ -3177,19 +3293,19 @@ const ACT={
   buyveh:(type)=>{const v=VEH[type];if(v.alx&&S.city!==ALX)return;if(S.rep<(v.rep||0)){toast(`Needs ${v.rep} ★ reputation`);return}if(!buy(newPrice(type)))return;const nv=newVehicle(type,'new');S.vehicles.push(nv);
     if(!S.taken.length){stopIdle(true);S.cur=S.vehicles.length-1;selPart='oil'}thumbCache[type+nv.paint]=null;shopModal('vehicles');updateTop();save();toast(`Bought a ${v.n}. ${S.taken.length?'Switch to it after your deliveries.':'It is now your active vehicle.'}`)},
   switchveh:(i)=>{if(S.taken.length)return;stopIdle(true);S.cur=+i;selPart='oil';shopModal('vehicles');updateTop();save()},
-  sellveh:(i)=>{i=+i;if(i===S.cur||S.vehicles.length<2)return;const val=sellValue(S.vehicles[i]);const t=S.vehicles[i].type;
+  sellveh:(i)=>{i=+i;if(i===S.cur||S.vehicles.length<2)return;if(S.vehicles[i].loan){toast('That one belongs to the Alterax military police.');return}const val=sellValue(S.vehicles[i]);const t=S.vehicles[i].type;
     S.vehicles.splice(i,1);if(S.cur>i)S.cur--;S.money+=val;SFX.cash();shopModal('vehicles');updateTop();save();toast(`Sold the ${VEH[t].n} for ${money(val)}`)},
   gfuel:()=>{const L=tankCap()-V().fuel;S.money-=L*fuelPrice();V().fuel=tankCap();SFX.cash();toast(`Filled ${Math.round(L)} L`);updateTop();renderGaragePanel();save()},
   charge:()=>{S.money-=15;V().soc=1;V().parts.battery.cond=Math.max(0,V().parts.battery.cond-1);toast('Battery charged to 100%');closeModal();updateTop();renderGaragePanel();save()},
   jumpself:()=>{if(!S.sup.jump)return;S.sup.jump--;V().soc=Math.max(V().soc,0.5);closeModal();toast('Jump pack used. Try again.');save()},
-  sleep:()=>{stopIdle(true);const ins=S.vehicles.reduce((a,v)=>a+insurance(v),0),interest=Math.round(S.loan*0.02*DF().costs);S.money-=ins;S.loan+=interest;
+  sleep:()=>{stopIdle(true);let alxOut=false;if(S.city===ALX){S.alx=S.alx||{from:ALX_GATE};S.alx.nights=(S.alx.nights||0)+1;alxOut=S.alx.nights>=((S.cop&&S.cop.stay)||1)}const ins=S.vehicles.reduce((a,v)=>a+insurance(v),0),interest=Math.round(S.loan*0.02*DF().costs);S.money-=ins;S.loan+=interest;
     let vand='';if(S.story&&S.story.ch===2&&S.story.flags.refused&&!S.story.flags.debtPaid&&Math.random()<0.25){const pp=PARTS[Math.floor(Math.random()*PARTS.length)];V().parts[pp.id].cond=Math.max(0,V().parts[pp.id].cond-30);if(V().parts[pp.id].know.lvl)V().parts[pp.id].know.stale=true;vand=pname(pp.id)}
     for(const v of S.vehicles)v.engT=null;S.awake=0;S.dayTemp=Math.round(Math.random()*12-4);
     const net=S.money-(S.dayStart==null?S.money:S.dayStart),dd=S.day;S.day++;S.clock=7*60;genJobs();S.dayStart=S.money;updateTop();renderGaragePanel();save();
     modal(`<h2>End of day ${dd}</h2><table><tr><td>Insurance &amp; garage (${S.vehicles.length} vehicle${S.vehicles.length>1?'s':''})</td><td class="mono">−${money(ins)}</td></tr>
      ${interest?`<tr><td>Loan interest (2%)</td><td class="mono">+${money(interest)} owed · total ${money(S.loan)}</td></tr>`:''}
      <tr><td><b>Cash change today</b></td><td class="mono" style="color:${net>=0?'var(--ok)':'var(--bad)'}"><b>${net>=0?'+':''}${money(net)}</b></td></tr></table>
-     ${vand?`<p style="color:var(--bad)">Someone messed with your ${vand.toLowerCase()} overnight. A note under the wiper says only: “V.”</p>`:''}${S.city===ALX?`<p style="color:var(--warn)">Your night in Alterax is over. At dawn a Humvee waits next to your vehicle: the garrison is sending you on your way${S.taken.length?` to ${CITIES[planOrder()[0]].n}`:' home'}.</p><div class="row"><button class="btn pri" data-act="alxleave">Drive out</button></div>`:
+     ${vand?`<p style="color:var(--bad)">Someone messed with your ${vand.toLowerCase()} overnight. A note under the wiper says only: “V.”</p>`:''}${S.city===ALX&&!alxOut?`<p class="muted">Your Alterax permit has ${((S.cop&&S.cop.stay)||1)-S.alx.nights} more night${((S.cop&&S.cop.stay)||1)-S.alx.nights>1?'s':''}.</p>`:''}${alxOut?`<p style="color:var(--warn)">Your permit in Alterax is used up. At dawn a Humvee waits next to your vehicle: the garrison is sending you on your way${S.taken.length?` to ${CITIES[planOrder()[0]].n}`:' home'}.</p><div class="row"><button class="btn pri" data-act="alxleave">Drive out</button></div>`:
      `<p class="muted">New jobs are on the board. Job timers don't run overnight.</p><div class="row"><button class="btn pri" data-act="close">Start day ${S.day}</button></div>`}`)},
   gtab:(k)=>{gTab=k;renderGaragePanel()},
   talk:(id)=>{stopIdle(true);talkTo(id)},
@@ -3215,6 +3331,19 @@ const ACT={
   jumppack:()=>{S.sup.jump--;V().soc=0.45;resumeAfterService();updateTop()},
   toGarage:()=>toGarage(),
   dev:(a)=>devCmd(a),
+  paybounty:(a)=>{if(!(S.bounty>0))return;if(S.money<S.bounty){toast('Not enough cash');return}S.money-=S.bounty;toast(`Bounty of ${money(S.bounty)} paid. Your name is off the list.`,3500);S.bounty=0;S.bountyLvl=0;SFX.cash();updateTop();save();if(a==='office')passOffice();if(scene==='garage')renderGaragePanel()},
+  goalxw:(to)=>startDrive(false,to,{wanted:true}),
+  ammo:()=>{if(!S.mg||!buy(ammoCost()))return;S.mg.ammo=800;updateTop();save();policeModal()},
+  loan:()=>{if(S.taken.length||!buy(150))return;const nv=newVehicle('jaguar','new');nv.loan=true;nv.paint='#4b5a32';S.loanPrev=S.cur;S.vehicles.push(nv);stopIdle(true);S.cur=S.vehicles.length-1;selPart='oil';save();updateTop();toast('Loaner Jaguar 4×4 assigned. Bring it back when you’re done.',3500);policeModal()},
+  returnloan:()=>{if(!V().loan||S.taken.length)return;S.vehicles.splice(S.cur,1);S.cur=clamp(S.loanPrev??0,0,S.vehicles.length-1);save();updateTop();toast('Loaner returned.');policeModal()},
+  takemission:(id)=>{const o=S.cop.offers&&S.cop.offers.list.find(x=>x.id===+id);if(!o||S.mission||!ALXV.includes(V().type))return;
+    if(o.type==='convoy'){if(VD().cap-usedSlots()<1||cargoKg()+300>VD().payload){toast('Needs 1 free cargo slot and 300 kg of payload');return}
+      S.taken.push({id:S.jid++,to:o.to,from:ALX,cargo:CARGO.findIndex(c=>c.gold),slots:1,kg:300,km:distKm(ALX,o.to),pay:0,deadline:99999,el:0,dmg:0,special:'gold'});S.mission={type:'convoy',to:o.to,reward:o.reward,hp:100}}
+    else S.mission={type:'hunt',city:o.city,name:o.name,sus:o.sus,vmax:o.vmax,hp:o.hp,reward:o.reward,stage:S.city===o.city?'ready':'travel'};
+    S.cop.offers.list=S.cop.offers.list.filter(x=>x!==o);save();closeModal();toast('Job accepted. Details are in your garage.',3000)},
+  starthunt:()=>{const m=S.mission;if(!m||m.type!=='hunt'||S.city!==m.city)return;if(!ALXV.includes(V().type)){toast('You need an Alterax vehicle for this job');return}if(S.taken.length){toast('Deliver your cargo first');return}
+    const Y=rpick(CITIES.map((c,i)=>i).filter(i=>i!==m.city&&i!==ALX));startDrive(false,Y,{free:true,hunt:true})},
+  abandonm:()=>{if(S.mission&&S.mission.type==='convoy')S.taken=S.taken.filter(j=>j.special!=='gold');S.mission=null;save();renderGaragePanel();toast('Job abandoned.')},
   repairplow:()=>{const c=plowRepairCost();if(!c||!buy(c))return;V().plow=100;perfModal();updateTop();save();toast('Plow straightened and welded: 100%')},
   town:()=>{if(scene==='town')setScene('garage');else if(scene!=='drive')enterTown()},townat:(id)=>enterTown(id),townnpc:()=>enterTown('npc'),tact:()=>townAct(),tgarage:()=>{closeModal();setScene('garage')},
   myveh:()=>shopModal('vehicles','garage'),
@@ -3236,7 +3365,7 @@ const ACT={
   gohome:(to)=>startDrive(false,+to,{free:true}),
   alxleave:()=>{closeModal();forceRoadReady();const dest=S.taken.length?planOrder()[0]:(S.alx&&S.alx.from!=null?S.alx.from:ALX_GATE);startDrive(false,dest,{free:true})},
   bcgo:()=>{BC.done=true;closeModal();resumeDrive()},
-  bcdead:()=>{BC.done=true;const w=BC.why;alxDeath(w==='none'?'You tried to enter Alterax without a pass. The border guards opened fire.':w==='expired'?'Your Alterax pass had expired. The border guards opened fire.':'Your Alterax pass was a forgery. The border guards opened fire.',true)},
+  bcdead:()=>{BC.done=true;const w=BC.why;alxDeath(w==='wanted'?'You drove up to the Alterax border with a bounty on your head. The guards opened fire.':w==='none'?'You tried to enter Alterax without a pass. The border guards opened fire.':w==='expired'?'Your Alterax pass had expired. The border guards opened fire.':'Your Alterax pass was a forgery. The border guards opened fire.',true)},
   harddeath:()=>{closeModal();setTimeout(()=>{if($('#modal').hidden&&!S.story.flags.intro)talkTo('rosa')},400)},
   perf:(tab)=>{stopIdle(true);perfModal(tab||'mods')},
   buymod:(id)=>{const m=MODS.find(x=>x.id===id);if(!m||V().up[id]||(m.req&&!V().up[m.req]))return;if(!buy(modCost(m)))return;V().up[id]=true;if(id==='plow')V().plow=100;perfModal();updateTop();save();toast(`${m.n} fitted to your ${VD().n}`)},
@@ -3276,14 +3405,14 @@ function bindPedal(el,key){
   el.addEventListener('pointerdown',on);el.addEventListener('pointerup',off);el.addEventListener('pointercancel',off);el.addEventListener('lostpointercapture',off);
   el.addEventListener('contextmenu',e=>e.preventDefault());
 }
-bindPedal($('#tGas'),'gas');bindPedal($('#tBrake'),'brake');bindPedal($('#tLeft'),'left');bindPedal($('#tRight'),'right');
+bindPedal($('#tGas'),'gas');bindPedal($('#tBrake'),'brake');bindPedal($('#tLeft'),'left');bindPedal($('#bFire'),'fire');bindPedal($('#tRight'),'right');
 addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();if(e.target.tagName==='INPUT')return;initAudio();devKey(k);
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
   if(k==='escape'&&!$('#modal').hidden&&scene!=='drive'){closeModal();return}
   if(scene==='drive'){
     if(['arrowright','d','arrowup','w'].includes(k))keys.gas=true;
-    if(['arrowleft','a','arrowdown','s',' '].includes(k))keys.brake=true;
+    if(['arrowleft','a','arrowdown','s'].includes(k)||(k===' '&&!S.mg))keys.brake=true;if(k===' '&&S.mg)keys.fire=true;
     if(k==='f')tryRefuel();if(k==='z'&&!e.repeat&&!$('#bSleep').hidden)ACT.roadsleep();if(k==='c'&&!e.repeat)toggleCruise();if(k==='h'&&!e.repeat)horn();if(k==='p'||k==='escape')togglePause();
   }else if(scene==='town'&&$('#modal').hidden){
     if(['arrowleft','a'].includes(k))keys.left=true;if(['arrowright','d'].includes(k))keys.right=true;
@@ -3295,9 +3424,9 @@ addEventListener('keydown',e=>{
 });
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();
   if(['arrowright','d','arrowup','w'].includes(k))keys.gas=false;
-  if(['arrowleft','a','arrowdown','s',' '].includes(k))keys.brake=false;
+  if(['arrowleft','a','arrowdown','s',' '].includes(k))keys.brake=false;if(k===' ')keys.fire=false;
   if(['arrowleft','a'].includes(k))keys.left=false;if(['arrowright','d'].includes(k))keys.right=false;});
-addEventListener('blur',()=>{keys.gas=keys.brake=touch.gas=touch.brake=keys.left=keys.right=touch.left=touch.right=false;idle.rev=false;if(scene==='drive'&&!drive.paused&&!drive.over)togglePause()});
+addEventListener('blur',()=>{keys.fire=touch.fire=false;keys.gas=keys.brake=touch.gas=touch.brake=keys.left=keys.right=touch.left=touch.right=false;idle.rev=false;if(scene==='drive'&&!drive.paused&&!drive.over)togglePause()});
 
 /* ================= main loop ================= */
 let last=performance.now(),perfAcc=0,perfN=0,topT=0,frameN=0;
