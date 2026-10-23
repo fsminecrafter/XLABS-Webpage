@@ -750,7 +750,15 @@ function missionStep(dt,av){const d=drive,R=d.route,Vd=VD();
     if(S.mission&&S.mission.type==='convoy')S.mission.hp=Math.max(0,cv.hp);
     if(cv.hp<=0){cv.on=false;cv.att=[];S.taken=S.taken.filter(j=>j.special!==MSPECIAL[cv.kind]);missionFail(E.lost)}}}
 const AMMO_CAP=1600;
-function endMission(){if(!S.mission)return;const hasLoaner=S.vehicles.some(v=>v.loan);S.mission=null;if(S.mg)S.mg.ammo=AMMO_CAP;if(hasLoaner)toast('Mission ended. Your loaner stays with you until you return it.',3500);updateTop()}
+function endMission(){if(!S.mission)return;S.mission=null;if(S.mg)S.mg.ammo=AMMO_CAP;
+  if(scene==='drive')drive.returnToAlx=true;else returnToAlterax();updateTop()}
+function returnToAlterax(){
+  const i=S.vehicles.findIndex(v=>v.loan);
+  if(i>=0){S.vehicles.splice(i,1);if(S.cur>i)S.cur--;else if(S.cur===i)S.cur=clamp(S.loanPrev??0,0,S.vehicles.length-1)}
+  delete S.loanPrev;S.city=ALX;S.pass=null;S.alx={from:ALX_GATE,day:S.day};S.taken=S.taken.filter(j=>!['gold','vip','prisoner','dispatch'].includes(j.special));
+  genJobs();drive.route=null;drive.returnToAlx=false;drive.over=true;drive.paused=false;closeModal();setScene('garage');save();
+  toast('Mission ended. You are back in Alterax; the loaner has been returned.',4000)
+}
 function missionWin(txt){const m=S.mission;if(!m)return 0;S.money+=m.reward;S.cop.done++;S.cop.stay=Math.min(10,1+5*S.cop.done);endMission();SFX.cash();
   if(txt)dmsg(`${txt} Job done: +${money(m.reward)}. Your Alterax permit now allows ${S.cop.stay} nights.`,'#62c06c',8);updateTop();save();return m.reward}
 function missionFail(txt){endMission();dmsg(`${txt} Job failed.`,'#e4493b',7);save()}
@@ -780,7 +788,7 @@ function policeModal(){const who={n:'Capt. Ivo Kadra',role:'Alterax military pol
     [{t:'Sign me up',f:()=>{S.cop.joined=true;S.mg=S.mg||{ammo:AMMO_CAP};save();toast('You joined the Alterax military police. Hold Space (or FIRE) for the roof gun.',4500);policeModal()}},{t:'Not today',f:()=>{}}]);
   if(!S.cop.offers||S.cop.offers.day!==S.day||!S.cop.offers.list.every(o=>o.kind))genOffers();
   const ok=ALXV.includes(V().type),m=S.mission,loan=V().loan;
-  let h=`<div class="talk"><img class="face" src="${faceImg(CAPTAIN)}" alt=""><div class="pinfo"><b style="font-size:17px">Capt. Ivo Kadra</b> <span class="tag">Alterax military police</span><p>${m?'Finish the job you already have.':'Pick a job. Any job. Your loaner stays with you after the job until you choose to return it.'}</p></div></div>
+  let h=`<div class="talk"><img class="face" src="${faceImg(CAPTAIN)}" alt=""><div class="pinfo"><b style="font-size:17px">Capt. Ivo Kadra</b> <span class="tag">Alterax military police</span><p>${m?'Finish the job you already have.':'Pick a job. Any job. The loaner is returned to the military when your mission ends, and you are brought back here.'}</p></div></div>
    <div class="kv"><span>Jobs completed</span><b>${S.cop.done}</b><span>Your Alterax permit</span><b>${S.cop.stay} night${S.cop.stay>1?'s':''}</b><span>Roof gun ammo</span><b>${m?'Unlimited on mission':`${S.mg.ammo} / ${AMMO_CAP}`}</b><span>Approved vehicle</span><b style="color:${ok?'var(--ok)':'var(--warn)'}">${ok?VD().n+(loan?' (loaner)':''):'No: you need an Alterax vehicle'}</b></div>
    <p class="muted">Members aren’t chased by Alterax patrols or guard posts for speeding. On an active job, speed cameras anywhere can’t fine you either, and the border waves your police ID through.</p>
    <div class="row">${S.mg.ammo<AMMO_CAP?`<button class="btn" data-act="ammo" ${S.money<ammoCost()?'disabled':''}>Refill ammo ${money(ammoCost())}</button>`:''}${loan?`<button class="btn" data-act="returnloan" ${S.taken.length||m?'disabled':''}>Return the loaner</button>`:ok?'':`<button class="btn pri" data-act="loan" ${S.taken.length||S.money<150?'disabled':''}>Loan a Jaguar 4×4 ($150)</button><button class="btn" data-act="townat" data-arg="dealer">Buy one at the army dealer</button>`}</div><h3>Jobs today</h3>`;
@@ -3289,7 +3297,7 @@ function helpModal(first){
   <li><b>Upgrade.</b> Buy used cars on the lot (inspect first: some sellers lie) or brand new from the dealer, and tune them at Redline Performance. Feeling lucky? The Lucky Lugnut Casino has a jackpot wheel and blackjack.</li>
   <li><b>Real-world rules.</b> Stop at red lights in town. Each vehicle has a payload limit. Cold engines are weak and thirsty until warm, wind changes your speed and fuel use, and staying awake too long makes you nod off at the wheel. Sleep resets it.</li>
   <li><b>Run a business.</b> Buy parts as Used, OEM or Performance. Chilled loads need the reefer van; express loads pay extra for early delivery. Insurance is charged each night, and the bank lends against your reputation.</li>
-  <li><b>Bounties and police work.</b> Escape an Alterax patrol and you get a bounty (the value of that trip’s deliveries, at least $1,000, plus 10%). Hunters then find you on every drive, anywhere, in faster and better-armed vehicles each time you get away. Pay it off at an Alterax pass office. With a clean name, the Alterax military police will hire you, whatever your reputation: drive an Alterax vehicle (buy or loan one) and take hunts, smuggler intercepts, treasury convoys, VIP escorts, prisoner transfers and urgent dispatches; and use the fully automatic roof gun (hold Space or FIRE, 800 rounds a minute, 1,600-round belt outside missions and unlimited ammo during Alterax jobs). Loaners remain yours after a mission until you return them at the military police. Members aren’t chased for speeding in Alterax, and on an active job no speed limit applies anywhere. Each finished job adds 5 nights to your Alterax permit, up to 10.</li>
+  <li><b>Bounties and police work.</b> Escape an Alterax patrol and you get a bounty (the value of that trip’s deliveries, at least $1,000, plus 10%). Hunters then find you on every drive, anywhere, in faster and better-armed vehicles each time you get away. Pay it off at an Alterax pass office. With a clean name, the Alterax military police will hire you, whatever your reputation: drive an Alterax vehicle (buy or loan one) and take hunts, smuggler intercepts, treasury convoys, VIP escorts, prisoner transfers and urgent dispatches; and use the fully automatic roof gun (hold Space or FIRE, 800 rounds a minute, 1,600-round belt outside missions and unlimited ammo during Alterax jobs). When a mission ends, any loaner is returned automatically and you are sent back to Alterax. Members aren’t chased for speeding in Alterax, and on an active job no speed limit applies anywhere. Each finished job adds 5 nights to your Alterax permit, up to 10.</li>
   <li><b>Walk around town.</b> Press <i>Town</i> (or “Walk into …” in the garage) to step out onto the street. Walk with ←/→ or A/D and press E at a door or next to someone: parts shop (buy, and sell old parts from your trunk), used car lot, dealer, Redline Performance, the freight depot, the diner, the casino, the Alterax pass office, and the locals.</li>
   <li><b>On the road.</b> Up to two hitchhikers can ride with you. Stopped and tired? Sleep in the cab, but about 1 in 20 nights a thief takes 10% of your cash (1 in 5 and 25% on the jungle road to Alterax). Settings has volume up to 200%.</li>
   <li><b>Alterax.</b> A military city deep in the jungle, ${ALX_KM} km past Port Dunmore. Jobs to and from it pay +75%, and it sells parts and vehicles 10% cheaper, plus army vehicles you can’t buy anywhere else. You need a ${money(ALX_PASS)} pass for each trip there and back (about 1 in 20 is a forgery: inspect yours). There are no speed cameras out there: guard posts watch the road instead, and anyone they catch speeding gets chased. Stop at the border, keep under 60 km/h in the military zone, don’t bring contraband, and expect to leave after one night. Dying there sends you back to your garage on Easy and Normal; on Hard it ends the game.</li>
@@ -3507,7 +3515,8 @@ function frame(t){
     else if(scene==='town'){stepTown(dt);renderTown(t)}
     else if(scene==='drive'&&drive.route){
       if(!drive.paused&&!drive.over){stepDrive(dt);drive.peakT=Math.max(drive.peakT||0,drive.temp)}
-      renderDrive(t);topT+=dt;if(topT>0.25){topT=0;updateTop()}
+      if(drive.returnToAlx)returnToAlterax();
+      if(scene==='drive'&&drive.route)renderDrive(t);topT+=dt;if(topT>0.25){topT=0;updateTop()}
     }
   }catch(err){console.error(err)}
   requestAnimationFrame(frame);
