@@ -380,7 +380,8 @@ function audioUpdate(st){
   aset(n.sqG.gain,st.brake&&st.av>1&&br<0.32&&br>=0.12?0.035:0,0.05);
   aset(n.grG.gain,st.brake&&st.av>0.4&&br<0.12?0.32*clamp(st.av/8,0.3,1):0,0.05);
   aset(n.stG.gain,st.crank>0?0.07:0,0.03);aset(n.st.frequency,140+(st.startPow||0.5)*170+Math.sin(t*28)*18,0.02);
-  aset(n.tbG.gain,on&&st.turbo?(st.boost||0)*0.03:0,0.08);aset(n.tb.frequency,1600+(st.boost||0)*5200+rpm*0.3,0.08);
+  if(Vd.jet){aset(n.tbG.gain,on?0.012+0.04*(st.boost||0):0,0.1);aset(n.tb.frequency,700+(st.boost||0)*2900,0.15);aset(n.inG.gain,on?0.02+0.09*(st.boost||0):0,0.1)}
+  else{aset(n.tbG.gain,on&&st.turbo?(st.boost||0)*0.03:0,0.08);aset(n.tb.frequency,1600+(st.boost||0)*5200+rpm*0.3,0.08)}
   aset(n.scrG.gain,st.spin&&st.av>0.5?0.13:0,0.04);
   aset(n.humG.gain,0,0.3);
   const sc=AU.sched,ahead=t+0.12;
@@ -1135,16 +1136,21 @@ Object.assign(VEH,{
   eng:{base:0.88,cut:500,clatter:0.1,vol:1.2},horn:[[180,0.9],[220,0.9]],names:{tiresR:'Rear bogie tires'},paints:['#4b5a32','#6b6a48','#3a4230'],
   desc:'A 1996 ex-army 6×6 cargo truck with a canvas-covered bed. Fourteen slots, a 10 t payload, all-wheel drive, and parts that wear 25% slower. Slow, but nothing stops it.',
   hot:{oil:[700,-84],air:[584,-226],plugs:[730,-164],battery:[520,-88],alt:[744,-116],radiator:[782,-164],brakes:[680,-52],tiresF:[652,-10],tiresR:[200,-10],shocks:[640,-120],lights:[792,-140],fuelf:[600,-78]}},
+ jetcar:{n:'Vortex J-1 jet car',yr:2019,cap:1,mass:1650,drag:0.55,top:500,brake:11,tank:200,fuelM:6.25,partM:2.4,price:90000,tough:0.6,alx:true,jet:true,thrust:16500,
+  L:440,wr:84,wf:366,r:28,h:120,ly:70,tl:40,cyl:2,lugsF:5,lugsR:5,lugTool:'w19',idle:3000,red:15000,tq:600,pk:12000,gears:[500],drv:0.5,shift:0.1,
+  eng:{base:0.35,cut:2600,clatter:0,vol:1.1},horn:[[620,0.25],[780,0.25]],names:{oil:'Turbine oil',air:'Intake screen',plugs:'Igniters',alt:'Starter-generator',radiator:'Oil cooler'},paints:['#2f3a2a','#4b5a32','#1f2226','#8a8f96'],
+  desc:'An Alterax test-range jet car built around a surplus fighter turbojet. No gearbox and no shifting: the turbine pushes the body directly, so it never spins its wheels. 500 km/h flat out; the rocket booster lifts the governor to 1000 km/h, and with every upgrade fitted it gets all the way there. A 200 L tank, but full thrust burns 10 L a minute (idle 1.5 L). One seat, one cargo slot. A small electric motor handles reversing.',
+  hot:{oil:[60,-62],air:[300,-92],plugs:[90,-84],alt:[130,-52],radiator:[40,-96],lights:[430,-46],battery:[200,-46],brakes:[366,-24],tiresF:[392,-10],tiresR:[110,-10],shocks:[330,-48],fuelf:[160,-70]}},
 });
-Object.assign(EXH,{jaguar:[2,-46],strider:[2,-44],kodiak:[561,-362,1]});
+Object.assign(EXH,{jaguar:[2,-46],strider:[2,-44],kodiak:[561,-362,1],jetcar:[-14,-66]});
 /* engine torque curves, gearing (top speed per gear at redline) and drivetrain */
 const ENG={bug:{tq:72,pk:2600,gears:[35,62,90,118],drv:0.6,shift:0.28,tl:56},pickup:{tq:255,pk:2400,gears:[38,68,102,135,160],drv:0.5,shift:0.25,tl:82},
  van:{tq:235,pk:2200,gears:[34,62,94,124,145],drv:0.55,shift:0.3,tl:110},reefer:{tq:300,pk:1800,gears:[32,58,88,116,135],drv:0.55,shift:0.32,tl:118},
  truck:{tq:950,pk:1400,drv:0.62,shift:0.45,tl:108},gt:{tq:540,pk:4600,gears:[70,115,160,205,250,290],drv:0.55,shift:0.15,tl:46},semi:{tq:2400,pk:1200,drv:0.55,shift:0.55,tl:135}};
 for(const k in ENG)Object.assign(VEH[k],ENG[k]);
-const PAYLOAD={bug:300,hatch:420,microbus:800,pickup:900,van:1300,reefer:1500,lighttruck:3000,truck:6000,rigid:12000,gt:150,semi:24000,jaguar:1100,strider:2200,kodiak:10000};
+const PAYLOAD={bug:300,hatch:420,microbus:800,pickup:900,van:1300,reefer:1500,lighttruck:3000,truck:6000,rigid:12000,gt:150,semi:24000,jaguar:1100,strider:2200,kodiak:10000,jetcar:120};
 for(const k in PAYLOAD)VEH[k].payload=PAYLOAD[k];
-for(const k in VEH){const v=VEH[k];let m=0;for(let r=v.idle;r<=v.red;r+=50)m=Math.max(m,engTorque(v,r)*r*Math.PI/30);v.pmax=m}
+for(const k in VEH){const v=VEH[k];let m=0;for(let r=v.idle;r<=v.red;r+=50)m=Math.max(m,engTorque(v,r)*r*Math.PI/30);v.pmax=v.jet?v.thrust*v.top/3.6:m}
 const newPrice=type=>Math.round(VEH[type].price*1.7*priceF()/100)*100;
 const MODS=[
  {id:'ecu',n:'ECU remap',cost:600,d:'+10% torque across the rev range. Slightly thirstier.'},
@@ -1168,7 +1174,7 @@ const CITIES=[{n:'Millbrook',x:0,y:0},{n:'Ironvale',x:3.2,y:1.1},{n:'Port Dunmor
 /* Alterax: a military city deep in the jungle, 15 km past Port Dunmore (its nearest town).
    Distances below are metres measured from the Alterax end of a route. */
 const ALX=6,ALX_GATE=2,ALX_KM=15,ALX_BORDER=2500,ALX_JUNGLE=13000,ALX_PASS=100,ALX_PAY=1.75;
-const ALXV=['jaguar','strider','kodiak'];
+const ALXV=['jaguar','strider','kodiak','jetcar'];
 const ALX_NAMES=['Varga','Kesh','Moro','Danek','Ilic','Sorran','Bek','Tavi'];
 const CARGO=[
   {n:'Mail & parcels',s:[1,2],kg:60,frag:0.6,pay:1.0},{n:'Bakery bread',s:[1,1],kg:50,frag:0.7,pay:1.15,tight:true},
@@ -1600,6 +1606,23 @@ function drawJaguar(c,o){const paint=o.paint;c.save();bodyT(c,o);
     c.fillStyle=shade(paint,0.55);rr(c,192,-218,30,24,4);c.fill();c.fillStyle='#c68a5c';circ(c,212,-226,9);c.fill();c.fillStyle=shade(paint,0.6);c.beginPath();c.arc(212,-229,11,Math.PI,0);c.fill()}
   c.restore();
   drawWheel(c,78,-33,33,o.rot||0,o.flatR,o.wobR,'#5a6048');drawWheel(c,322,-33,33,o.rot||0,o.flatF,o.wobF,'#5a6048')}
+function drawJetcar(c,o){const paint=o.paint,j=o.jet||0;c.save();bodyT(c,o);
+  if(j>0.25){const f=(j-0.25)/0.75,fl=70+f*120+Math.random()*30*f;const g=c.createLinearGradient(-8,0,-8-fl,0);g.addColorStop(0,'rgba(255,240,180,.95)');g.addColorStop(0.35,'rgba(255,150,40,.8)');g.addColorStop(1,'rgba(255,80,20,0)');
+    c.fillStyle=g;c.beginPath();c.moveTo(-8,-84);c.quadraticCurveTo(-8-fl*0.6,-76,-8-fl,-66);c.quadraticCurveTo(-8-fl*0.6,-56,-8,-48);c.closePath();c.fill()}
+  c.fillStyle='#2a2c2f';c.beginPath();c.moveTo(-12,-86);c.lineTo(30,-92);c.lineTo(30,-40);c.lineTo(-12,-46);c.closePath();c.fill();
+  c.fillStyle='#16181a';c.beginPath();c.ellipse(-12,-66,6,19,0,0,Math.PI*2);c.fill();c.fillStyle=j>0.25?'#ff9a3a':'#3a2a22';c.beginPath();c.ellipse(-12,-66,3.5,13,0,0,Math.PI*2);c.fill();
+  c.fillStyle=paint;c.beginPath();c.moveTo(20,-38);c.lineTo(22,-96);c.lineTo(150,-104);c.lineTo(250,-100);c.lineTo(436,-50);c.lineTo(440,-36);c.closePath();c.fill();gloss(c,-104,-36);
+  c.beginPath();c.moveTo(24,-96);c.lineTo(6,-170);c.lineTo(40,-170);c.lineTo(86,-100);c.closePath();c.fillStyle=shade(paint,0.8);c.fill();
+  c.fillStyle='#c42d1f';c.fillRect(8,-166,30,6);
+  c.fillStyle='#1d2730';c.beginPath();c.moveTo(180,-102);c.quadraticCurveTo(220,-142,290,-104);c.closePath();c.fill();
+  c.fillStyle='rgba(255,255,255,.2)';c.beginPath();c.moveTo(196,-106);c.quadraticCurveTo(222,-134,262,-112);c.lineTo(258,-108);c.quadraticCurveTo(222,-128,200,-104);c.fill();
+  c.fillStyle='#16181a';c.beginPath();c.moveTo(290,-82);c.lineTo(330,-74);c.lineTo(330,-62);c.lineTo(292,-68);c.closePath();c.fill();
+  c.fillStyle='rgba(0,0,0,.3)';c.fillRect(60,-60,250,4);
+  star(c,140,-74,12,'#e8c547');
+  c.fillStyle=o.lightOn?'#fff3c4':'#dcdcd2';c.beginPath();c.moveTo(412,-56);c.lineTo(436,-49);c.lineTo(432,-44);c.lineTo(410,-50);c.fill();
+  c.fillStyle='#0f1011';c.beginPath();c.arc(84,-26,32,Math.PI,0);c.fill();c.beginPath();c.arc(366,-26,32,Math.PI,0);c.fill();
+  c.restore();
+  drawWheel(c,84,-28,28,o.rot||0,o.flatR,o.wobR,'#9aa2aa');drawWheel(c,366,-28,28,o.rot||0,o.flatF,o.wobF,'#9aa2aa')}
 function drawStrider(c,o){const paint=o.paint;c.save();bodyT(c,o);
   c.fillStyle=paint;c.beginPath();c.moveTo(4,-36);c.lineTo(4,-196);c.lineTo(318,-200);c.lineTo(370,-124);c.lineTo(428,-114);c.lineTo(440,-98);c.lineTo(440,-36);c.closePath();c.fill();gloss(c,-200,-36);
   c.strokeStyle='rgba(0,0,0,.3)';c.lineWidth=2;c.beginPath();for(const x of [104,204,300]){c.moveTo(x,-194);c.lineTo(x,-40)}c.moveTo(4,-118);c.lineTo(300,-118);c.stroke();
@@ -1631,7 +1654,7 @@ function drawKodiak(c,o){const paint=o.paint;c.save();bodyT(c,o);
   c.fillStyle='#0f1011';c.beginPath();c.arc(200,-50,98,Math.PI,0);c.fill();c.beginPath();c.arc(680,-50,60,Math.PI,0);c.fill();
   c.restore();
   drawWheel(c,160,-50,50,o.rot||0,o.flatR,o.wobR,'#5a6048');drawWheel(c,250,-50,50,o.rot||0,o.flatR,o.wobR,'#5a6048');drawWheel(c,680,-50,50,o.rot||0,o.flatF,o.wobF,'#5a6048')}
-const DRAWV={bug:drawBug,hatch:drawHatch,microbus:drawBus,pickup:drawPickup,van:drawVan,reefer:drawReefer,lighttruck:drawLight,truck:drawTruck,rigid:drawRigid,gt:drawGT,semi:drawSemi,jaguar:drawJaguar,strider:drawStrider,kodiak:drawKodiak};
+const DRAWV={bug:drawBug,hatch:drawHatch,microbus:drawBus,pickup:drawPickup,van:drawVan,reefer:drawReefer,lighttruck:drawLight,truck:drawTruck,rigid:drawRigid,gt:drawGT,semi:drawSemi,jaguar:drawJaguar,strider:drawStrider,kodiak:drawKodiak,jetcar:drawJetcar};
 
 /* ================= GARAGE ================= */
 let garageBg=null;
@@ -1715,7 +1738,7 @@ function stepIdle(dt){
     V().fuel=Math.max(0,V().fuel-dt*0.004*Vd.fuelM*(idle.rev?3:1));V().engT=Math.min(85,(V().engT??ambient())+dt*(idle.rev?1.5:0.6));
     if(V().fuel<=0)stopIdle();
   }
-  audioUpdate({on:idle.crank<=0,rpm:idle.rpm,load:idle.rev?0.55:0.08,misfire:idle.misfire,missEvt:idle.missEvt,av:0,brake:0,temp:80,rain:false,flat:false,wob:0,rot:0,crank:idle.crank,startPow:idle.startPow,looseN:looseCount(),exhaust:!!V().up.exhaust,turbo:!!V().up.turbo,boost:idle.rev&&V().up.turbo?0.6:0});
+  audioUpdate({on:idle.crank<=0,rpm:idle.rpm,load:idle.rev?0.55:0.08,misfire:idle.misfire,missEvt:idle.missEvt,av:0,brake:0,temp:80,rain:false,flat:false,wob:0,rot:0,crank:idle.crank,startPow:idle.startPow,looseN:looseCount(),exhaust:!!V().up.exhaust,turbo:!!V().up.turbo||!!Vd.jet,boost:Vd.jet?(idle.rev?0.6:0.2):idle.rev&&V().up.turbo?0.6:0});
 }
 function startIdle(){
   if(roadReady().length){toast('Finish the open parts on the bench first');return}
@@ -1836,7 +1859,7 @@ const PDRAW={
  head(c){const Vd=VD();c.fillStyle='#596068';c.fillRect(30,262,540,110);c.fillStyle=V().type==='bug'?'#3c4148':'#8a2c22';rr(c,40,100,520,190,46);c.fill();
   c.fillStyle='rgba(255,255,255,.1)';rr(c,56,108,488,16,8);c.fill();
   c.fillStyle='rgba(255,255,255,.55)';c.font='900 26px "Big Shoulders Display", Impact, sans-serif';c.textAlign='center';
-  c.fillText(V().type==='bug'||V().type==='microbus'?'FLAT FOUR · AIR COOLED':Vd.cyl===8?'5.4 L V8 · 410 HP':V().type==='semi'?'13 L STRAIGHT SIX DIESEL':Vd.cyl===6?'STRAIGHT SIX':'FOUR CYLINDER',300,150);c.textAlign='left';
+  c.fillText(Vd.jet?'TURBOJET · 16.5 kN THRUST':V().type==='bug'||V().type==='microbus'?'FLAT FOUR · AIR COOLED':Vd.cyl===8?'5.4 L V8 · 410 HP':V().type==='semi'?'13 L STRAIGHT SIX DIESEL':Vd.cyl===6?'STRAIGHT SIX':'FOUR CYLINDER',300,150);c.textAlign='left';
   const fs=partFs('plugs');c.fillStyle='#24272b';for(const f of fs){circ(c,f.x,f.y,28);c.fill()}
   c.fillStyle='rgba(255,255,255,.4)';c.font='600 13px Barlow, sans-serif';fs.forEach((f,i)=>c.fillText(String(i+1),f.x-4,256))},
  battery(c){c.strokeStyle='#a32b20';c.lineWidth=16;c.beginPath();c.moveTo(220,105);c.quadraticCurveTo(140,40,40,30);c.stroke();
@@ -2187,14 +2210,14 @@ function stepDrive(dt){
   if(C('fuelf')<0.22&&thr>0&&d.misfire<=0&&Math.random()<dt*0.35){d.misfire=0.5;d.missEvt=true;dmsg('Engine stumbling: fuel starved.','#e9a53a',3,'fuel')}
   if(d.misfire>0){d.misfire-=dt;pf*=0.25}
   if(d.temp>110)pf*=0.55;
-  if(d.temp<70)pf*=0.88+0.12*clamp((d.temp-20)/50,0,1);
-  if(d.temp<55&&d.rpm>Vd.red*0.7&&d.engineOn){vs.parts.oil.cond=Math.max(0,vs.parts.oil.cond-dt*0.02);dmsg('Engine still cold. Go easy until it warms up.','#9cc7e8',3,'cold')}
+  if(d.temp<70&&!Vd.jet)pf*=0.88+0.12*clamp((d.temp-20)/50,0,1);
+  if(!Vd.jet&&d.temp<55&&d.rpm>Vd.red*0.7&&d.engineOn){vs.parts.oil.cond=Math.max(0,vs.parts.oil.cond-dt*0.02);dmsg('Engine still cold. Go easy until it warms up.','#9cc7e8',3,'cold')}
   if(!d.engineOn||vs.fuel<=0)pf=0;
   const M=d.mass+vs.fuel*0.75,v=d.v,av=Math.abs(v),gs=Vd.gears,wR=Vd.red*Math.PI/30;
   // automatic gearbox: shift points depend on throttle; torque is cut while shifting
   if(d.shiftT>0)d.shiftT-=dt;
   const rpmAt=gi=>av*3.6/gs[gi]*Vd.red;let g=d.g;
-  if(d.shiftT<=0&&d.engineOn&&thr>=0){
+  if(!Vd.jet&&d.shiftT<=0&&d.engineOn&&thr>=0){
     if(g<gs.length-1&&rpmAt(g)>Vd.red*(thr>0.85?0.93:lerp(0.42,0.8,thr))){g++;d.shiftT=Vd.shift;d.shiftEvt=true}
     else if(g>0&&rpmAt(g)<Vd.red*(thr>0.85?0.5:0.3)&&rpmAt(g-1)<Vd.red*0.88){g--;d.shiftT=Vd.shift*0.6;d.shiftEvt=true}
   }
@@ -2202,10 +2225,18 @@ function stepDrive(dt){
   d.g=g;
   const rpmW=rpmAt(g);let rpm=rpmW,slip=false;
   if(rpmW<Vd.idle*1.15){rpm=Vd.idle+Math.abs(thr)*(Vd.pk*0.85-Vd.idle);slip=true}
-  const limiter=rpmW>Vd.red*1.01;
+  const limiter=!Vd.jet&&rpmW>Vd.red*1.01;
+  if(Vd.jet){const tgt=!d.engineOn||d.crank>0||vs.fuel<=0?0:thr>0?0.2+0.8*thr:0.2;d.spool=(d.spool||0)+clamp(tgt-(d.spool||0),-0.9*dt,0.55*dt);rpm=Vd.idle+d.spool*(Vd.red-Vd.idle);slip=false}
   if(!d.engineOn||d.crank>0)rpm=0;
+  d.rkOn=!!(up.rocket&&d.rocket&&thr>0&&d.engineOn&&d.crank<=0&&vs.fuel>0);
   // wheel force from the torque curve through the current gear
   let Fe=0;
+  if(Vd.jet){
+    // turbojet: thrust pushes the body, no gears; the governor holds 500 km/h, or 1000 with the rocket lit
+    if(d.engineOn&&d.crank<=0){Fe=Vd.thrust*clamp((d.spool-0.2)/0.8,0,1)*pf*(up.turbo?1.4:1);
+      const tEff=Vd.top*(d.rkOn?2:1),kmh=av*3.6;if(kmh>tEff)Fe*=clamp((tEff+1.2-kmh)/1.2,0,1);
+      if(thr<0)Fe=v>-2.6?-2600*Math.min(1,pf+0.3):0}
+  }else{
   if(thr>0&&d.engineOn&&d.crank<=0&&d.shiftT<=0&&!limiter){
     let T=engTorque(Vd,clamp(rpm,Vd.idle,Vd.red))*pf*thr;
     if(slip)T*=1+1.1*clamp(1-rpmW/(Vd.idle*1.15),0,1); // torque converter multiplication at low speed
@@ -2215,20 +2246,20 @@ function stepDrive(dt){
     if(d.flatF||d.flatR)Fe*=kmh>28?0.1:0.6;
   }
   if(thr<0&&d.engineOn&&d.crank<=0)Fe=v>-2.6?-engTorque(Vd,Vd.pk)*pf*wR/(gs[0]/3.6)*0.88*0.3:0;
+  }
   const grip=(0.55+0.45*Math.min(C('tiresF'),C('tiresR')))*(d.rain?0.78:1)*(up.semislick?1.15:1)*(up.wheels?1.05:1);
   const trac=0.9*grip*Vd.drv*M*9.81;d.spin=false;
-  if(Math.abs(Fe)>trac){Fe=Math.sign(Fe)*trac*0.85;if(av<25)d.spin=true}
+  if(!Vd.jet&&Math.abs(Fe)>trac){Fe=Math.sign(Fe)*trac*0.85;if(av<25)d.spin=true}
   const mid=d.x-(Vd.L-(Vd.wr+Vd.wf)/2)*K;
   const grade=(roadH(R,mid+1)-roadH(R,mid-1))/2,theta=Math.atan(grade);
   // rocket: doubles the push and keeps pulling up to twice the normal top speed, past the rev limiter
-  d.rkOn=!!(up.rocket&&d.rocket&&thr>0&&d.engineOn&&d.crank<=0&&vs.fuel>0);
   const FeEng=Fe;
-  if(d.rkOn){Fe*=2;if(av*3.6<Vd.top*2)Fe=Math.max(Fe,Vd.drag*av*av+M*2.2+M*9.81*Math.max(0,Math.sin(theta)))}
+  if(d.rkOn){Fe*=2;if(!Vd.jet&&av*3.6<Vd.top*2)Fe=Math.max(Fe,Vd.drag*av*av+M*2.2+M*9.81*Math.max(0,Math.sin(theta)))}
   const Fg=-M*9.81*Math.sin(theta);
   const roll=(0.009+((d.flatF||d.flatR)?0.03:0))*M*9.81;
   let a=(Fe+Fg)/M;
   {const air=av>0.5?v+d.wind:v;a-=Vd.drag*air*Math.abs(air)/M;if(av>0.05)a-=Math.sign(v)*roll/M}
-  if(thr===0&&v>0.5&&d.engineOn&&!slip&&d.shiftT<=0)a-=Vd.tq*0.2*Math.min(1,rpmW/Vd.red)*wR/(gs[g]/3.6)*0.88/M; // engine braking, stronger in low gears
+  if(!Vd.jet&&thr===0&&v>0.5&&d.engineOn&&!slip&&d.shiftT<=0)a-=Vd.tq*0.2*Math.min(1,rpmW/Vd.red)*wR/(gs[g]/3.6)*0.88/M; // engine braking, stronger in low gears
   const fade=d.bt>300?clamp(1-(d.bt-300)/350,0.35,1):1;
   const bmax=Vd.brake*(up.bbk?1.25:1)*(0.25+0.75*C('brakes'))*fade;
   const bd=brake*Math.min(bmax,9.5*grip);
@@ -2262,13 +2293,14 @@ function stepDrive(dt){
     dmsg(`Speed camera! ${Math.round(kk)} in a ${lim} zone. Fine ${money(fine)}.`,'#e4493b',4);SFX.tq()}}}
   for(const L of R.lights||[]){if(ox<L.x&&d.x>=L.x&&lightState(L)==='red'&&av>1.5){const f=Math.round(120*DF().fine);S.money-=f;d.fines+=f;d.flash=0.35;dmsg(`Ran a red light! Fine ${money(f)}.`,'#e4493b',4);SFX.tq()}}
   // fuel from actual engine power (brake-specific fuel consumption), plus idle
-  const P=Math.max(0,FeEng*v);d.load=clamp(P/Vd.pmax,0,1.3);const load=Math.max(d.load,Math.abs(thr)*0.15);
-  if(d.engineOn&&d.crank<=0){const use=(0.00012+0.0005*Vd.mass/8000+P*7.9e-8)*FUEL_SCALE*(1+(1-C('air'))*0.4+(1-C('plugs'))*0.3)*(up.ecu?1.05:1)*(d.temp<60?1.25:1)*(d.rkOn?2:1);d.fuelUsed+=use*dt;vs.fuel=Math.max(0,vs.fuel-use*dt)}
+  const P=Math.max(0,FeEng*v);d.load=Vd.jet?clamp((d.spool-0.2)/0.8,0,1)*0.7:clamp(P/Vd.pmax,0,1.3);const load=Math.max(d.load,Math.abs(thr)*0.15);
+  if(Vd.jet&&d.engineOn&&d.crank<=0){const use=(1.5+8.5*clamp((d.spool-0.2)/0.8,0,1))/60*(d.rkOn?2:1);d.fuelUsed+=use*dt;vs.fuel=Math.max(0,vs.fuel-use*dt)}
+  else if(d.engineOn&&d.crank<=0){const use=(0.00012+0.0005*Vd.mass/8000+P*7.9e-8)*FUEL_SCALE*(1+(1-C('air'))*0.4+(1-C('plugs'))*0.3)*(up.ecu?1.05:1)*(d.temp<60?1.25:1)*(d.rkOn?2:1);d.fuelUsed+=use*dt;vs.fuel=Math.max(0,vs.fuel-use*dt)}
   if(vs.fuel<=0&&d.engineOn){d.engineOn=false;dmsg('Out of fuel! The engine died.','#e4493b',5)}
   if(vs.fuel<tankCap()*0.12&&vs.fuel>0)dmsg('Fuel low.','#e9a53a',3,'fl');
   const heat=d.engineOn?1+4*load*(1.4-0.4*C('oil'))*(up.turbo?1.2:1):0;
   const lr=looseFrac('radiator');
-  const kc=(0.04+0.0025*av)*(0.5+0.5*C('radiator'))*(up.radiator?1.35:1)*(d.temp<85?0.25:1);
+  const kc=(0.04+0.0025*(Vd.jet?Math.min(av,40):av))*(0.5+0.5*C('radiator'))*(up.radiator?1.35:1)*(d.temp<85?0.25:1);
   d.temp+=(heat-(d.temp-d.amb)*kc)*dt*0.6;
   if(d.temp>110)dmsg('Engine overheating! Ease off.','#e4493b',3,'hot');
   if(d.temp>125){for(const id of ['oil','radiator','plugs'])vs.parts[id].cond=Math.max(0,vs.parts[id].cond-3*dt)}
@@ -2378,7 +2410,7 @@ function stepDrive(dt){
   stepParticles(dt);stepTraffic(dt);
   audioUpdate({on:d.engineOn&&d.crank<=0,rpm:d.rpm,load:d.load,misfire:d.misfire,missEvt:d.missEvt,av,brake,temp:d.temp,rain:d.rain,
     flat:d.flatF||d.flatR,wob:Math.max(Math.abs(d.wobF),Math.abs(d.wobR)),rot:d.rot,crank:d.crank,startPow:d.startPow,looseN:looseCount(),
-    exhaust:!!up.exhaust,turbo:!!up.turbo,boost:up.turbo&&d.engineOn?clamp(d.load*1.5*d.rpm/Vd.red,0,1):0,spin:d.spin||d.skid,limiter:d.limiter,liftEvt:d.liftEvt,shiftEvt:d.shiftEvt});
+    exhaust:!!up.exhaust,turbo:!!up.turbo||!!Vd.jet,boost:Vd.jet?(d.engineOn?d.spool||0:0):up.turbo&&d.engineOn?clamp(d.load*1.5*d.rpm/Vd.red,0,1):0,spin:d.spin||d.skid,limiter:d.limiter,liftEvt:d.liftEvt,shiftEvt:d.shiftEvt});
 }
 const TRAFFIC=['bug','hatch','microbus','pickup','hatch','pickup','gt'];
 function stepTraffic(dt){const d=drive,R=d.route;if(!d.traffic)d.traffic=[];
@@ -2708,7 +2740,7 @@ function renderDrive(t){
   ctx.save();ctx.translate(sr[0],sr[1]);ctx.rotate(ang);ctx.fillStyle=`rgba(0,0,0,${0.32-dk*0.15})`;ctx.beginPath();ctx.ellipse(((Vd.wr+Vd.wf)/2-Vd.wr)*s,ppm*0.06,Vd.L*s*0.56,ppm*0.2,0,0,Math.PI*2);ctx.fill();ctx.restore();
   const idleShake=d.engineOn&&d.crank<=0&&Math.abs(d.v)<0.3?Math.sin(t*0.09)*0.8*(1+(1-C('plugs'))*2):0;
   ctx.save();ctx.translate(sr[0],sr[1]);ctx.rotate(ang);ctx.scale(s,s);ctx.translate(-Vd.wr,0);d.vm=ctx.getTransform();
-  DRAWV[V().type](ctx,{paint:V().paint,rot:d.rot,bodyOff:d.susY*76+idleShake+(d.misfire>0?2:0),pitch:d.pitch,mid:(Vd.wr+Vd.wf)/2,flatF:d.flatF,flatR:d.flatR,wobF:d.wobF,wobR:d.wobR,lightOn:hr>=20||hr<6.2,load:R.test?0:usedSlots()});
+  DRAWV[V().type](ctx,{paint:V().paint,rot:d.rot,bodyOff:d.susY*76+idleShake+(d.misfire>0?2:0),pitch:d.pitch,mid:(Vd.wr+Vd.wf)/2,flatF:d.flatF,flatR:d.flatR,wobF:d.wobF,wobR:d.wobR,lightOn:hr>=20||hr<6.2,load:R.test?0:usedSlots(),jet:Vd.jet&&d.engineOn?d.spool:0});
   if(V().up.plow)drawPlow(ctx,Vd,V().plow??100);if(S.mg)drawTurret(ctx,Vd,true);if(onDuty()){const ph=Math.floor(t/170)%2,bx=Vd.L*0.62,by=-(Vd.h||150)-6;ctx.fillStyle=ph?'#ff3b2f':'#3a6bff';ctx.fillRect(bx,by,22,8)}
   ctx.restore();
   for(const e of evs)if(e.type==='deer'&&e.t0&&!e.done&&e.y>=RC)drawDeer(toX(e.x),toY(e.x)+e.y*ppm,ppm,t);
@@ -2789,7 +2821,7 @@ function renderHUD(){
   const d=drive,R=d.route,top=54,Vd=VD();
   const cx=12,cy=top,cw=262,ch=150;
   ctx.fillStyle='rgba(16,19,22,.85)';rr(ctx,cx,cy,cw,ch,6);ctx.fill();ctx.strokeStyle='#3b444d';ctx.lineWidth=1;ctx.stroke();
-  const gx=cx+56,gyc=cy+60,gr=44,kmh=Math.abs(d.v)*3.6,gmax=Math.max(120,Vd.top+10);
+  const gx=cx+56,gyc=cy+60,gr=44,kmh=Math.abs(d.v)*3.6,gmax=Math.max(120,Vd.top*(V().up.rocket?2:1)+10);
   ctx.strokeStyle='#2a3138';ctx.lineWidth=8;ctx.beginPath();ctx.arc(gx,gyc,gr,Math.PI*0.75,Math.PI*2.25);ctx.stroke();
   const lim=limitAt(R,d.x);
   ctx.strokeStyle=kmh>lim+5?'#e4493b':'#f2b51c';ctx.beginPath();ctx.arc(gx,gyc,gr,Math.PI*0.75,Math.PI*0.75+Math.PI*1.5*clamp(kmh/gmax,0,1));ctx.stroke();
@@ -2797,7 +2829,7 @@ function renderHUD(){
   ctx.strokeStyle=d.rpm>Vd.red*0.92?'#e4493b':'#5aa0d8';ctx.lineWidth=3;ctx.beginPath();ctx.arc(gx,gyc,gr-9,Math.PI*0.75,Math.PI*0.75+Math.PI*1.5*clamp(d.rpm/Vd.red,0,1));ctx.stroke();
   ctx.fillStyle='#ece7db';ctx.font='900 30px "Big Shoulders Display", Impact, sans-serif';ctx.textAlign='center';ctx.fillText(Math.round(kmh),gx,gyc+8);
   ctx.font='600 10px Barlow, sans-serif';ctx.fillStyle='#9da5ac';ctx.fillText('KM/H',gx,gyc+21);
-  ctx.font='700 12px "Share Tech Mono", monospace';ctx.fillStyle=d.rpm>Vd.red*0.92?'#e4493b':'#f2b51c';ctx.fillText(`G ${d.engineOn?d.gear:'–'} · ${Math.round(d.rpm/100)*100} rpm`,gx,cy+ch-6);ctx.textAlign='left';
+  ctx.font='700 12px "Share Tech Mono", monospace';ctx.fillStyle=d.rpm>Vd.red*0.92?'#e4493b':'#f2b51c';ctx.fillText(Vd.jet?`JET · N1 ${d.engineOn?Math.round((d.spool||0)*100):0}%`:`G ${d.engineOn?d.gear:'–'} · ${Math.round(d.rpm/100)*100} rpm`,gx,cy+ch-6);ctx.textAlign='left';
   const bx=cx+118,bw=86;
   gaugeBar(bx,cy+20,bw,'FUEL',V().fuel/tankCap(),V().fuel<tankCap()*0.12?'#e4493b':'#62c06c',Math.round(V().fuel)+'L');
   gaugeBar(bx,cy+46,bw,'ENGINE TEMP',(d.temp-40)/100,d.temp>110?'#e4493b':d.temp>100?'#e9a53a':'#5aa0d8',Math.round(d.temp)+'°');
@@ -3149,7 +3181,7 @@ function shopModal(tab,venue){if(venue!==undefined)shopVenue=venue;
       for(const type of S.city===ALX?[...VORDER,...ALXV]:VORDER){const v=VEH[type],np=newPrice(type),lock=S.rep<(v.rep||0);
         h+=`<div class="vcard"><img src="${thumb(type,v.paints[0])}" alt="${v.n}" style="width:150px;height:70px;background:#1a1f24;border-radius:3px">
          <div class="pinfo"><b>${v.yr} ${v.n}</b><br><span class="muted">${v.desc}</span><br>
-         <span class="tag">${v.cap} slot${v.cap>1?'s':''}</span> <span class="tag">${Math.round(v.pmax/1000)} kW · ${v.tq} N·m</span> <span class="tag">${v.payload.toLocaleString()} kg payload</span> <span class="tag">${v.top} km/h</span> <span class="tag">${v.tank} L</span> <span class="tag">parts ×${v.partM}</span> ${v.cold?'<span class="tag hot">reefer</span>':''} ${v.express?'<span class="tag hot">express +50%</span>':''} ${v.alx?'<span class="tag alx">Alterax only</span>':''} ${v.tough?`<span class="tag">wears ${Math.round((1-v.tough)*100)}% slower</span>`:''} ${v.armor?`<span class="tag">cargo damage −${Math.round((1-v.armor)*100)}%</span>`:''}</div>
+         <span class="tag">${v.cap} slot${v.cap>1?'s':''}</span> <span class="tag">${v.jet?`turbojet · ${v.thrust/1000} kN · no gears`:`${Math.round(v.pmax/1000)} kW · ${v.tq} N·m`}</span> <span class="tag">${v.payload.toLocaleString()} kg payload</span> <span class="tag">${v.top} km/h</span> <span class="tag">${v.tank} L</span> <span class="tag">parts ×${v.partM}</span> ${v.cold?'<span class="tag hot">reefer</span>':''} ${v.express?'<span class="tag hot">express +50%</span>':''} ${v.alx?'<span class="tag alx">Alterax only</span>':''} ${v.tough?`<span class="tag">wears ${Math.round((1-v.tough)*100)}% slower</span>`:''} ${v.armor?`<span class="tag">cargo damage −${Math.round((1-v.armor)*100)}%</span>`:''}</div>
          <div class="row">${lock?`<span class="lock">Needs ${v.rep} ★ · ${money(np)}</span>`:`<button class="btn pri" data-act="buyveh" data-arg="${type}" ${S.money<np?'disabled':''}>Buy new ${money(np)}</button>`}</div></div>`}
       }}
   }
@@ -3180,7 +3212,7 @@ function perfModal(tab){perfTab=tab||perfTab;const Vd=VD(),up=V().up;
   const kw=Math.round(Vd.pmax*(up.ecu?1.1:1)*(up.exhaust?1.05:1)*(up.turbo?1.22:1)/1000);
   let h=`<div class="row" style="justify-content:space-between"><h2 style="color:#ff6a55">Redline Performance</h2><span class="mono">Cash ${money(S.money)}</span></div>
    <div class="tabs">${[['mods','Tuning'],['parts','Performance parts']].map(([k,n])=>`<button class="btn ${perfTab===k?'on':''}" data-act="perf" data-arg="${k}">${n}</button>`).join('')}</div>
-   <div class="kv"><span>Vehicle</span><b>${Vd.yr} ${Vd.n}</b><span>Peak power (stock → now)</span><b>${Math.round(Vd.pmax/1000)} → ${kw} kW</b><span>Peak torque</span><b>${Vd.tq} N·m @ ${Vd.pk} rpm</b></div>`;
+   <div class="kv"><span>Vehicle</span><b>${Vd.yr} ${Vd.n}</b><span>Peak power (stock → now)</span><b>${Math.round(Vd.pmax/1000)} → ${kw} kW</b><span>${Vd.jet?'Thrust (stock → now)':'Peak torque'}</span><b>${Vd.jet?`${(Vd.thrust/1000).toFixed(1)} → ${(Vd.thrust*(up.ecu?1.1:1)*(up.exhaust?1.05:1)*(up.turbo?1.4:1)/1000).toFixed(1)} kN · top ${up.rocket?'500 (1000 rocket)':'500'} km/h`:`${Vd.tq} N·m @ ${Vd.pk} rpm`}</b></div>`;
   if(perfTab==='mods'){
     h+=`<p class="muted">Bolt-on upgrades, fitted on the spot. They stay with this vehicle.</p><table>`;
     for(const m of MODS){const c=modCost(m),own=up[m.id],lock=m.req&&!up[m.req];
