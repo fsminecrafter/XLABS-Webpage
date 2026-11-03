@@ -236,6 +236,8 @@ function resetState(opts) {
     fs, app, start: performance.now(), screen: opts.screen || { w: 1280, h: 720 },
     heap: null, windows: new Map(), nextWindowId: 1, focused: 0, handles: new Map(), nextHandle: 3,
     input: [], mouse: { dx: 0, dy: 0, wheel: 0, buttons: 0 }, pressed: new Set(),
+    hosts: new Map(), reverseHosts: new Map(), nextHostId: 1,
+    netConnections: new Map(), nextNetHandle: 1,
     fb: null, fbDirty: false, fbOwned: false, dirty: new Set(), lastFlush: 0, slice: performance.now(),
     resume: undefined, wait: null, cleanup: 0, exited: false, timer: 0, waitingInput: null,
     outBuf: '',
@@ -579,6 +581,219 @@ function fileMeta(node, path) {
 }
 function fmtDate(d) { const p = (n) => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()); }
 
+function ip4(host) {
+  const parts = String(host).split('.');
+  if (parts.length !== 4 || parts.some(p => !/^(0|[1-9]\d{0,2})$/.test(p) || Number(p) > 255)) return 0;
+  return parts.reduce((ip, p) => ((ip << 8) | Number(p)) >>> 0, 0);
+}
+
+function networkHost(host) {
+  const literal = ip4(host);
+  if (literal) return literal;
+  if (!/^(?=.{1,253}$)[a-z\d](?:[a-z\d.-]*[a-z\d])?$/i.test(host)) return 0;
+  const key = host.toLowerCase();
+  if (state.hosts.has(key)) return state.hosts.get(key);
+  const ip = (0xC6336400 + state.nextHostId++) >>> 0;
+  state.hosts.set(key, ip);
+  state.reverseHosts.set(ip, key);
+  return ip;
+}
+
+function ip4Text(ip) {
+  return [(ip >>> 24) & 255, (ip >>> 16) & 255, (ip >>> 8) & 255, ip & 255].join('.');
+}
+
+function networkError(conn, message) {
+  conn.failed = true;
+  conn.peerClosed = true;
+  conn.requestStarted = true;
+  if (conn.errorReported || conn.closed || state.exited) return;
+  conn.errorReported = true;
+  post({ t: 'netError', message });
+}
+
+function networkBytes(parts) {
+  const size = parts.reduce((n, p) => n + p.length, 0), out = new Uint8Array(size);
+  let at = 0;
+  for (const part of parts) { out.set(part, at); at += part.length; }
+  return out;
+}
+
+function httpRequest(conn) {
+  const data = conn.request;
+  let end = -1;
+  for (let i = 3; i < data.length; i++) {
+    if (data[i - 3] === 13 && data[i - 2] === 10 && data[i - 1] === 13 && data[i] === 10) { end = i + 1; break; }
+  }
+  if (end < 0) return null;
+  const text = new TextDecoder().decode(data.subarray(0, end - 4));
+  const lines = text.split('\r\n'), first = lines.shift().match(/^([A-Z!#$%&'*+.^_`|~-]+)\s+(\S+)\s+HTTP\/1\.[01]$/);
+  if (!first || first[1] === 'CONNECT') throw new Error('The preview supports HTTP request methods, not raw TCP tunnels.');
+  const headers = new Headers();
+  let length = 0;
+  for (const line of lines) {
+    const colon = line.indexOf(':');
+    if (colon <= 0) throw new Error('Malformed HTTP request header.');
+    const name = line.slice(0, colon).trim(), value = line.slice(colon + 1).trim();
+    if (!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(name)) throw new Error('Malformed HTTP request header.');
+    if (name.toLowerCase() === 'content-length') {
+      if (!/^\d+$/.test(value) || Number(value) > 16 * 1024 * 1024) throw new Error('Invalid or oversized HTTP request body.');
+      length = Number(value);
+    } else if (name.toLowerCase() === 'transfer-encoding') {
+      throw new Error('Chunked HTTP requests are not supported in the preview.');
+    } else if (!/^(host|connection|content-length|transfer-encoding|upgrade|keep-alive|proxy-|sec-)/i.test(name)) {
+      headers.append(name, value);
+    }
+  }
+  const bodyStart = end;
+  if (data.length < bodyStart + length) return null;
+  const base = (conn.secure ? 'https://' : 'http://') + conn.host +
+    ((conn.secure && conn.port === 443) || (!conn.secure && conn.port === 80) ? '' : ':' + conn.port) + '/';
+  const url = new URL(first[2] === '*' ? '/' : first[2], base);
+  if (url.origin !== new URL(base).origin) throw new Error('The HTTP request target must stay on the connected host.');
+  const method = first[1];
+  if ((method === 'GET' || method === 'HEAD') && length) throw new Error(method + ' requests cannot have a body.');
+  return { url: url.href, method, headers, body: length ? data.slice(bodyStart, bodyStart + length) : undefined };
+}
+
+async function responseBytes(response) {
+  const chunks = [];
+  let size = 0;
+  if (response.body) {
+    const reader = response.body.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.length;
+      if (size > 16 * 1024 * 1024) {
+        await reader.cancel();
+        throw new Error('HTTP response exceeds the 16 MiB preview limit.');
+      }
+      chunks.push(value);
+    }
+  }
+  return networkBytes(chunks);
+}
+
+function startHttpRequest(conn) {
+  if (conn.requestStarted) return;
+  let request;
+  try { request = httpRequest(conn); } catch (e) { networkError(conn, e.message); return; }
+  if (!request) return;
+  conn.requestStarted = true;
+  conn.controller = new AbortController();
+  if (conn.timeoutMs) {
+    conn.timeout = setTimeout(() => {
+      if (!conn.closed && !conn.peerClosed) {
+        conn.controller.abort();
+        networkError(conn, 'HTTP(S) request timed out.');
+      }
+    }, Math.min(conn.timeoutMs, 0x7FFFFFFF));
+  }
+  const runState = state;
+  fetch(request.url, {
+    method: request.method, headers: request.headers, body: request.body,
+    mode: 'cors', credentials: 'omit', redirect: 'follow', cache: 'no-store',
+    signal: conn.controller.signal
+  }).then(async response => {
+    const body = await responseBytes(response);
+    if (conn.timeout) clearTimeout(conn.timeout);
+    if (state !== runState || conn.closed) return;
+    const headers = [];
+    response.headers.forEach((value, name) => {
+      if (!/^(content-length|content-encoding|transfer-encoding|connection)$/i.test(name)) headers.push(name + ': ' + value);
+    });
+    const head = new TextEncoder().encode('HTTP/1.1 ' + response.status + ' ' + (response.statusText || 'Response') +
+      '\r\n' + headers.join('\r\n') + '\r\ncontent-length: ' + body.length + '\r\nconnection: close\r\n\r\n');
+    conn.response = networkBytes([head, body]);
+    conn.peerClosed = true;
+  }).catch(e => {
+    if (conn.timeout) clearTimeout(conn.timeout);
+    if (state === runState && !conn.closed && e.name !== 'AbortError')
+      networkError(conn, 'HTTP(S) request failed: ' + (e.message || String(e)) + ' (check the URL and browser CORS policy).');
+  });
+}
+
+function networkSyscall(req) {
+  const R = L.syscall_net_request_t, op = rd(req, R.op);
+  if (op === 1) {
+    const at = rd(req, R.out_status);
+    if (!at) return ERR.INVAL;
+    const S = L.syscall_net_status_t;
+    U8.fill(0, at, at + S.$size);
+    wr(at, S.has_driver, 1); wr(at, S.configured, 1);
+    U8.set([0x02, 0x58, 0x4c, 0x41, 0x42, 0x53], at + S.mac.off);
+    wr(at, S.local_ip, 0x0A00020F); wr(at, S.netmask, 0xFFFFFF00);
+    wr(at, S.gateway, 0x0A000202); wr(at, S.dns, 0x0A000203);
+    return OK;
+  }
+  if (op === 2 || op === 21 || op === 22 || op === 23 || op === 24 ||
+      op === 32 || op === 33 || op === 34 || op === 35 || op === 49) return ERR.PERM;
+  if (op === 4) return OK;
+  if (op === 3) {
+    const host = str(rd(req, R.host), 254), out = rd(req, R.out_ip);
+    if (!host || !out) return ERR.INVAL;
+    const ip = networkHost(host);
+    if (!ip) return ERR.NOTFOUND;
+    U32[out >>> 2] = ip;
+    return OK;
+  }
+  if (op === 16 || op === 48) {
+    const ip = rd(req, R.ip), port = rd(req, R.port), out = rd(req, R.out_handle);
+    const host = state.reverseHosts.get(ip) || ip4Text(ip);
+    if (!ip || !port || !out) return ERR.INVAL;
+    const handle = state.nextNetHandle++;
+    state.netConnections.set(handle, {
+      kind: op === 48 ? 'tls' : 'tcp', host, port, secure: op === 48,
+      timeoutMs: rd(req, R.timeout_ms),
+      request: new Uint8Array(0), response: new Uint8Array(0), responsePos: 0,
+      requestStarted: false, peerClosed: false, failed: false, errorReported: false, closed: false,
+    });
+    BU64[out >>> 3] = BigInt(handle);
+    return OK;
+  }
+
+  const handle = rd(req, R.handle), conn = state.netConnections.get(handle);
+  if (op === 20 || op === 50) {
+    if (!conn || conn.closed || (op === 20 && conn.kind !== 'tcp') || (op === 50 && conn.kind !== 'tls'))
+      return op === 50 ? 0n : ERR.BADFD;
+    if (op === 50) return conn.failed ? 0n : 2n;
+    return conn.failed ? 0n : conn.peerClosed ? 4n : 2n;
+  }
+  if (op === 19 || op === 53) {
+    if (!conn || conn.closed || (op === 19 && conn.kind !== 'tcp') || (op === 53 && conn.kind !== 'tls')) return ERR.BADFD;
+    conn.closed = true;
+    if (conn.controller) conn.controller.abort();
+    if (conn.timeout) clearTimeout(conn.timeout);
+    state.netConnections.delete(handle);
+    return OK;
+  }
+  if (op === 17 || op === 51) {
+    const kind = op === 51 ? 'tls' : 'tcp';
+    if (!conn || conn.closed || conn.kind !== kind || conn.requestStarted) return ERR.BADFD;
+    const ptr = rd(req, R.buf), len = rd(req, R.len);
+    if (!ptr || !len || len > (kind === 'tls' ? 4096 : 65536) || len > MEM_SIZE - ptr) return ERR.INVAL;
+    if (conn.request.length + len > 16 * 1024 * 1024) return ERR.INVAL;
+    conn.request = networkBytes([conn.request, U8.slice(ptr, ptr + len)]);
+    startHttpRequest(conn);
+    return BigInt(len);
+  }
+  if (op === 18 || op === 52) {
+    const kind = op === 52 ? 'tls' : 'tcp';
+    if (!conn || conn.closed || conn.kind !== kind) return ERR.BADFD;
+    const ptr = rd(req, R.buf), len = rd(req, R.len);
+    if (!ptr || !len || len > MEM_SIZE - ptr) return ERR.INVAL;
+    const count = Math.min(len, conn.response.length - conn.responsePos);
+    if (count) {
+      U8.set(conn.response.subarray(conn.responsePos, conn.responsePos + count), ptr);
+      conn.responsePos += count;
+      return BigInt(count);
+    }
+    return conn.failed || conn.peerClosed ? ERR.NOTFOUND : 0n;
+  }
+  return ERR.NOTFOUND;
+}
+
 kernel.syscall = function (n, a, b, c) {
   const r = sysInner(n, a, b, c);
   // give the page a turn now and then, even if the program never sleeps
@@ -729,14 +944,7 @@ function sysInner(n, a, b, c) {
       }
       return ERR.INVAL;
     }
-    case 30: {                                         // NET: no network card in the preview
-      const R = L.syscall_net_request_t, req = Number(a);
-      const op = rd(req, R.op);
-      if (op === 1) { const st = rd(req, R.out_status); if (st) { const S = L.syscall_net_status_t; U8.fill(0, st, st + S.$size); } return OK; }
-      if (op === 2) return ERR.PERM;
-      if (op === 4) return OK;
-      return ERR.NOTFOUND;
-    }
+    case 30: return networkSyscall(Number(a));         // NET
     case 31: {                                         // HEAP
       const op = Number(a), ptr = Number(b), size = Number(c);
       if (op === 1 || op === 4) { if (size <= 0 || size > 64 * 1024 * 1024) return ERR.INVAL; const p = s.heap.alloc(size); return p ? BigInt(p) : ERR.GENERIC; }
@@ -828,6 +1036,12 @@ function schedule(ms) {
 function finish(code, crash) {
   if (state.exited) return;
   state.exited = true;
+  for (const conn of state.netConnections.values()) {
+    conn.closed = true;
+    if (conn.controller) conn.controller.abort();
+    if (conn.timeout) clearTimeout(conn.timeout);
+  }
+  state.netConnections.clear();
   flushFrames();
   if (state.timer) clearTimeout(state.timer);
   post({ t: 'exit', code, crash: crash || null, windows: [...state.windows.keys()] });

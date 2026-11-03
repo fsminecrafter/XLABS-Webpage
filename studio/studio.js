@@ -355,6 +355,10 @@ function onWorker(m) {
       log('compiled in ' + m.compileMs + ' ms\n', 'sys');
       $('screen').focus({ preventScroll: true });
       return;
+    case 'netError':
+      log('Networking error: ' + m.message + '\n', 'bad');
+      desktop.write('Networking error: ' + m.message + '\n');
+      return;
     case 'out': log(m.text); desktop.message(m); return;
     case 'exit':
       exited = true;

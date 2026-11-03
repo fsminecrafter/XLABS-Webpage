@@ -17,7 +17,7 @@ Open `studio/index.html` through a web server (Web Workers do not run from
 | `docsview.js` | The docs pane: the collapsible page list, search, content and F1 lookup |
 | `fonts/` | Inter (SIL OFL), the fonts mosWM installs; the preview puts them at the same path so smooth text works there |
 | `desktop.js` | The preview desktop: mosWM-style windows, taskbar, terminal, input |
-| `worker.js` | Runs a program: compiles it with the JS back end and emulates the Minimal-OS kernel (syscalls, window manager, MinimaFS, heap, graphics, input) |
+| `worker.js` | Runs a program: compiles it with the JS back end and emulates the Minimal-OS kernel (syscalls, window manager, MinimaFS, heap, graphics, input, and outbound HTTP(S)) |
 | `fgpu.js` | `SYS_GPU` for the preview: a port of the kernel's FGPU (`fgpu.c`, `fgpu_raster.c`, `fgpu_shader.c`), so FarcadeGL programs run. Shader programs are checked like the kernel checks them, then compiled to JavaScript |
 | `mcc-front.js` | mcc, the C compiler: preprocessor, parser, type checker |
 | `mcc-cpp.js` | mcc's C++ front end: lowers classes, templates and the rest to the C syntax tree |
@@ -49,6 +49,16 @@ a path given as a second argument) into the website's Docs pages in
 `build-sdk.mjs` also swaps FarcadeGL's one-instruction `fglSqrt` (SSE inline
 assembly) for the same square root in plain C.
 
+## Networking in the preview
+
+The preview supports outbound HTTP/HTTPS over the SDK's TCP/TLS client calls.
+It translates one HTTP/1.x request per connection to the browser's `fetch` API;
+the browser performs DNS and enforces same-origin/CORS rules. Credentials are
+omitted. Request and response bodies are limited to 16 MiB, and chunked
+requests are not supported. UDP, DHCP, TCP listeners, TLS server sessions, and
+non-HTTP protocols are unavailable in the preview. Built `.run` programs use
+the full network stack when run on Minimal-OS.
+
 ## Tests
 
 ```sh
@@ -60,6 +70,13 @@ Node) and with the x86_64 back end (run on Linux by `loader.c`, which loads the
 ELF the way Minimal-OS's `elfloader.c` does and services syscalls through a
 test hook). All three outputs must match. It also compiles every template with
 both back ends.
+
+```sh
+node studio/tests/net-preview.js
+```
+
+Exercises the preview's SDK DNS and TCP-to-HTTP bridge against a local HTTP
+server.
 
 ```sh
 studio/tests/fgpu-diff.sh path/to/Minimal-OS

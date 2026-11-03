@@ -257,7 +257,7 @@ code,pre,kbd,.term{font-variant-ligatures:none}
       <a href="#projects" data-route="projects">Projects</a>
       <a href="#/red-sandbox" data-route="sandbox">Red Sandbox</a>
       <a href="studio/">Studio</a>
-      <a href="#roadmap" class="opt">Roadmap</a>
+      <a href="#/p/roadmap" data-route="roadmap" class="opt">Roadmap</a>
       <a href="#/docs" data-route="docs">Docs</a>
       <span class="tools">
         <button type="button" class="ib search-open" aria-label="Search the docs" title="Search (/)"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><kbd>/</kbd></button>
@@ -412,43 +412,6 @@ code,pre,kbd,.term{font-variant-ligatures:none}
       </div>
     </section>
 
-    <section id="roadmap">
-      <h2>Roadmap</h2>
-      <div class="road">
-        <div>
-          <span class="k">0.4.51, done in the source</span>
-          <ul>
-            <li><span class="tick done">✓</span>Golf</li>
-            <li><span class="tick done">✓</span>GPU support — VRAM, NVIDIA Pascal/Turing and QEMU drivers</li>
-            <li><span class="tick done">✓</span>FarcadeGL, the Minimal-OS 3D library</li>
-            <li><span class="tick done">✓</span>Partitions and larger disks — MBR/GPT, 16 TiB, NVMe</li>
-            <li><span class="tick done">✓</span>Installer and bootable disk installs, BIOS and UEFI</li>
-          </ul>
-          <span class="k later">Shipped in 0.4.50</span>
-          <ul>
-            <li><span class="tick done">✓</span>Simple desktop — MOSdesk</li>
-            <li><span class="tick done">✓</span>Window manager — mosWM</li>
-            <li><span class="tick done">✓</span>File browser and text editor</li>
-            <li><span class="tick done">✓</span>App development in the browser — Run Studio</li>
-          </ul>
-        </div>
-        <div class="todo">
-          <span class="k">0.4.52, planned</span>
-          <ul>
-            <li><span class="tick">○</span>GPU engine and GLSL-style shaders on the card — shader IR, firmware loading and the backend hook are in; GSP boot and SASS encoding are next</li>
-            <li><span class="tick">○</span>Fixes across the apps</li>
-            <li><span class="tick">○</span>A web browser, maybe</li>
-          </ul>
-          <span class="k later">Earlier</span>
-          <ul class="past">
-            <li><span class="tick done">✓</span>0.4.4x — multicore, services, syscalls, <code>.run</code> programs</li>
-            <li><span class="tick done">✓</span>0.4.05 — scheduler, images, fonts, USB, audio, MinimaFS</li>
-            <li><span class="tick done">✓</span>0.4.00 — graphics, processes, allocator, panic screen</li>
-          </ul>
-          <p class="note"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/roadmap.txt">Full roadmap on GitHub</a></p>
-        </div>
-      </div>
-    </section>
   </main>
 <main id="docs" class="docs" hidden>
 <nav class="side" aria-label="Documentation"><!-- os-docs:nav --><span class="h">Minimal-OS docs</span><a href="#/docs/system-overview" data-nav="system-overview">Overview</a><a href="#/docs/build-and-debugging" data-nav="build-and-debugging">Build and debugging</a><a href="#/docs/boot-and-kernel" data-nav="boot-and-kernel">Boot and kernel</a><a href="#/docs/hardware-and-drivers" data-nav="hardware-and-drivers">Hardware and drivers</a><a href="#/docs/gpu" data-nav="gpu">GPU and 3D</a><a href="#/docs/storage-and-packages" data-nav="storage-and-packages">Storage and packages</a><a href="#/docs/installing" data-nav="installing">Installing to a disk</a><a href="#/docs/networking" data-nav="networking">Networking</a><a href="#/docs/services" data-nav="services">Services</a><a href="#/docs/install-and-services" data-nav="install-and-services">Install and services</a><a href="#/docs/user-programs" data-nav="user-programs">User programs</a><a href="#/docs/user-sdk-syscalls" data-nav="user-sdk-syscalls">SDK and syscalls</a><!-- /os-docs:nav --><!-- sdk-docs:nav --><span class="h">SDK functions</span><a href="#/docs/sdk-functions" data-nav="sdk-functions">Overview</a><a href="#/docs/sdk-conventions" data-nav="sdk-conventions">Conventions and errors</a><a href="#/docs/sdk-process" data-nav="sdk-process">Process and terminal</a><a href="#/docs/sdk-files" data-nav="sdk-files">Files</a><a href="#/docs/sdk-memory" data-nav="sdk-memory">Memory and randomness</a><a href="#/docs/sdk-strings" data-nav="sdk-strings">Strings and memory</a><a href="#/docs/sdk-output" data-nav="sdk-output">Formatted output</a><a href="#/docs/sdk-windows" data-nav="sdk-windows">Windows</a><a href="#/docs/sdk-easyui" data-nav="sdk-easyui">easyui widgets</a><a href="#/docs/sdk-font" data-nav="sdk-font">Text in your own pixels</a><a href="#/docs/sdk-graphics" data-nav="sdk-graphics">Graphics</a><a href="#/docs/sdk-input" data-nav="sdk-input">Input</a><a href="#/docs/sdk-network" data-nav="sdk-network">Networking</a><a href="#/docs/sdk-sysinfo" data-nav="sdk-sysinfo">System information</a><a href="#/docs/sdk-packages" data-nav="sdk-packages">Packages</a><a href="#/docs/sdk-managers" data-nav="sdk-managers">Device managers</a><a href="#/docs/sdk-farcadegl" data-nav="sdk-farcadegl">FarcadeGL 3D</a><a href="#/docs/sdk-fgsl" data-nav="sdk-fgsl">FGSL shading language</a><a href="#/docs/sdk-storage" data-nav="sdk-storage">Disks and root commands</a><!-- /sdk-docs:nav --></nav>
@@ -2857,7 +2820,7 @@ long mos_root_read(char* out, size_t out_size);</code></pre>
 <p><code>mos_root_auth</code> checks the password of the MOSdesk account and gives the process a ticket for a few minutes (<code>SYS_ERR_PERM</code> when wrong). <code>mos_root_run</code> starts a kernel terminal command such as <code>install sata1 --yes</code>; one command runs at a time. <code>mos_root_read</code> appends the command's output to <code>out</code> and returns 1 while it still runs, 0 once it has finished. The MOSdesk Installer is built this way.</p><nav class="pager" aria-label="More pages"><a class="pv" href="#/docs/sdk-fgsl" rel="prev"><span>Previous</span>FGSL shading language</a><span></span></nav><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/storage.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
 <!-- /sdk-docs:pages --></div></main>
 <main id="pages" class="docs" hidden>
-<nav class="side" aria-label="Projects"><span class="h">Projects</span><a href="#/p/minimal-os" data-page-nav="minimal-os">Minimal-OS</a><a href="#/p/sdk" data-page-nav="sdk">Minimal-OS SDK</a><a href="#/p/farcadegl" data-page-nav="farcadegl">FarcadeGL</a><a href="#/p/minimassl" data-page-nav="minimassl">MinimaSSL</a><a href="#/p/mosdesk" data-page-nav="mosdesk">MOSdesk</a><a href="#/p/moswm" data-page-nav="moswm">mosWM</a><a href="#/p/studio" data-page-nav="studio">Run Studio</a><a href="#/red-sandbox" data-page-nav="red-sandbox">Red Sandbox</a></nav>
+<nav class="side" aria-label="Projects"><span class="h">Projects</span><a href="#/p/minimal-os" data-page-nav="minimal-os">Minimal-OS</a><a href="#/p/sdk" data-page-nav="sdk">Minimal-OS SDK</a><a href="#/p/farcadegl" data-page-nav="farcadegl">FarcadeGL</a><a href="#/p/minimassl" data-page-nav="minimassl">MinimaSSL</a><a href="#/p/mosdesk" data-page-nav="mosdesk">MOSdesk</a><a href="#/p/moswm" data-page-nav="moswm">mosWM</a><a href="#/p/studio" data-page-nav="studio">Run Studio</a><a href="#/p/roadmap" data-page-nav="roadmap">Roadmap</a><a href="#/red-sandbox" data-page-nav="red-sandbox">Red Sandbox</a></nav>
 <div>
 
 <article class="doc" data-page="minimal-os" hidden>
@@ -3150,7 +3113,7 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
 <article class="doc" data-page="studio" hidden>
 <p class="eyebrow">Web tool · JavaScript</p>
 <h1>Run Studio</h1>
-<p class="intro">A complete little toolchain in a web page: an editor, a C and C++ compiler, a preview of Minimal-OS with mosWM, and a linker that writes real <code>.run</code> and <code>.mpkg</code> files. Nothing is uploaded; it all runs in your browser.</p>
+<p class="intro">A complete little toolchain in a web page: an editor, a C and C++ compiler, a preview of Minimal-OS with mosWM, and a linker that writes real <code>.run</code> and <code>.mpkg</code> files. Source and builds stay in your browser; preview network requests go directly from the browser.</p>
 <div class="btns"><a class="btn primary" href="studio/">Open Run Studio</a></div>
 <h2>The compiler</h2>
 <p>Studio includes <b>mcc</b>, a C11 and C++ compiler written for it. C++ is lowered to the same syntax tree as C — methods take an explicit <code>this</code>, constructors and destructors become calls at the right places, virtual calls go through a vtable, templates are instantiated per use — so both back ends handle it unchanged. It preprocesses and type-checks your code against the real SDK headers (only the three inline-assembly syscall stubs are swapped for a <code>__syscall</code> builtin) and has two back ends:</p>
@@ -3162,12 +3125,55 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
 <h2>The preview</h2>
 <p>The preview recreates mosWM: window chrome with the kernel's default style or your own, moving, resizing, edge tiling, minimise and maximise, a taskbar, and a terminal for programs that print. Mouse and keyboard input arrive as the same window events mosWM posts, with USB HID key codes. Programs that use <code>graphics.h</code> draw to a full-screen framebuffer with the kernel's 8×8 font.</p>
 <p>3D works too. FarcadeGL programs draw through a JavaScript port of the kernel's GPU pipeline, with the same lighting, texturing, wireframe and FGSL shaders. Its frames are checked against the kernel's own rasterizer and match it pixel for pixel, apart from a few edge pixels. Try the 3D cube sample.</p>
+<h2>Networking in the preview</h2>
+<p>The preview maps outbound HTTP and HTTPS requests through the browser's <code>fetch</code> API. Use the SDK's DNS, TCP or TLS client calls to send one HTTP/1.x request per connection. Requests obey browser same-origin and CORS rules, credentials are omitted, and the browser resolves hostnames. Network failures are shown in the Studio output and preview terminal.</p>
+<p>This is not a raw socket implementation: UDP, DHCP, TCP listeners, TLS server sessions, and arbitrary non-HTTP protocols are unavailable. A program built in Studio still uses the full Minimal-OS networking stack when run on the OS.</p>
 <h2>Limits</h2>
 <ul>
 <li>No <code>goto</code>, bit-fields, variable-length arrays, inline assembly or statement expressions; <code>long double</code> is <code>double</code>.</li>
 <li>C++ without exceptions or RTTI (like the SDK), lambdas, rvalue references, multiple inheritance, member templates or class template specialization.</li>
-<li>The preview has no network card and cannot run <code>SYS_EXEC</code> or <code>SYS_PKG</code>. Its GPU cannot page flip, so full-screen FarcadeGL programs present by copying.</li>
+<li>The preview cannot run <code>SYS_EXEC</code> or <code>SYS_PKG</code>. Its GPU cannot page flip, so full-screen FarcadeGL programs present by copying.</li>
 </ul>
+</article>
+
+<article class="doc" data-page="roadmap" hidden>
+<p class="eyebrow">Xlabs · Project status</p>
+<h1>Roadmap</h1>
+<p class="intro">A snapshot of what has shipped, what is planned next, and the earlier milestones behind Minimal-OS and its desktop.</p>
+<div class="road">
+  <div>
+    <span class="k">0.4.51, done in the source</span>
+    <ul>
+      <li><span class="tick done">✓</span>Golf</li>
+      <li><span class="tick done">✓</span>GPU support — VRAM, NVIDIA Pascal/Turing and QEMU drivers</li>
+      <li><span class="tick done">✓</span>FarcadeGL, the Minimal-OS 3D library</li>
+      <li><span class="tick done">✓</span>Partitions and larger disks — MBR/GPT, 16 TiB, NVMe</li>
+      <li><span class="tick done">✓</span>Installer and bootable disk installs, BIOS and UEFI</li>
+    </ul>
+    <span class="k later">Shipped in 0.4.50</span>
+    <ul>
+      <li><span class="tick done">✓</span>Simple desktop — MOSdesk</li>
+      <li><span class="tick done">✓</span>Window manager — mosWM</li>
+      <li><span class="tick done">✓</span>File browser and text editor</li>
+      <li><span class="tick done">✓</span>App development in the browser — Run Studio</li>
+    </ul>
+  </div>
+  <div class="todo">
+    <span class="k">0.4.52, planned</span>
+    <ul>
+      <li><span class="tick">○</span>GPU engine and GLSL-style shaders on the card — shader IR, firmware loading and the backend hook are in; GSP boot and SASS encoding are next</li>
+      <li><span class="tick">○</span>Fixes across the apps</li>
+      <li><span class="tick">○</span>A web browser, maybe</li>
+    </ul>
+    <span class="k later">Earlier</span>
+    <ul class="past">
+      <li><span class="tick done">✓</span>0.4.4x — multicore, services, syscalls, <code>.run</code> programs</li>
+      <li><span class="tick done">✓</span>0.4.05 — scheduler, images, fonts, USB, audio, MinimaFS</li>
+      <li><span class="tick done">✓</span>0.4.00 — graphics, processes, allocator, panic screen</li>
+    </ul>
+    <p class="note"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/roadmap.txt">Full roadmap on GitHub</a></p>
+  </div>
+</div>
 </article>
 
 </div>
@@ -3293,7 +3299,7 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
       parts.forEach(function(a){a.hidden=a.dataset.page!==id});
       plinks.forEach(function(l){l.dataset.pageNav===id?l.setAttribute('aria-current','page'):l.removeAttribute('aria-current')});
       document.title=pages.querySelector('[data-page="'+id+'"] h1').textContent+' · Xlabs';
-      mark('projects');window.scrollTo(0,0);
+      mark(id==='roadmap'?'roadmap':'projects');window.scrollTo(0,0);
     }else if(/^#\/red-sandbox/.test(h)){
       show(sandbox);document.title='Red Sandbox · Xlabs';mark('sandbox');window.scrollTo(0,0);
     }else{

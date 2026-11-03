@@ -306,7 +306,7 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
         <ul>
           <li>No <code>goto</code>, bit-fields, variable-length arrays, inline assembly or statement expressions; <code>long double</code> is <code>double</code>; <code>case</code> labels must sit directly in the switch block.</li>
           <li>C++: classes, single inheritance, virtual functions, constructors and destructors, operator overloading, references, <code>new</code>/<code>delete</code>, namespaces, function and class templates, <code>auto</code>, range-based <code>for</code>, <code>enum class</code>. Not supported: exceptions and RTTI (the SDK builds without them), lambdas, rvalue references, multiple inheritance, member templates and class template specialization.</li>
-          <li>The preview is not cycle-accurate and has no network card; <code>SYS_PKG</code> and <code>SYS_EXEC</code> report errors there.</li>
+          <li>The preview supports outbound HTTP(S) via browser <code>fetch</code> (subject to CORS); UDP, DHCP, TCP listeners and non-HTTP sockets are unavailable. <code>SYS_PKG</code> and <code>SYS_EXEC</code> report errors there.</li>
         </ul>
         <h3>Keys</h3>
         <p><code>Ctrl+Enter</code> run · <code>Ctrl+.</code> stop · <code>Ctrl+S</code> save · <code>Ctrl+/</code> comment · <code>F1</code> docs for the function under the cursor (or show/hide the docs). Projects are saved in this browser.</p>
