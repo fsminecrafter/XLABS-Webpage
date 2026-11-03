@@ -116,9 +116,12 @@ body.docking,body.docking *{cursor:grabbing!important;user-select:none}
 .dcontent p,.dcontent li{margin:6px 0}
 .dcontent ul,.dcontent ol{padding-left:20px}
 .dcontent a{color:var(--accent)}
-.dcontent code{font:400 12.5px "JetBrains Mono",monospace;background:var(--line);padding:1px 4px;border-radius:3px}
+.dcontent code{font:400 12.5px "JetBrains Mono",monospace;font-variant-ligatures:none;background:var(--line);padding:1px 4px;border-radius:3px}
 .dcontent pre{position:relative;background:var(--panel);color:var(--panel-ink);padding:10px 12px;border-radius:6px;overflow-x:auto;line-height:1.55;margin:8px 0}
 .dcontent pre code{background:none;padding:0;font-size:12.5px;color:inherit}
+.dcontent .hl-keyword{color:#9DA9FF}.dcontent .hl-type{color:#7FD1C7}.dcontent .hl-string{color:#E6C07B}.dcontent .hl-number,.dcontent .hl-atom{color:#F0A27A}
+.dcontent .hl-comment{color:#7F8590;font-style:italic}.dcontent .hl-meta{color:#C792EA}.dcontent .hl-fn{color:#82AAFF}.dcontent .hl-op{color:#B9C0CA}
+.dcontent .hl-prop{color:#D6DAE0}.dcontent .hl-flag{color:#A6D7A0}
 .dcopy{position:absolute;top:4px;right:4px;border:1px solid var(--panel-line);background:var(--panel);color:var(--panel-dim);font:500 11px "Instrument Sans",system-ui,sans-serif;padding:2px 7px;border-radius:4px;cursor:pointer;opacity:0}
 .dcontent pre:hover .dcopy,.dcopy:focus-visible{opacity:1}
 .dcopy:hover{color:var(--panel-ink)}
@@ -335,6 +338,7 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
 <script src="desktop.js"></script>
 <script src="docs.js"></script>
 <script src="layout.js"></script>
+<script src="../assets/highlight.js"></script>
 <script src="docsview.js"></script>
 <script src="studio.js"></script>
 </body>

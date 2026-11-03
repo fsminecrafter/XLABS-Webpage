@@ -32,6 +32,7 @@ const OS_PAGES = [
   ['build-and-debugging', 'Build and debugging'],
   ['boot-and-kernel', 'Boot and kernel'],
   ['hardware-and-drivers', 'Hardware and drivers'],
+  ['audio', 'Audio'],
   ['gpu', 'GPU and 3D'],
   ['storage-and-packages', 'Storage and packages'],
   ['installing', 'Installing to a disk'],
