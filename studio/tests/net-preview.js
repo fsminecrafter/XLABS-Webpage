@@ -1,4 +1,4 @@
-// Exercises the preview's SDK DNS and TCP-to-HTTP bridge against a local server.
+// Exercises the preview's SDK TCP-to-HTTP bridge against a local proxy endpoint.
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
@@ -8,11 +8,21 @@ const server = http.createServer((req, res) => {
   req.setEncoding('utf8');
   req.on('data', chunk => { body += chunk; });
   req.on('end', () => {
-    if (req.url !== '/preview-test' || req.method !== 'POST' || body !== 'ping') {
-      res.writeHead(400); res.end('bad request'); return;
+    let proxyRequest;
+    try { proxyRequest = JSON.parse(body); } catch { proxyRequest = null; }
+    if (req.url !== '/v1/fetch' || req.method !== 'POST' ||
+        proxyRequest?.url !== 'http://example.com/preview-test' ||
+        proxyRequest?.method !== 'POST' ||
+        Buffer.from(proxyRequest.body || '', 'base64').toString() !== 'ping') {
+      res.writeHead(400, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Unexpected proxy request.' }));
+      return;
     }
-    res.writeHead(200, { 'content-type': 'text/plain' });
-    res.end('network-ok');
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({
+      status: 200, statusText: 'OK', headers: [['content-type', 'text/plain']],
+      body: Buffer.from('network-ok').toString('base64'),
+    }));
   });
 });
 
@@ -23,8 +33,8 @@ server.listen(0, () => {
 
 int main(void) {
     uint32_t ip = 0;
-    if (mos_net_resolve("localhost", &ip, 1000) != (long)SYS_SUCCESS) return 1;
-    long h = mos_tcp_connect(ip, ${port}, 1000);
+    if (mos_net_resolve("example.com", &ip, 1000) != (long)SYS_SUCCESS) return 1;
+    long h = mos_tcp_connect(ip, 80, 1000);
     if (h < 0) return 2;
     const char request[] = "POST /preview-test HTTP/1.1\\r\\nHost: localhost\\r\\nContent-Type: text/plain\\r\\nContent-Length: 4\\r\\nConnection: close\\r\\n\\r\\n";
     if (mos_tcp_send(h, request, sizeof(request) - 1) < 0) return 3;
@@ -73,6 +83,7 @@ int main(void) {
   }, 15000);
   globalThis.onmessage({ data: {
     t: 'run', files: { 'main.c': source }, name: 'net-preview', args: [],
-    resources: [], system: [], screen: { w: 640, h: 480 }
+    resources: [], system: [], screen: { w: 640, h: 480 },
+    httpProxy: 'http://127.0.0.1:' + port + '/v1/fetch'
   } });
 });

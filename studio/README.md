@@ -52,12 +52,33 @@ assembly) for the same square root in plain C.
 ## Networking in the preview
 
 The preview supports outbound HTTP/HTTPS over the SDK's TCP/TLS client calls.
-It translates one HTTP/1.x request per connection to the browser's `fetch` API;
-the browser performs DNS and enforces same-origin/CORS rules. Credentials are
-omitted. Request and response bodies are limited to 16 MiB, and chunked
-requests are not supported. UDP, DHCP, TCP listeners, TLS server sessions, and
-non-HTTP protocols are unavailable in the preview. Built `.run` programs use
-the full network stack when run on Minimal-OS.
+Without a proxy it uses browser `fetch`, so the target must allow the Studio
+origin through CORS. To reach hosts that do not allow browser requests, run the
+optional self-hosted relay:
+
+```sh
+ALLOWED_HOSTS=google.com,www.google.com \
+ALLOWED_ORIGINS=https://fsminecrafter.github.io \
+HOST=0.0.0.0 PORT=8787 \
+node studio/proxy/server.mjs
+```
+
+Deploy the relay behind HTTPS, and open Studio with its endpoint configured:
+
+```text
+studio/?httpProxy=https%3A%2F%2Fproxy.example.com%2Fv1%2Ffetch
+```
+
+The relay requires exact hostnames and exact browser origins; it rejects IP
+addresses, nonstandard ports, private/reserved IPv4 destinations, and redirects
+to hosts outside the allowlist. Add every intended redirect hostname explicitly.
+Only public IPv4 DNS results are used. The relay allows 60 requests per client
+IP per minute by default.
+Only standard HTTP(S) ports and a small set of non-credential request headers
+are forwarded. Credentials are omitted. Request and response bodies are limited
+to 16 MiB; chunked requests are not supported. UDP, DHCP, TCP listeners, TLS
+server sessions, and non-HTTP protocols are unavailable in the preview. Built
+`.run` programs use the full network stack when run on Minimal-OS.
 
 ## Tests
 
@@ -75,8 +96,12 @@ both back ends.
 node studio/tests/net-preview.js
 ```
 
-Exercises the preview's SDK DNS and TCP-to-HTTP bridge against a local HTTP
-server.
+Exercises the preview's SDK DNS and TCP-to-HTTP bridge against a local proxy
+endpoint. Test the relay allowlist and CORS behavior with:
+
+```sh
+node --test studio/proxy/server.test.mjs
+```
 
 ```sh
 studio/tests/fgpu-diff.sh path/to/Minimal-OS

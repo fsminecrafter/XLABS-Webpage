@@ -3206,8 +3206,14 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
 <p>The preview recreates mosWM: window chrome with the kernel's default style or your own, moving, resizing, edge tiling, minimise and maximise, a taskbar, and a terminal for programs that print. Mouse and keyboard input arrive as the same window events mosWM posts, with USB HID key codes. Programs that use <code>graphics.h</code> draw to a full-screen framebuffer with the kernel's 8×8 font.</p>
 <p>3D works too. FarcadeGL programs draw through a JavaScript port of the kernel's GPU pipeline, with the same lighting, texturing, wireframe and FGSL shaders. Its frames are checked against the kernel's own rasterizer and match it pixel for pixel, apart from a few edge pixels. Try the 3D cube sample.</p>
 <h2>Networking in the preview</h2>
-<p>The preview maps outbound HTTP and HTTPS requests through the browser's <code>fetch</code> API. Use the SDK's DNS, TCP or TLS client calls to send one HTTP/1.x request per connection. Requests obey browser same-origin and CORS rules, credentials are omitted, and the browser resolves hostnames. Network failures are shown in the Studio output and preview terminal.</p>
+<p>The preview maps outbound HTTP and HTTPS requests through the browser's <code>fetch</code> API. Use the SDK's DNS, TCP or TLS client calls to send one HTTP/1.x request per connection. Without a proxy, browser same-origin and CORS rules apply. To connect to sites that block browser requests, Studio can use the optional self-hosted HTTP relay; configure it with the <code>httpProxy</code> query parameter. Credentials are omitted and network failures are shown in the Studio output and preview terminal.</p>
 <p>This is not a raw socket implementation: UDP, DHCP, TCP listeners, TLS server sessions, and arbitrary non-HTTP protocols are unavailable. A program built in Studio still uses the full Minimal-OS networking stack when run on the OS.</p>
+<h3>Self-hosted relay</h3>
+<p>Run <code>studio/proxy/server.mjs</code> on a server with <code>ALLOWED_HOSTS</code> set to exact permitted destination hostnames and <code>ALLOWED_ORIGINS</code> set to the exact Studio origin. For example:</p>
+<pre><code>ALLOWED_HOSTS=google.com,www.google.com \
+ALLOWED_ORIGINS=https://fsminecrafter.github.io \
+HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
+<p>Put the relay behind HTTPS, then open <code>studio/?httpProxy=https%3A%2F%2Fproxy.example.com%2Fv1%2Ffetch</code>. The relay blocks private/reserved IPv4 addresses, allows 60 requests per client IP per minute, and rejects redirects to non-allowlisted hosts; add every expected redirect hostname explicitly.</p>
 <h2>Limits</h2>
 <ul>
 <li>No <code>goto</code>, bit-fields, variable-length arrays, inline assembly or statement expressions; <code>long double</code> is <code>double</code>.</li>
@@ -3219,41 +3225,69 @@ run 0:/programs/mosWM/mosWM.run         # by hand, from the Minimal-OS terminal<
 <article class="doc" data-page="roadmap" hidden>
 <p class="eyebrow">Xlabs · Project status</p>
 <h1>Roadmap</h1>
-<p class="intro">A snapshot of what has shipped, what is planned next, and the earlier milestones behind Minimal-OS and its desktop.</p>
+<p class="intro">The complete Minimal-OS milestone roadmap: shipped work from 0.4.00 onward and the current browser milestone. Statuses reflect the project roadmap.</p>
+<p><span class="tick done">✓</span> Done &nbsp; <span class="tick">C</span> Deferred for later &nbsp; <span class="tick">○</span> Planned</p>
 <div class="road">
   <div>
-    <span class="k">0.4.51, done in the source</span>
+    <span class="k">0.4.00</span>
+    <ul>
+      <li><span class="tick done">✓</span>Panic screen</li>
+      <li><span class="tick">C</span>Simple audio — returned to later and completed in 0.4.05</li>
+      <li><span class="tick done">✓</span>Allocator</li>
+      <li><span class="tick done">✓</span>startupRoutine</li>
+      <li><span class="tick done">✓</span>Processes and ProcessManager</li>
+      <li><span class="tick done">✓</span>Graphics</li>
+    </ul>
+    <span class="k later">0.4.05</span>
+    <ul>
+      <li><span class="tick done">✓</span>Better allocator</li>
+      <li><span class="tick done">✓</span>Time Scheduler</li>
+      <li><span class="tick done">✓</span>Improved scheduler and proc</li>
+      <li><span class="tick done">✓</span>Graphics handler (<code>display.h</code>)</li>
+      <li><span class="tick done">✓</span>Time handler (<code>time.h</code>)</li>
+      <li><span class="tick done">✓</span>Displaying and reading images — limited support</li>
+      <li><span class="tick done">✓</span>Fonts — initially limited support</li>
+      <li><span class="tick done">✓</span>USB 1.1</li>
+      <li><span class="tick done">✓</span>Keyboard</li>
+      <li><span class="tick done">✓</span>Simple audio</li>
+      <li><span class="tick done">✓</span>File system</li>
+    </ul>
+    <span class="k later">0.4.4x</span>
+    <ul>
+      <li><span class="tick done">✓</span>Multithreading and multicore usage</li>
+      <li><span class="tick done">✓</span>Services manager</li>
+      <li><span class="tick done">✓</span>Syscalls and user layer</li>
+      <li><span class="tick done">✓</span>Executable <code>.run</code> file</li>
+    </ul>
+    <span class="k later">0.4.50</span>
+    <ul>
+      <li><span class="tick done">✓</span>Simple desktop</li>
+      <li><span class="tick done">✓</span>Window manager</li>
+      <li><span class="tick done">✓</span>MinimaFS file browser</li>
+      <li><span class="tick done">✓</span>Text editor</li>
+    </ul>
+  </div>
+  <div>
+    <span class="k later">0.4.51</span>
     <ul>
       <li><span class="tick done">✓</span>Golf</li>
-      <li><span class="tick done">✓</span>GPU support — VRAM, NVIDIA Pascal/Turing and QEMU drivers</li>
-      <li><span class="tick done">✓</span>FarcadeGL, the Minimal-OS 3D library</li>
-      <li><span class="tick done">✓</span>Partitions and larger disks — MBR/GPT, 16 TiB, NVMe</li>
-      <li><span class="tick done">✓</span>Installer and bootable disk installs, BIOS and UEFI</li>
+      <li><span class="tick done">✓</span>GPU support — VRAM, NVIDIA Pascal/Turing and QEMU drivers; 3D currently runs on the CPU</li>
+      <li><span class="tick done">✓</span>FarcadeGL, the Minimal-OS 3D library (formerly MiniGL)</li>
+      <li><span class="tick done">✓</span>Partitions and larger disks — MBR/GPT, volumes up to 16 TiB, NVMe</li>
+      <li><span class="tick done">✓</span>Installer and bootable disk installs — install command and MOSdesk Installer, BIOS and UEFI</li>
     </ul>
-    <span class="k later">Shipped in 0.4.50</span>
+    <span class="k later">0.4.52</span>
     <ul>
-      <li><span class="tick done">✓</span>Simple desktop — MOSdesk</li>
-      <li><span class="tick done">✓</span>Window manager — mosWM</li>
-      <li><span class="tick done">✓</span>File browser and text editor</li>
-      <li><span class="tick done">✓</span>App development in the browser — Run Studio</li>
+      <li><span class="tick done">✓</span>GPU engine and GLSL-style shaders on Pascal</li>
+      <li><span class="tick done">✓</span>Fixes across the apps</li>
     </ul>
-  </div>
-  <div class="todo">
-    <span class="k">0.4.52, planned</span>
+    <span class="k later">0.4.53</span>
     <ul>
-      <li><span class="tick">○</span>GPU engine and GLSL-style shaders on the card — shader IR, firmware loading and the backend hook are in; GSP boot and SASS encoding are next</li>
-      <li><span class="tick">○</span>Fixes across the apps</li>
-      <li><span class="tick">○</span>A web browser, maybe</li>
+      <li><span class="tick">○</span>Web browser (Mxplorer)</li>
     </ul>
-    <span class="k later">Earlier</span>
-    <ul class="past">
-      <li><span class="tick done">✓</span>0.4.4x — multicore, services, syscalls, <code>.run</code> programs</li>
-      <li><span class="tick done">✓</span>0.4.05 — scheduler, images, fonts, USB, audio, MinimaFS</li>
-      <li><span class="tick done">✓</span>0.4.00 — graphics, processes, allocator, panic screen</li>
-    </ul>
-    <p class="note"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/roadmap.txt">Full roadmap on GitHub</a></p>
   </div>
 </div>
+<p class="note"><a href="https://github.com/fsminecrafter/Minimal-OS/blob/main/roadmap.txt">View the roadmap source on GitHub</a></p>
 </article>
 
 </div>

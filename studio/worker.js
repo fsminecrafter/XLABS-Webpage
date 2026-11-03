@@ -234,6 +234,7 @@ function resetState(opts) {
   for (const f of opts.system || []) fs.write(f.path, f.data);
   state = {
     fs, app, start: performance.now(), screen: opts.screen || { w: 1280, h: 720 },
+    httpProxy: opts.httpProxy || '',
     heap: null, windows: new Map(), nextWindowId: 1, focused: 0, handles: new Map(), nextHandle: 3,
     input: [], mouse: { dx: 0, dy: 0, wheel: 0, buttons: 0 }, pressed: new Set(),
     hosts: new Map(), reverseHosts: new Map(), nextHostId: 1,
@@ -619,6 +620,19 @@ function networkBytes(parts) {
   return out;
 }
 
+function bytesBase64(bytes) {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 0x8000)
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+}
+
+function bytesFromBase64(text) {
+  const binary = atob(text), bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
 function httpRequest(conn) {
   const data = conn.request;
   let end = -1;
@@ -691,26 +705,50 @@ function startHttpRequest(conn) {
     }, Math.min(conn.timeoutMs, 0x7FFFFFFF));
   }
   const runState = state;
-  fetch(request.url, {
+  const proxyUrl = state.httpProxy;
+  const responsePromise = proxyUrl ? (async () => {
+    const endpoint = new URL(proxyUrl);
+    if (!/^https?:$/.test(endpoint.protocol)) throw new Error('The configured HTTP proxy must use HTTP or HTTPS.');
+    const response = await fetch(endpoint.href, {
+      method: 'POST', mode: 'cors', credentials: 'omit', cache: 'no-store',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        url: request.url, method: request.method,
+        headers: Object.fromEntries(request.headers.entries()),
+        body: request.body ? bytesBase64(request.body) : ''
+      }),
+      signal: conn.controller.signal
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || ('Proxy returned HTTP ' + response.status));
+    if (typeof result.body !== 'string' || typeof result.status !== 'number' || !Array.isArray(result.headers))
+      throw new Error('The configured HTTP proxy returned an invalid response.');
+    const body = bytesFromBase64(result.body);
+    if (body.length > 16 * 1024 * 1024) throw new Error('HTTP response exceeds the 16 MiB preview limit.');
+    return { status: result.status, statusText: result.statusText || 'Response', headers: result.headers, body };
+  })() : fetch(request.url, {
     method: request.method, headers: request.headers, body: request.body,
     mode: 'cors', credentials: 'omit', redirect: 'follow', cache: 'no-store',
     signal: conn.controller.signal
-  }).then(async response => {
-    const body = await responseBytes(response);
+  }).then(async response => ({
+    status: response.status, statusText: response.statusText,
+    headers: [...response.headers].filter(([name]) => !/^(content-length|content-encoding|transfer-encoding|connection)$/i.test(name)),
+    body: await responseBytes(response)
+  }));
+  responsePromise.then(result => {
     if (conn.timeout) clearTimeout(conn.timeout);
     if (state !== runState || conn.closed) return;
-    const headers = [];
-    response.headers.forEach((value, name) => {
-      if (!/^(content-length|content-encoding|transfer-encoding|connection)$/i.test(name)) headers.push(name + ': ' + value);
-    });
-    const head = new TextEncoder().encode('HTTP/1.1 ' + response.status + ' ' + (response.statusText || 'Response') +
-      '\r\n' + headers.join('\r\n') + '\r\ncontent-length: ' + body.length + '\r\nconnection: close\r\n\r\n');
-    conn.response = networkBytes([head, body]);
+    const headers = result.headers.map(([name, value]) => name + ': ' + value);
+    const head = new TextEncoder().encode('HTTP/1.1 ' + result.status + ' ' + result.statusText +
+      '\r\n' + headers.join('\r\n') + '\r\ncontent-length: ' + result.body.length + '\r\nconnection: close\r\n\r\n');
+    conn.response = networkBytes([head, result.body]);
     conn.peerClosed = true;
   }).catch(e => {
     if (conn.timeout) clearTimeout(conn.timeout);
     if (state === runState && !conn.closed && e.name !== 'AbortError')
-      networkError(conn, 'HTTP(S) request failed: ' + (e.message || String(e)) + ' (check the URL and browser CORS policy).');
+      networkError(conn, proxyUrl
+        ? 'HTTP(S) proxy request failed: ' + (e.message || String(e))
+        : 'HTTP(S) request failed: ' + (e.message || String(e)) + ' (check the URL and browser CORS policy, or configure an HTTP proxy).');
   });
 }
 
@@ -745,6 +783,7 @@ function networkSyscall(req) {
     const handle = state.nextNetHandle++;
     state.netConnections.set(handle, {
       kind: op === 48 ? 'tls' : 'tcp', host, port, secure: op === 48,
+      proxyUrl: state.httpProxy,
       timeoutMs: rd(req, R.timeout_ms),
       request: new Uint8Array(0), response: new Uint8Array(0), responsePos: 0,
       requestStarted: false, peerClosed: false, failed: false, errorReported: false, closed: false,

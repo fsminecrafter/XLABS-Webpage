@@ -3,6 +3,7 @@
 'use strict';
 const $ = (id) => document.getElementById(id);
 const STORE = 'xlabs.studio.project.v1';
+const HTTP_PROXY = new URLSearchParams(location.search).get('httpProxy') || '';
 const TEMPLATES = window.STUDIO_TEMPLATES || [];
 const isSource = (p) => /\.(c|h|cpp|cc|cxx|hpp|hh)$/i.test(p);
 const isCppFile = (p) => /\.(cpp|cc|cxx|hpp|hh)$/i.test(p);
@@ -320,7 +321,7 @@ function run() {
   const w0 = worker, files = sources(), res = resources();
   systemFiles().then((system) => {
     if (worker !== w0) return;
-    worker.postMessage({ t: 'run', files, name, args: project.args ? project.args.split(/\s+/).filter(Boolean) : [], screen: { w, h }, resources: res, system });
+    worker.postMessage({ t: 'run', files, name, args: project.args ? project.args.split(/\s+/).filter(Boolean) : [], screen: { w, h }, resources: res, system, httpProxy: HTTP_PROXY });
   });
   lastPong = performance.now();
   pingTimer = setInterval(() => {
