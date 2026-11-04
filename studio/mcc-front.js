@@ -176,12 +176,27 @@ class Preprocessor {
       } else if (Object.prototype.hasOwnProperty.call(this.files, rel)) return { path: rel, src: this.files[rel] };
       const r = normPath(name);
       if (Object.prototype.hasOwnProperty.call(this.files, r)) return { path: r, src: this.files[r] };
+      const d = this.inIncludeDirs(r);
+      if (d) return d;
       if (Object.prototype.hasOwnProperty.call(this.sdk, r)) return { path: '<sdk>/' + r, src: this.sdk[r] };
       return null;
     }
     const r = normPath(name);
+    // the project's include folders come first, as in the SDK's build.sh
+    const d = this.inIncludeDirs(r);
+    if (d) return d;
     if (Object.prototype.hasOwnProperty.call(this.sdk, r)) return { path: '<sdk>/' + r, src: this.sdk[r] };
     if (Object.prototype.hasOwnProperty.call(this.files, r)) return { path: r, src: this.files[r] };
+    return null;
+  }
+
+  // the folders the SDK's build.sh passes with -I: src/, include/ and
+  // libraries/ttrend/include/ in the project
+  inIncludeDirs(r) {
+    for (const dir of ['libraries/ttrend/include/', 'src/', 'include/']) {
+      const p = dir + r;
+      if (Object.prototype.hasOwnProperty.call(this.files, p)) return { path: p, src: this.files[p] };
+    }
     return null;
   }
 
@@ -2218,7 +2233,16 @@ MCC.evalInitConst = evalInitConst;
 function parseProject(files, sdk, opts) {
   opts = opts || {};
   const isCpp = (p) => /\.(cpp|cc|cxx)$/.test(p);
-  const units = Object.keys(files).filter(p => /\.c$/.test(p) || isCpp(p)).sort();
+  // Like the SDK's build.sh: every .c/.cpp file outside tests/ and
+  // examples/, except a .c file that another file #includes (it is
+  // compiled as part of that file).
+  const included = new Set();
+  for (const [p, src] of Object.entries(files)) {
+    if (typeof src !== 'string') continue;
+    const dir = p.includes('/') ? p.slice(0, p.lastIndexOf('/') + 1) : '';
+    for (const m of src.matchAll(/^[ \t]*#[ \t]*include[ \t]*"([^"]+\.(?:c|cpp|cc|cxx))"/gm)) included.add(normPath(dir + m[1]));
+  }
+  const units = Object.keys(files).filter(p => (/\.c$/.test(p) || isCpp(p)) && !included.has(p) && !/(^|\/)(tests|examples)\//.test(p)).sort();
   if (!units.length) throw new CompileError('the project has no .c or .cpp files', null);
   if (units.some(isCpp) && !MCC.CppParser) throw new CompileError('C++ support (mcc-cpp.js) is not loaded', null);
   const sources = units.map(u => ({ path: u, own: true }));

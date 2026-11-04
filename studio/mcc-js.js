@@ -629,6 +629,8 @@ class JSGen {
 }
 
 function compileJS(files, sdk, opts) {
+  // __MCC_PREVIEW__ tells a program it runs in the Studio preview
+  opts = Object.assign({}, opts, { defines: Object.assign({ __MCC_PREVIEW__: '1' }, opts && opts.defines) });
   const prog = MCC.parseProject(files, sdk, opts);
   return new JSGen(prog, opts).compile();
 }

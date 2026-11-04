@@ -1,0 +1,106 @@
+{
+ "source": "MOSdesk c2c8222",
+ "apps": [
+  {
+   "id": "mxplorer",
+   "run": "Mxplorer",
+   "title": "Mxplorer",
+   "icon": "globe",
+   "mem": 256,
+   "seed": {
+    "0:/data/mxplorer-homepage.txt": "1\n"
+   },
+   "description": "The Minimal-OS web browser: its own HTML, CSS and JavaScript engines, tabs and developer tools (F12).",
+   "bytes": 1307835
+  },
+  {
+   "id": "terminal",
+   "run": "mos_terminal",
+   "title": "Terminal",
+   "icon": "terminal",
+   "description": "The MOSdesk command line: ls, cat, cd, ps, run and more, all through user-mode system calls.",
+   "bytes": 79887
+  },
+  {
+   "id": "edit",
+   "run": "mos_edit",
+   "title": "Text Editor",
+   "icon": "edit",
+   "description": "Open, edit and save text files, with undo, find and replace.",
+   "bytes": 62682
+  },
+  {
+   "id": "calc",
+   "run": "mos_calc",
+   "title": "Calculator",
+   "icon": "calc",
+   "description": "A desktop calculator built with easyui.",
+   "bytes": 9259
+  },
+  {
+   "id": "clock",
+   "run": "mos_clock",
+   "title": "Clock",
+   "icon": "clock",
+   "description": "An analogue clock driven by the kernel’s real-time clock.",
+   "bytes": 4007
+  },
+  {
+   "id": "paint",
+   "run": "mos_paint",
+   "title": "Paint",
+   "icon": "paint",
+   "description": "Draw with the mouse: palette, brush sizes on the wheel, C clears.",
+   "bytes": 5398
+  },
+  {
+   "id": "photos",
+   "run": "mos_photos",
+   "title": "Photos",
+   "icon": "photo",
+   "description": "Shows .img pictures, Minimal-OS’s image format.",
+   "bytes": 9947
+  },
+  {
+   "id": "player",
+   "run": "mos_player",
+   "title": "Player",
+   "icon": "music",
+   "description": "Plays .adi audio files (the preview has no sound card, so it stays silent).",
+   "bytes": 56347
+  },
+  {
+   "id": "video",
+   "run": "mos_video",
+   "title": "Video",
+   "icon": "video",
+   "description": "Plays .vid videos, decoded on the CPU.",
+   "bytes": 12735
+  },
+  {
+   "id": "golf",
+   "run": "mos_golf",
+   "title": "Greenline Golf",
+   "icon": "golf",
+   "mem": 192,
+   "description": "Mini golf in the style of KDE’s Kolf: aim with the mouse, hold to charge.",
+   "bytes": 180667
+  },
+  {
+   "id": "snake",
+   "run": "mos_snake",
+   "title": "Snake",
+   "icon": "snake",
+   "description": "The classic, with the arrow keys.",
+   "bytes": 5154
+  },
+  {
+   "id": "cube",
+   "run": "mos_cube",
+   "title": "3D Cube",
+   "icon": "cube",
+   "description": "A lit, textured FarcadeGL cube. L, S and W switch the modes.",
+   "bytes": 6889
+  }
+ ]
+}

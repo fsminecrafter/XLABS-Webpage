@@ -55,6 +55,7 @@ class Desktop {
     this.buttons = 0;
     this.running = false;
     this.selectedIcon = -1;
+    this.pending = new Map();       // key -> label: programs being loaded or compiled
     this.lastClick = { t: 0, x: 0, y: 0, target: null };
     this.font = this.makeFont();
     this.setScreen(this.opts.width || 1280, this.opts.height || 720);
@@ -177,19 +178,27 @@ class Desktop {
     this.invalidate();
   }
 
-  // program ended: the kernel closes everything the process owned
+  // a process ended: the kernel closes everything it owned. Window ids
+  // are pid * winPerProc + the process's own id.
+  removeProcessWindows(pid) {
+    const per = this.opts.winPerProc || 128;
+    for (const id of [...this.windows.keys()]) if (Math.floor(id / per) === pid) this.removeWindow(id);
+    this.invalidate();
+  }
+  // the project program (the one the Terminal window belongs to)
   programExited() {
-    for (const id of [...this.windows.keys()]) this.removeWindow(id);
-    this.gfxActive = false;
     this.running = false;
     this.invalidate();
   }
   programStarted() {
-    for (const id of [...this.windows.keys()]) this.removeWindow(id);
-    this.gfxActive = false;
     this.running = true;
     this.term.lines = [''];
     this.term.visible = false;
+    this.invalidate();
+  }
+  // a taskbar entry for a program that is loading or compiling
+  setPending(key, label) {
+    if (label) this.pending.set(key, label); else this.pending.delete(key);
     this.invalidate();
   }
 
@@ -433,6 +442,7 @@ class Desktop {
     this.hover = h;
     this.canvas.style.cursor = h.part === 'resize' ? 'nwse-resize' : (h.part === 'close' || h.part === 'max' || h.part === 'min' || h.part === 'taskbar') ? 'pointer' : 'default';
     if (h.part === 'content') this.sendMouse(h, EV.MOUSE);
+    if (this.menu) this.menuHover = this.menuItemAt(p.x, p.y);
     if (this.menu || h.part === 'taskbar') this.invalidate();
   }
 
@@ -528,30 +538,52 @@ class Desktop {
     else this.focus(task.id);
   }
 
+  // the start menu: the project on the left, the Minimal-OS apps on the right
   menuItems() {
-    const items = [
-      { label: 'Run ' + this.app + '.run', run: () => this.opts.onLaunch && this.opts.onLaunch() },
-      { label: 'Stop program', run: () => this.opts.onStop && this.opts.onStop(), disabled: !this.running },
-      { label: 'Terminal', run: () => this.showTerminal() },
+    const left = [
+      { label: 'Run ' + this.app + '.run', icon: 'app', run: () => this.opts.onLaunch && this.opts.onLaunch() },
+      { label: 'Stop ' + this.app + '.run', icon: 'app', run: () => this.opts.onStop && this.opts.onStop(), disabled: !this.running },
+      { label: 'Output terminal', icon: 'terminal', run: () => this.showTerminal() },
+      { label: 'Home folder', icon: 'folder', run: () => this.opts.onOpenFiles && this.opts.onOpenFiles('0:/users/user') },
+      { label: 'All files', icon: 'computer', run: () => this.opts.onOpenFiles && this.opts.onOpenFiles('0:/') },
     ];
-    return items;
+    const apps = (this.opts.apps ? this.opts.apps() : []).map(a => ({ label: a.title, icon: a.icon, run: () => this.opts.onLaunchApp(a.id) }));
+    return { left, apps };
+  }
+
+  menuLayout() {
+    const m = this.menuItems();
+    const rowH = 30, cols = m.apps.length ? 2 : 1, colW = 220;
+    const room = this.H - TASKBAR - 16 - 60;
+    const perCol = Math.max(m.left.length, Math.min(m.apps.length, Math.floor(room / rowH)));
+    const w = cols * colW + 8, h = 52 + 22 + perCol * rowH + 8;
+    const top = this.H - TASKBAR - 8 - h;
+    const items = [];
+    m.left.forEach((it, i) => items.push(Object.assign({ x: 12, y: top + 74 + i * rowH, w: colW - 8 }, it)));
+    m.apps.slice(0, perCol).forEach((it, i) => items.push(Object.assign({ x: 12 + colW, y: top + 74 + i * rowH, w: colW - 8 }, it)));
+    return { top, w, h, rowH, colW, cols, items };
   }
 
   menuItemAt(x, y) {
-    const items = this.menuItems();
-    const top = this.H - TASKBAR - 16 - items.length * 30 - 52;
-    if (x < 8 || x > 8 + 220 || y < top + 52) return null;
-    const i = Math.floor((y - top - 52) / 30);
-    const it = items[i];
+    const l = this.menuLayout();
+    const it = l.items.find(i => x >= i.x && x < i.x + i.w && y >= i.y && y < i.y + l.rowH);
     return it && !it.disabled ? it : null;
   }
 
   icons() {
-    return [
-      { label: 'Home', kind: 'home', open: () => this.showTerminal() },
-      { label: 'System', kind: 'computer', open: () => this.showTerminal() },
-      { label: this.app, kind: 'app', open: () => this.opts.onLaunch && this.opts.onLaunch() },
-    ].map((ic, i) => Object.assign(ic, { index: i, x: 18, y: 18 + i * 96 }));
+    const list = [
+      { label: 'Home', kind: 'folder', open: () => this.opts.onOpenFiles ? this.opts.onOpenFiles('0:/users/user') : this.showTerminal() },
+      { label: 'System', kind: 'computer', open: () => this.opts.onOpenFiles ? this.opts.onOpenFiles('0:/') : this.showTerminal() },
+      { label: this.app, kind: 'project', open: () => this.opts.onLaunch && this.opts.onLaunch() },
+    ];
+    // the apps MOSdesk puts on the desktop
+    const apps = this.opts.apps ? this.opts.apps() : [];
+    for (const id of ['mxplorer', 'terminal', 'edit']) {
+      const a = apps.find(x => x.id === id);
+      if (a) list.push({ label: a.title, kind: a.icon, open: () => this.opts.onLaunchApp(a.id) });
+    }
+    const rows = Math.max(1, Math.floor((this.H - TASKBAR - 18) / 96));
+    return list.map((ic, i) => Object.assign(ic, { index: i, x: 18 + Math.floor(i / rows) * 88, y: 18 + (i % rows) * 96 }));
   }
 
   iconAt(x, y) {
@@ -565,14 +597,15 @@ class Desktop {
     const g = this.ctx;
     g.drawImage(this.wallpaper, 0, 0);
     this.drawIcons(g);
-    if (!this.running && !this.windows.size && !this.term.visible) {
+    if (!this.running && !this.windows.size && !this.term.visible && !this.pending.size) {
       g.fillStyle = 'rgba(234,242,248,0.72)';
       g.font = '500 22px Inter, "Instrument Sans", system-ui, sans-serif';
       g.textAlign = 'center';
-      g.fillText('Press Run to start ' + this.app + '.run', this.W / 2, this.H / 2 - 20);
+      g.fillText('Press Run to start ' + this.app + '.run', this.W / 2 + 40, this.H / 2 - 20);
       g.font = '400 15px Inter, "Instrument Sans", system-ui, sans-serif';
       g.fillStyle = 'rgba(234,242,248,0.5)';
-      g.fillText('Ctrl+Enter runs, Ctrl+. stops. Click a window before typing.', this.W / 2, this.H / 2 + 12);
+      g.fillText('or open a Minimal-OS app from the menu in the corner.', this.W / 2 + 40, this.H / 2 + 12);
+      g.fillText('Ctrl+Enter runs, Ctrl+. stops. Click a window before typing.', this.W / 2 + 40, this.H / 2 + 36);
       g.textAlign = 'left';
     }
     for (const id of this.order) if (this.visible(id)) this.drawWindow(g, id);
@@ -592,23 +625,15 @@ class Desktop {
     for (const ic of this.icons()) {
       if (this.selectedIcon === ic.index) { g.fillStyle = 'rgba(61,174,233,0.25)'; rr(g, ic.x, ic.y, 76, 88, 8); g.fill(); }
       const cx = ic.x + 38, top = ic.y + 8;
-      if (ic.kind === 'app') {
-        g.fillStyle = '#24343C'; rr(g, cx - 24, top, 48, 48, 10); g.fill();
-        g.fillStyle = ACCENT; rr(g, cx - 18, top + 6, 36, 8, 3); g.fill();
-        g.fillStyle = '#EAF2F8'; g.font = '600 13px "JetBrains Mono", monospace'; g.textAlign = 'center'; g.fillText('.run', cx, top + 36);
-      } else if (ic.kind === 'home') {
-        g.fillStyle = '#E8B34C'; rr(g, cx - 24, top + 8, 48, 36, 5); g.fill();
-        g.fillStyle = '#F2C66B'; rr(g, cx - 24, top + 4, 22, 10, 3); g.fill();
-      } else {
-        g.fillStyle = '#9BB0BC'; rr(g, cx - 24, top + 4, 48, 32, 5); g.fill();
-        g.fillStyle = '#17232A'; g.fillRect(cx - 20, top + 8, 40, 24);
-        g.fillStyle = ACCENT; g.fillRect(cx - 16, top + 12, 18, 3);
-        g.fillStyle = '#9BB0BC'; g.fillRect(cx - 10, top + 38, 20, 6);
-      }
+      g.fillStyle = 'rgba(0,0,0,0.18)'; rr(g, cx - 24, top + 2, 48, 48, 12); g.fill();
+      this.drawIcon(g, ic.kind, cx - 24, top, 48);
+      if (ic.kind === 'project') { g.fillStyle = '#EAF2F8'; g.font = '600 11px "JetBrains Mono", monospace'; g.textAlign = 'center'; g.fillText('.run', cx, top + 45); }
       g.textAlign = 'center';
       g.font = '500 13px Inter, "Instrument Sans", system-ui, sans-serif';
-      g.fillStyle = 'rgba(0,0,0,0.55)'; g.fillText(ic.label, cx + 1, ic.y + 77);
-      g.fillStyle = '#F2F6F8'; g.fillText(ic.label, cx, ic.y + 76);
+      let label = ic.label;
+      while (label.length > 1 && g.measureText(label).width > 84) label = label.slice(0, -2) + '…';
+      g.fillStyle = 'rgba(0,0,0,0.55)'; g.fillText(label, cx + 1, ic.y + 77);
+      g.fillStyle = '#F2F6F8'; g.fillText(label, cx, ic.y + 76);
       g.textAlign = 'left';
     }
   }
@@ -693,7 +718,7 @@ class Desktop {
     g.fillStyle = 'rgba(14,21,26,0.92)'; g.fillRect(0, y, this.W, TASKBAR);
     g.fillStyle = 'rgba(255,255,255,0.07)'; g.fillRect(0, y, this.W, 1);
     // start button: the Minimal-OS mark
-    if (this.menu || (this.hover && this.hover.part === 'taskbar' && this.hoverX < 48)) { g.fillStyle = 'rgba(61,174,233,0.4)'; g.fillRect(4, y + 4, 40, 40); }
+    if (this.menu || (this.hover && this.hover.part === 'taskbar' && this.hoverX < 48)) { g.fillStyle = 'rgba(61,174,233,0.4)'; rr(g, 4, y + 4, 40, 40, 6); g.fill(); }
     g.fillStyle = '#EAF2F8';
     g.fillRect(14, y + 14, 6, 20); g.fillRect(28, y + 14, 6, 20); g.fillRect(20, y + 20, 8, 6);
     if (this.menu) { g.fillStyle = ACCENT; g.fillRect(8, y + 45, 32, 2); }
@@ -712,6 +737,20 @@ class Desktop {
       while (s.length > 1 && g.measureText(s).width > 150) s = s.slice(0, -2) + '…';
       g.fillText(s, tx + 10, y + 29);
     });
+    // programs still loading or compiling
+    let px = 56 + tasks.length * 176;
+    for (const label of this.pending.values()) {
+      if (px + 170 > this.W - 140) break;
+      g.fillStyle = 'rgba(255,255,255,0.04)'; rr(g, px, y + 6, 170, 36, 6); g.fill();
+      const t = performance.now() / 1000;
+      g.strokeStyle = ACCENT; g.lineWidth = 2; g.beginPath(); g.arc(px + 18, y + 24, 6, t * 5, t * 5 + 4.2); g.stroke();
+      g.fillStyle = '#9BAFBC';
+      let s = label;
+      while (s.length > 1 && g.measureText(s).width > 132) s = s.slice(0, -2) + '…';
+      g.fillText(s, px + 32, y + 29);
+      px += 176;
+    }
+    if (this.pending.size) this.invalidate();
     // clock
     const now = new Date();
     const p2 = (n) => String(n).padStart(2, '0');
@@ -724,22 +763,43 @@ class Desktop {
   }
 
   drawMenu(g) {
-    const items = this.menuItems();
-    const h = 52 + items.length * 30 + 8;
-    const top = this.H - TASKBAR - 8 - h;
-    g.fillStyle = '#3A4249'; rr(g, 8, top, 220, h, 8); g.fill();
-    g.fillStyle = '#1D2125'; rr(g, 9, top + 1, 218, h - 2, 7); g.fill();
+    const l = this.menuLayout();
+    const { top, w, h } = l;
+    g.fillStyle = '#3A4249'; rr(g, 8, top, w, h, 10); g.fill();
+    g.fillStyle = '#1D2125'; rr(g, 9, top + 1, w - 2, h - 2, 9); g.fill();
     g.fillStyle = ACCENT; g.beginPath(); g.arc(35, top + 27, 15, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#FFFFFF'; g.fillRect(29, top + 20, 3, 14); g.fillRect(38, top + 20, 3, 14); g.fillRect(32, top + 24, 6, 4);
     g.fillStyle = '#EAF2F8'; g.font = '600 14px Inter, "Instrument Sans", system-ui, sans-serif';
     g.fillText('Minimal-OS', 58, top + 24);
     g.fillStyle = '#9BAFBC'; g.font = '400 12px Inter, "Instrument Sans", system-ui, sans-serif';
     g.fillText('Studio preview', 58, top + 40);
-    items.forEach((it, i) => {
-      const iy = top + 52 + i * 30;
+    g.font = '600 11px Inter, "Instrument Sans", system-ui, sans-serif';
+    g.fillStyle = '#7F949F';
+    g.fillText('PROJECT', 22, top + 66);
+    if (l.cols > 1) g.fillText('APPS', 22 + l.colW, top + 66);
+    g.fillStyle = 'rgba(255,255,255,0.06)'; g.fillRect(16, top + 52, w - 24, 1);
+    const hov = this.menuHover;
+    for (const it of l.items) {
+      if (hov && hov.x === it.x && hov.y === it.y && !it.disabled) { g.fillStyle = 'rgba(61,174,233,0.22)'; rr(g, it.x, it.y + 2, it.w, l.rowH - 4, 6); g.fill(); }
+      this.drawIcon(g, it.icon, it.x + 6, it.y + 5, 20, it.disabled);
       g.fillStyle = it.disabled ? '#5C6B74' : '#EAF2F8';
       g.font = '500 13px Inter, "Instrument Sans", system-ui, sans-serif';
-      g.fillText(it.label, 22, iy + 20);
-    });
+      let s = it.label;
+      while (s.length > 1 && g.measureText(s).width > it.w - 40) s = s.slice(0, -2) + '…';
+      g.fillText(s, it.x + 34, it.y + 20);
+    }
+  }
+
+  // an app icon: a coloured tile with the glyph (system.js draws the glyphs)
+  drawIcon(g, kind, x, y, size, dim) {
+    const color = kind === 'project' ? '#24343C' : (this.opts.iconColor ? this.opts.iconColor(kind) : '#24343C');
+    g.save();
+    if (dim) g.globalAlpha = 0.4;
+    g.fillStyle = color; rr(g, x, y, size, size, size * 0.24); g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.12)'; rr(g, x, y, size, size / 2, size * 0.24); g.fill();
+    const img = this.opts.iconImage ? this.opts.iconImage(kind === 'project' ? 'app' : kind, '#FFFFFF') : null;
+    if (img && img.ready) g.drawImage(img, x + size * 0.18, y + size * 0.18, size * 0.64, size * 0.64);
+    g.restore();
   }
 }
 

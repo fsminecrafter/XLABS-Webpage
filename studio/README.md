@@ -12,11 +12,12 @@ Open `studio/index.html` through a web server (Web Workers do not run from
 | File | What it is |
 | --- | --- |
 | `index.html` | The page: layout and styles |
-| `studio.js` | Project storage, editor tabs, run/stop, builds and downloads |
+| `studio.js` | The project and its file list, editor tabs, uploads and downloads (files, folders, .zip), dialogs and menus, the Apps menu, the Files tab, run/stop and builds |
+| `system.js` | The preview system: one MinimaFS shared by every program (kept in IndexedDB), a worker per running program (the project and any Minimal-OS apps), routing between them and the desktop, and the app catalog |
 | `layout.js` | The panes: order, docking by dragging a top bar, gutters, minimise / hide, preview full screen |
 | `docsview.js` | The docs pane: the collapsible page list, search, content and F1 lookup |
 | `fonts/` | Inter (SIL OFL), the fonts mosWM installs; the preview puts them at the same path so smooth text works there |
-| `desktop.js` | The preview desktop: mosWM-style windows, taskbar, terminal, input |
+| `desktop.js` | The preview desktop: mosWM-style windows from every running program, taskbar, start menu with the apps, desktop icons, terminal, input |
 | `worker.js` | Runs a program: compiles it with the JS back end and emulates the Minimal-OS kernel (syscalls, window manager, MinimaFS, heap, graphics, input, and outbound HTTP(S)) |
 | `fgpu.js` | `SYS_GPU` for the preview: a port of the kernel's FGPU (`fgpu.c`, `fgpu_raster.c`, `fgpu_shader.c`), so FarcadeGL programs run. Shader programs are checked like the kernel checks them, then compiled to JavaScript |
 | `mcc-front.js` | mcc, the C compiler: preprocessor, parser, type checker |
@@ -25,6 +26,7 @@ Open `studio/index.html` through a web server (Web Workers do not run from
 | `mcc-x64.js` | mcc back end for builds (x86_64 code, ELF writer, `MINIRUN1` and `MPKG0001` bundlers) |
 | `sdk.js` | Generated: the Minimal-OS SDK headers plus freestanding `stdint.h`, `stdarg.h`, … and the crt0 |
 | `templates.js` | Generated: the sample projects |
+| `apps/` | Generated: the Minimal-OS apps from MOSdesk (`index.json` lists them, `<id>.json` holds an app's sources and resources) |
 | `docs.js` | Generated: the SDK function reference and the Minimal-OS docs, for the docs pane |
 | `vendor/` | CodeMirror 5 (MIT), the editor |
 
@@ -33,6 +35,7 @@ Open `studio/index.html` through a web server (Web Workers do not run from
 ```sh
 node studio/tools/build-sdk.mjs path/to/Minimal-OS-SDK   # after the SDK headers change
 node studio/tools/build-templates.mjs                    # after editing studio/templates/
+node studio/tools/build-apps.mjs path/to/MOSdesk         # after MOSdesk's apps or Mxplorer change
 node tools/build-docs.mjs path/to/Minimal-OS               # after Minimal-OS or SDK docs/ change
 ```
 
@@ -48,6 +51,34 @@ a path given as a second argument) into the website's Docs pages in
 
 `build-sdk.mjs` also swaps FarcadeGL's one-instruction `fglSqrt` (SSE inline
 assembly) for the same square root in plain C.
+
+`build-apps.mjs` packs each app the way the SDK's `build.sh` sees it. Two
+things mcc does not have are patched in the packed copy, each with the code
+the app would compile to anyway: Mxplorer's two inline-assembly blocks (it
+already has C fallbacks for other targets; the preview also lets its scripts
+use the 2 MiB program stack) and its three GNU statement expressions. The
+tool warns when a patch stops applying.
+
+## Running apps, and files
+
+Every program in the preview runs in its own worker: the project, and the
+apps started from Apps, the start menu, the desktop icons, the Files tab or
+another program's `SYS_EXEC` (the Terminal app's `run`). Window ids are
+`pid * 128 + id` on the page so the desktop can tell them apart; keys and
+raw input go to the program that owns the focused window.
+
+The page keeps the master copy of MinimaFS. A worker gets a snapshot when it
+starts and posts what it changes (a file when it is closed, and once a second
+while it stays open); the page passes changes on to the other workers. Files
+under `0:/programs/` that Studio installs (the apps, the project, mosWM's
+fonts) are rebuilt on every visit; everything else that is uploaded or saved
+is kept in IndexedDB.
+
+The compiler follows `build.sh` for folder projects: every `.c`/`.cpp`
+outside `tests/` and `examples/` is a translation unit (except a `.c` file
+another file `#include`s), and `include/`, `src/` and
+`libraries/ttrend/include/` are searched for includes. Programs compiled for
+the preview see `__MCC_PREVIEW__`.
 
 ## Networking in the preview
 
@@ -91,6 +122,12 @@ Node) and with the x86_64 back end (run on Linux by `loader.c`, which loads the
 ELF the way Minimal-OS's `elfloader.c` does and services syscalls through a
 test hook). All three outputs must match. It also compiles every template with
 both back ends.
+
+```sh
+node studio/tests/apps.js
+```
+
+Compiles every app in `apps/` with both back ends.
 
 ```sh
 node studio/tests/net-preview.js

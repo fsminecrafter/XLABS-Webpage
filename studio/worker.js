@@ -11,7 +11,8 @@
 'use strict';
 importScripts('mcc-front.js', 'mcc-cpp.js', 'sdk.js', 'mcc-js.js', 'fgpu.js');
 
-const MEM_SIZE = 96 * 1024 * 1024;
+// the program's memory: 96 MiB, or what an app asks for (Mxplorer: 256 MiB)
+let MEM_SIZE = 96 * 1024 * 1024;
 const STACK_SIZE = 2 * 1024 * 1024;
 const SUSPEND = Symbol('suspend');
 const U64 = (v) => BigInt.asUintN(64, BigInt(v));
@@ -23,7 +24,8 @@ const FONT = Uint8Array.from(atob('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 //  Memory
 // ---------------------------------------------------------------------
 let buffer, I8, U8, I16, U16, I32, U32, BI64, BU64, F32, F64;
-function newMemory() {
+function newMemory(mib) {
+  MEM_SIZE = Math.max(96, Math.min(1024, mib || 96)) * 1024 * 1024;
   buffer = new ArrayBuffer(MEM_SIZE);
   I8 = new Int8Array(buffer); U8 = new Uint8Array(buffer);
   I16 = new Int16Array(buffer); U16 = new Uint16Array(buffer);
@@ -172,10 +174,14 @@ class FS {
   parent(p) { const i = p.lastIndexOf('/'); return i <= 2 ? p.slice(0, 3) : p.slice(0, i); }
   mkdir(p) { p = this.norm(p); if (!this.nodes.has(p)) this.nodes.set(p, { dir: true, created: new Date() }); return p; }
   mkdirs(p) { p = this.norm(p); const segs = p.slice(3).split('/').filter(Boolean); let cur = p.slice(0, 3); this.mkdir(cur); for (const s of segs) { cur = cur.length > 3 ? cur + '/' + s : cur + s; this.mkdir(cur); } }
-  write(p, data) {
+  write(p, data, created, changed) {
     p = this.norm(p);
     this.mkdirs(this.parent(p));
-    this.nodes.set(p, { dir: false, data: data instanceof Uint8Array ? data : new TextEncoder().encode(data), created: new Date(), changed: new Date(), runnable: /\.run$/.test(p) });
+    const bytes = data instanceof Uint8Array ? data : new TextEncoder().encode(data);
+    const old = this.nodes.get(p);
+    // keep the node (open handles point at it) when a file is replaced
+    if (old && !old.dir) { old.data = bytes; old.changed = changed || new Date(); return; }
+    this.nodes.set(p, { dir: false, data: bytes, created: created || new Date(), changed: changed || new Date(), runnable: /\.run$/.test(p) });
   }
   get(p) { return this.nodes.get(this.norm(p)); }
   list(p) {
@@ -211,7 +217,8 @@ const WF = { VISIBLE: 1, RESIZABLE: 2, FULLSCREEN: 4, MAXIMIZED: 8, MINIMIZED: 1
 const EV = { RESIZED: 1, CLOSE_REQUEST: 2, MINIMIZED: 3, MAXIMIZED: 4, RESTORED: 5, FOCUS_GAINED: 6, FOCUS_LOST: 7, KEY: 8, MOUSE: 9, MOUSE_WHEEL: 10 };
 const DEFAULT_STYLE = { title_bar: 0xFF24343C, title_text: 0xFFFFFFFF, close_button: 0xFFE35D6A, minimize_button: 0xFFE8B34C, maximize_button: 0xFF4ABF8A, close_icon: 0xFFFFFFFF, minimize_icon: 0xFF17262C, maximize_icon: 0xFF17262C, border: 0xFF49616B, content_background: 0xFF17232A };
 const STYLE_KEYS = Object.keys(DEFAULT_STYLE);
-const PID = 12;
+// this program's pid: the page gives each process its own
+let PID = 12;
 
 const kernel = {
   syscall() { return OK; }
@@ -222,17 +229,25 @@ let state = null;   // per-run state
 function post(msg, transfer) { postMessage(msg, transfer || []); }
 
 function resetState(opts) {
-  newMemory();
+  newMemory(opts.mem);
   const fs = new FS();
   for (const d of ['0:/etc', '0:/programs', '0:/services', '0:/users']) fs.mkdir(d);
   fs.write('0:/etc/motd.txt', 'Welcome to Minimal-OS.\n');
   fs.write('0:/etc/minimaSSL.slib', new Uint8Array(16));
   const app = opts.name || 'app';
-  fs.write('0:/programs/' + app + '.run', new Uint8Array(64));
+  PID = opts.pid || 12;
+  // the page's copy of MinimaFS, shared by every program in the preview
+  for (const e of opts.fs || []) {
+    if (e.dir) fs.mkdirs(e.path);
+    else fs.write(e.path, e.data, e.created && new Date(e.created), e.changed && new Date(e.changed));
+  }
+  const argv0 = opts.argv0 || '0:/programs/' + app + '.run';
+  if (!fs.get(argv0)) fs.write(argv0, new Uint8Array(64));
   for (const f of opts.resources || []) fs.write('0:/programs/' + app + '/' + f.path, f.data);
   // files the installed system has, such as mosWM's fonts (absolute paths)
   for (const f of opts.system || []) fs.write(f.path, f.data);
   state = {
+    pid: PID, argv0, runnables: new Set((opts.runnables || []).map(p => fs.norm(p))), procs: opts.procs || null, nextPid: opts.nextPid || PID + 1,
     fs, app, start: performance.now(), screen: opts.screen || { w: 1280, h: 720 },
     httpProxy: opts.httpProxy || '',
     heap: null, windows: new Map(), nextWindowId: 1, focused: 0, handles: new Map(), nextHandle: 3,
@@ -250,7 +265,7 @@ function uptime() { return Math.floor(performance.now() - state.start); }
 
 // ---- GPU (SYS_GPU): fgpu.js, a port of the kernel's FGPU ----
 const gpuEnv = {
-  mem: () => ({ U8, U32 }), L, rd, wr, writeStr, ERR, OK, memSize: MEM_SIZE,
+  mem: () => ({ U8, U32 }), L, rd, wr, writeStr, ERR, OK, get memSize() { return MEM_SIZE; },
   screen: () => state.screen,
   log: (m) => console.warn(m),
   // what the kernel does with SYS_WINDOW_PRESENT for the window's owner
@@ -881,10 +896,10 @@ function sysInner(n, a, b, c) {
       if (need > h.node.data.length) { const d = new Uint8Array(need); d.set(h.node.data); h.node.data = d; }
       h.node.data.set(U8.subarray(p, p + len), h.pos);
       h.pos += len; h.node.changed = new Date();
-      post({ t: 'fs', path: h.path, size: h.node.data.length });
+      h.dirty = true;
       return BigInt(len);
     }
-    case 8: return s.handles.delete(Number(a)) ? OK : ERR.BADFD;
+    case 8: { const h = s.handles.get(Number(a)); if (!h) return ERR.BADFD; if (h.dirty) syncFile(h); s.handles.delete(Number(a)); return OK; }
     case 9: return s.fs.get(str(Number(a))) ? 1n : 0n;
     case 10: { const nd = s.fs.get(str(Number(a))); return nd && nd.dir ? 1n : 0n; }
     case 11: {                                         // GETTIME -> datetime_t
@@ -896,7 +911,7 @@ function sysInner(n, a, b, c) {
     }
     case 12: { const h = s.handles.get(Number(a)); if (!h) return ERR.BADFD; h.pos = Math.max(0, Math.min(Number(b), h.node.data.length)); return OK; }
     case 13: { const h = s.handles.get(Number(a)); return h ? BigInt(h.node.data.length) : ERR.BADFD; }
-    case 14: { const p = str(Number(a)); if (!p) return ERR.INVAL; if (s.fs.get(p)) return ERR.GENERIC; if (!s.fs.get(s.fs.parent(s.fs.norm(p)))) return ERR.NOTFOUND; s.fs.mkdir(p); return OK; }
+    case 14: { const p = str(Number(a)); if (!p) return ERR.INVAL; if (s.fs.get(p)) return ERR.GENERIC; if (!s.fs.get(s.fs.parent(s.fs.norm(p)))) return ERR.NOTFOUND; fsChanged('mkdir', s.fs.mkdir(p)); return OK; }
     case 15: return graphicsSyscall(Number(a));
     case 16: return OK;                                // MANAGER
     case 17: {                                         // USB
@@ -933,6 +948,7 @@ function sysInner(n, a, b, c) {
       if (n === 21 && (!nd.dir || s.fs.list(p).length)) return ERR.INVAL;
       if (n === 20 && nd.dir) return ERR.INVAL;
       s.fs.nodes.delete(p);
+      fsChanged('delete', p);
       return OK;
     }
     case 22: {                                         // GET_METADATA
@@ -959,7 +975,8 @@ function sysInner(n, a, b, c) {
     }
     case 27: {                                         // PSLIST
       const P = L.syscall_process_info_t, out = Number(a), max = Number(b);
-      const procs = [[1, 'kernel', 1, 0], [2, 'terminal', 2, 0], [3, 'keyboard', 2, 0], [4, 'audio', 2, 0], [5, 'services', 2, 0], [8, 'mosWM', 1, 1], [PID, '0:/programs/' + s.app + '.run', 1, 1]];
+      const procs = [[1, 'kernel', 1, 0], [2, 'terminal', 2, 0], [3, 'keyboard', 2, 0], [4, 'audio', 2, 0], [5, 'services', 2, 0], [8, 'mosWM', 1, 1]]
+        .concat(s.procs ? s.procs.map(q => [q.pid, q.path, 1, 1]) : [[PID, s.argv0, 1, 1]]);
       const k = Math.min(max, procs.length);
       for (let i = 0; i < k; i++) {
         const at = out + i * P.$size;
@@ -1001,8 +1018,18 @@ function sysInner(n, a, b, c) {
       return ERR.INVAL;
     }
     case 32: { const p = Number(a), len = Number(b); for (let o = 0; o < len; o += 65536) crypto.getRandomValues(U8.subarray(p + o, p + Math.min(len, o + 65536))); return BigInt(len); }
-    case 33: return ERR.NOTFOUND;                      // EXEC: only this program exists in the preview
-    case 34: { const p = str(Number(a)); if (!p) return ERR.INVAL; if (s.fs.get(p)) return ERR.GENERIC; s.fs.write(p, new Uint8Array(0)); return OK; }
+    case 33: {                                         // EXEC: the page starts it in its own worker
+      const path = str(Number(a)), p = path && s.fs.norm(path);
+      if (!p) return ERR.INVAL;
+      if (!s.fs.get(p)) return ERR.NOTFOUND;
+      if (!s.runnables.has(p)) return ERR.GENERIC;      // a .run the preview cannot build (not an app it knows)
+      const args = [], at = Number(b), count = Math.min(Number(c) || 0, 32);
+      for (let i = 0; at && i < count; i++) args.push(str($lp(at + i * 8), 1024) || '');
+      const pid = s.nextPid++;
+      post({ t: 'exec', path: p, args, pid });
+      return BigInt(pid);
+    }
+    case 34: { const p = str(Number(a)); if (!p) return ERR.INVAL; if (s.fs.get(p)) return ERR.GENERIC; s.fs.write(p, new Uint8Array(0)); fsChanged('write', s.fs.norm(p)); return OK; }
     case 35: { const p = Number(a), size = Number(b); if (!p || size < 2) return ERR.INVAL; writeStr(p, '0:/programs', size); return OK; }
     case 36: {                                         // INPUT_READ
       const R = L.syscall_input_read_request_t, req = Number(a);
@@ -1033,6 +1060,23 @@ function inputRead(evs, cap) {
   return BigInt(k);
 }
 
+// ---- the shared file system: changes go to the page, which passes them on ----
+function fsChanged(op, path, node) {
+  post({ t: 'fsw', op, path, data: op === 'write' ? (node || state.fs.nodes.get(path)).data.slice() : undefined });
+}
+function syncFile(h) { h.dirty = false; if (state.fs.nodes.get(h.path) === h.node) fsChanged('write', h.path, h.node); }
+function syncOpenFiles() { for (const h of state.handles.values()) if (h.dirty) syncFile(h); }
+// a change another program (or the Files tab) made
+function applyRemote(m) {
+  const fs = state.fs;
+  if (m.op === 'write') fs.write(m.path, m.data);
+  else if (m.op === 'mkdir') fs.mkdirs(m.path);
+  else if (m.op === 'delete') {
+    const p = fs.norm(m.path), pre = p + '/';
+    for (const k of [...fs.nodes.keys()]) if (k === p || k.startsWith(pre)) fs.nodes.delete(k);
+  }
+}
+
 // ---------------------------------------------------------------------
 //  Scheduler
 // ---------------------------------------------------------------------
@@ -1043,6 +1087,7 @@ function flushOut() { if (state && state.outBuf) { post({ t: 'out', text: state.
 function flushFrames() {
   if (!state) return;
   flushOut();
+  if (performance.now() - (state.lastFileSync || 0) > 1000) { state.lastFileSync = performance.now(); syncOpenFiles(); }
   for (const id of state.dirty) {
     const w = state.windows.get(id);
     if (!w) continue;
@@ -1081,6 +1126,7 @@ function finish(code, crash) {
     if (conn.timeout) clearTimeout(conn.timeout);
   }
   state.netConnections.clear();
+  syncOpenFiles();
   flushFrames();
   if (state.timer) clearTimeout(state.timer);
   post({ t: 'exit', code, crash: crash || null, windows: [...state.windows.keys()] });
@@ -1147,7 +1193,7 @@ function start(msg) {
   const stackTop = MEM_SIZE - 4096;
   rt.stackLimit = stackTop - STACK_SIZE;
   state.heap = new Heap(heapStart, rt.stackLimit - 65536);
-  const args = ['0:/programs/' + state.app + '.run'].concat(msg.args || []);
+  const args = [state.argv0].concat(msg.args || []);
   const a = writeArgs(stackTop, args);
   rt.stackTop = a.sp;
   rt.I8 = I8; rt.U8 = U8; rt.I16 = I16; rt.U16 = U16; rt.I32 = I32; rt.U32 = U32; rt.I64 = BI64; rt.U64 = BU64; rt.F32 = F32; rt.F64 = F64;
@@ -1186,6 +1232,8 @@ onmessage = (e) => {
     case 'run': start(m); break;
     case 'stop': stop(); break;
     case 'ping': post({ t: 'pong', id: m.id }); break;
+    case 'fsw': if (state) applyRemote(m); break;
+    case 'procs': if (state) { state.procs = m.list; state.nextPid = Math.max(state.nextPid, m.nextPid || 0); } break;
     case 'wmBounds': {
       if (!state) return;
       const w = state.windows.get(m.id);
