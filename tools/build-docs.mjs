@@ -33,6 +33,7 @@ const OS_PAGES = [
   ['boot-and-kernel', 'Boot and kernel'],
   ['hardware-and-drivers', 'Hardware and drivers'],
   ['audio', 'Audio'],
+  ['media', 'Images and video'],
   ['gpu', 'GPU and 3D'],
   ['storage-and-packages', 'Storage and packages'],
   ['installing', 'Installing to a disk'],
@@ -62,6 +63,7 @@ const SDK_PAGES = [
   ['farcadegl', 'FarcadeGL 3D'],
   ['fgsl', 'FGSL shading language'],
   ['storage', 'Disks and root commands'],
+  ['audio', 'Playing audio'],
 ];
 const sdkId = (file) => file === 'README' ? 'sdk-functions' : 'sdk-' + file;
 const SETS = {
