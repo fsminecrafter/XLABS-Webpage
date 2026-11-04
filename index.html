@@ -144,6 +144,32 @@ h3.big{font-size:clamp(26px,3vw,34px);letter-spacing:-.03em;font-weight:500;marg
 .embed{position:relative;aspect-ratio:16/10;border-radius:8px;overflow:hidden;background:var(--panel);border:1px solid var(--line)}
 .embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .embed.tall{aspect-ratio:auto;height:min(78vh,820px);min-height:420px}
+.mp{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);color:var(--panel-ink)}
+.mp-stage{position:relative;height:min(66vh,620px);min-height:300px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.mp-stage.drag::after{content:"";position:absolute;inset:10px;border:2px dashed #7C90FF;border-radius:6px;pointer-events:none}
+.mp-stage canvas{display:block}
+.mp-stage canvas.alpha{background:repeating-conic-gradient(#3A3D43 0 25%,#2A2D32 0 50%) 0 0/16px 16px}
+.mp-stage canvas.pixel{image-rendering:pixelated}
+.mp-stage canvas.wave{cursor:pointer}
+.mp-empty{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:24px;color:var(--panel-dim);font-size:15px;max-width:520px}
+.mp-empty strong{color:var(--panel-ink);font-size:24px;font-weight:500;letter-spacing:-.02em}
+.mp-empty.err strong{color:#FF8A7A}
+.mp-bar{display:flex;align-items:center;gap:12px;padding:10px 14px;border-top:1px solid rgba(255,255,255,.08);font:500 13px/1 "JetBrains Mono",ui-monospace,monospace;color:var(--panel-dim)}
+.mp-bar button{flex:none;display:grid;place-items:center;min-width:34px;height:34px;padding:0 10px;border:0;border-radius:6px;background:none;color:var(--panel-ink);font:inherit;cursor:pointer}
+.mp-bar button:hover{background:rgba(255,255,255,.08)}
+.mp-bar input[type=range]{accent-color:#7C90FF;margin:0}
+.mp-time{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.mp-time span{flex:none;font-variant-numeric:tabular-nums}
+.mp-seek{flex:1;min-width:40px}
+.mp-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:none}
+.mp-volw{display:flex;align-items:center;gap:6px;flex:none}
+.mp-volw input{width:84px}
+.mp[data-kind=img] .mp-time,.mp[data-kind=img] .mp-volw,.mp[data-sound="0"] .mp-volw,.mp:not([data-kind=vid]) .mp-frame{display:none}
+.mp[data-kind=img] .mp-name{display:block}
+.mp-info{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px 28px;margin:0;padding:18px 2px 0}
+.mp-info dt{font:500 12px/1.4 "JetBrains Mono",ui-monospace,monospace;color:var(--muted)}
+.mp-info dd{margin:2px 0 0;font-size:15px;overflow-wrap:anywhere}
+@media (max-width:640px){.mp-stage{height:52vh;min-height:240px}.mp-frame,.mp-volw,#mp-dur{display:none!important}.mp-bar{gap:6px;padding:8px}.mp-time{gap:8px}.mp-bar button{padding:0 8px}.mp-info{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px}}
 .poster{position:absolute;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:8px;padding:28px;color:var(--panel-ink);background:radial-gradient(120% 90% at 85% 10%,rgba(212,56,42,.55),transparent 60%),repeating-linear-gradient(0deg,transparent 0 39px,rgba(255,255,255,.05) 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,rgba(255,255,255,.05) 39px 40px),var(--panel)}
 .poster strong{font-size:30px;font-weight:500;letter-spacing:-.03em}
 .poster span:not(.tag){color:var(--panel-dim);font-size:15px;margin-bottom:8px}
@@ -279,6 +305,7 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
       <a href="#/red-sandbox" data-route="sandbox">Red Sandbox</a>
       <a href="studio/">Studio</a>
       <a href="#/p/roadmap" data-route="roadmap" class="opt">Roadmap</a>
+      <a href="#/player" data-route="player" class="opt">Player</a>
       <a href="#/docs" data-route="docs">Docs</a>
       <span class="tools">
         <button type="button" class="ib search-open" aria-label="Search the docs" title="Search (/)"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><kbd>/</kbd></button>
@@ -327,6 +354,7 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
         <a class="card" href="#/p/mosdesk"><span class="tag">Desktop · C</span><h3>MOSdesk</h3><p>The Minimal-OS desktop: themes, wallpapers, user folders, smooth Inter text, and apps from a text editor to an installer and a 3D cube.</p><span class="more">Read more →</span></a>
         <a class="card" href="#/p/moswm"><span class="tag">Window manager · C</span><h3>mosWM</h3><p>Composites application windows with damage tracking, tiles them to edges, and gives apps a protected window API.</p><span class="more">Read more →</span></a>
         <a class="card" href="studio/"><span class="tag">Web tool · JavaScript</span><h3>Run Studio</h3><p>Write a <code>.run</code> app, try it in a live mosWM desktop, then build the real x86_64 program — all in the browser.</p><span class="more">Open the studio →</span></a>
+        <a class="card" href="#/player"><span class="tag">Web tool · JavaScript · new</span><h3>Media Player</h3><p>Open Minimal-OS <code>.img</code> pictures, <code>.vid</code> videos and <code>.adi</code> sound and view or play them right in the browser.</p><span class="more">Open the player →</span></a>
         <a class="card" href="#/red-sandbox"><span class="tag">Web · JavaScript, WebAssembly</span><h3>Red Sandbox</h3><p>A 3D physics workbench: glue, gears, axles, springs, engines with real gas combustion, and wired signals.</p><span class="more">Play it here →</span></a>
       </div>
     </section>
@@ -3534,12 +3562,57 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
   </div>
 </main>
 
+<main id="media" hidden>
+  <div class="sandbox-head">
+    <div>
+      <p class="eyebrow">Web tool · JavaScript, Canvas, Web Audio</p>
+      <h1 class="page-title">Media Player</h1>
+    </div>
+    <div class="btns"><button class="btn primary" type="button" id="mp-open">Open a file</button><button class="btn" type="button" id="mp-sample">Try a sample video</button></div>
+  </div>
+  <input type="file" id="mp-file" accept=".img,.vid,.adi" hidden>
+  <div class="mp" id="mp">
+    <div class="mp-stage" id="mp-stage">
+      <canvas id="mp-canvas" hidden></canvas>
+      <div class="mp-empty" id="mp-empty"><strong>Drop an .img, .vid or .adi file here</strong><span>Or use Open a file. Files are decoded in this page and never leave your device.</span></div>
+    </div>
+    <div class="mp-bar" id="mp-bar" hidden>
+      <span class="mp-time">
+        <button type="button" id="mp-play" aria-label="Play" title="Play (Space)"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path id="mp-icon" d="M8 5v14l11-7z" fill="currentColor"/></svg></button>
+        <span id="mp-cur">0:00.0</span>
+        <input type="range" class="mp-seek" id="mp-seek" min="0" max="1" step="any" value="0" aria-label="Position">
+        <span id="mp-dur">0:00.0</span>
+        <span class="mp-frame" id="mp-frame"></span>
+      </span>
+      <span class="mp-name" id="mp-name"></span>
+      <label class="mp-volw" title="Volume"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="range" id="mp-vol" min="0" max="100" value="80" aria-label="Volume"></label>
+      <button type="button" id="mp-save">Save PNG</button>
+    </div>
+  </div>
+  <dl class="mp-info" id="mp-info"></dl>
+  <div class="sandbox-info">
+    <div>
+      <h2>What it opens</h2>
+      <p><code>.img</code> pictures (RGB or with transparency), <code>.vid</code> videos with their soundtrack, and <code>.adi</code> sound in IMA-ADPCM or PCM16. These are the formats Photos, Video and Player use in <a href="#/p/mosdesk">MOSdesk</a>.</p>
+    </div>
+    <div>
+      <h2>Making files</h2>
+      <p><code>mosmedia img photo.png out.img</code> and <code>mosmedia vid clip.mp4 out.vid</code> convert pictures and videos; <code>wavtoadi.py</code> turns a WAV into <code>.adi</code>. See <a href="#/docs/media">Images and videos</a> in the docs.</p>
+    </div>
+    <div>
+      <h2>Controls</h2>
+      <p><kbd>Space</kbd> play or pause · <kbd>←</kbd> <kbd>→</kbd> back or forward 5 seconds · <kbd>,</kbd> <kbd>.</kbd> previous or next frame · click the waveform to jump. Save keeps a picture or frame as PNG, or sound as WAV.</p>
+    </div>
+  </div>
+</main>
+
 
   <footer>
     <span>© 2026 Xlabs</span>
     <span class="flinks">
       <a href="#/docs">Docs</a>
       <a href="studio/">Run Studio</a>
+      <a href="#/player">Media Player</a>
       <a href="#games">Games</a>
       <a href="https://github.com/fsminecrafter/Minimal-OS">Minimal-OS</a>
       <a href="https://github.com/fsminecrafter/Minimal-OS-SDK">SDK</a>
@@ -3590,8 +3663,8 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
 </script>
 <script>
 (function(){
-  var home=document.getElementById('home'),docs=document.getElementById('docs'),pages=document.getElementById('pages'),sandbox=document.getElementById('sandbox'),haul=document.getElementById('haul');
-  var mains=[home,docs,pages,sandbox,haul];
+  var home=document.getElementById('home'),docs=document.getElementById('docs'),pages=document.getElementById('pages'),sandbox=document.getElementById('sandbox'),haul=document.getElementById('haul'),media=document.getElementById('media');
+  var mains=[home,docs,pages,sandbox,haul,media];
   var arts=docs.querySelectorAll('.doc'),links=docs.querySelectorAll('[data-nav]');
   var parts=pages.querySelectorAll('[data-page]'),plinks=pages.querySelectorAll('[data-page-nav]');
   var top=document.querySelectorAll('header nav [data-route]');
@@ -3628,6 +3701,8 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
       show(sandbox);document.title='Red Sandbox · Xlabs';mark('sandbox');window.scrollTo(0,0);
     }else if(/^#\/haul-and-wrench/.test(h)){
       show(haul);document.title='Haul & Wrench · Xlabs';mark('haul');window.scrollTo(0,0);
+    }else if(/^#\/player/.test(h)){
+      show(media);document.title='Media Player · Xlabs';mark('player');window.scrollTo(0,0);
     }else{
       show(home);document.title='Xlabs';mark(h==='#projects'?'projects':'');
       var el=h.length>1&&document.getElementById(h.slice(1));
@@ -3648,6 +3723,240 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
     });
   });
   window.addEventListener('hashchange',route);route();
+})();
+</script>
+<script src="assets/mosmedia.js"></script>
+<script>
+// Media Player (#/player): shows .img, plays .vid and .adi with assets/mosmedia.js
+(function(){
+  var M=window.MOSMedia;if(!M)return;
+  function $(id){return document.getElementById(id)}
+  var box=$('mp'),stage=$('mp-stage'),cv=$('mp-canvas'),g=cv.getContext('2d'),empty=$('mp-empty'),bar=$('mp-bar'),
+      fileIn=$('mp-file'),playB=$('mp-play'),icon=$('mp-icon'),seek=$('mp-seek'),cur=$('mp-cur'),dur=$('mp-dur'),
+      frameL=$('mp-frame'),nameL=$('mp-name'),vol=$('mp-vol'),saveB=$('mp-save'),info=$('mp-info'),sampleB=$('mp-sample');
+  var SAMPLE='https://raw.githubusercontent.com/fsminecrafter/Minimal-OS/main/docs/examples/sample.vid';
+  var media=null,name='',bytes=0,image=null,lastFrame=-1,playing=false,pos=0,t0=0,raf=0,dragging=false;
+  var actx=null,gain=null,abuf=null,src=null,useCtx=false,noSound='',peaks=null;
+  var PLAY='M8 5v14l11-7z',PAUSE='M7 5h4v14H7zM13 5h4v14h-4z';
+
+  function sound(){return media&&(media.kind==='adi'?media:media.audio)}
+  function length(){return media?media.duration:0}
+  function clock(){
+    if(!playing)return pos;
+    return useCtx?actx.currentTime-t0:(performance.now()-t0)/1000;
+  }
+  function fmt(s){s=Math.max(0,s);var m=Math.floor(s/60),x=s-m*60;return m+':'+(x<10?'0':'')+x.toFixed(1)}
+  function size(n){return n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(1)+' MB'}
+  function say(title,text,err){
+    empty.hidden=false;cv.hidden=true;empty.className='mp-empty'+(err?' err':'');
+    empty.querySelector('strong').textContent=title;empty.querySelector('span').textContent=text;
+  }
+
+  // ---- loading
+  function reset(){
+    pause();
+    if(src){src.disconnect();src=null}
+    media=null;abuf=null;peaks=null;image=null;lastFrame=-1;pos=0;noSound='';
+    bar.hidden=true;info.innerHTML='';
+  }
+  function load(buf,fname){
+    reset();
+    name=fname;bytes=buf.byteLength;
+    try{media=M.open(new Uint8Array(buf))}
+    catch(e){media=null;say('Could not open '+fname,e.message+'.',true);return}
+    var a=sound();
+    box.dataset.kind=media.kind;box.dataset.sound=a?'1':'0';
+    if(a)vol.value=Math.round(a.volume*100);
+    empty.hidden=true;cv.hidden=false;
+    cv.className=media.kind==='adi'?'wave':media.channels===4?'alpha':'';
+    if(media.kind!=='adi'){
+      cv.width=media.width;cv.height=media.height;
+      image=g.createImageData(media.width,media.height);
+    }
+    seek.max=length();seek.value=0;dur.textContent=fmt(length());
+    nameL.textContent=name;
+    saveB.textContent=media.kind==='adi'?'Save WAV':media.kind==='vid'?'Save frame':'Save PNG';
+    bar.hidden=false;
+    describe();fit();draw();ui();
+    if(media.kind!=='img')play();
+  }
+  function openFile(f){
+    if(!f)return;
+    say('Opening '+f.name+'…','Decoding in this page.');
+    f.arrayBuffer().then(function(b){setTimeout(function(){load(b,f.name)},20)},function(e){say('Could not read '+f.name,String(e),true)});
+  }
+  function describe(){
+    var rows=[],a=sound();
+    if(media.kind==='img')rows.push(['Type','Picture (.img)'],['Size',media.width+' × '+media.height],['Colour',media.channels===4?'RGBA, with transparency':'RGB']);
+    if(media.kind==='vid')rows.push(['Type','Video (.vid)'],['Size',media.width+' × '+media.height],['Frame rate',(+media.fps.toFixed(3))+' fps'],['Frames',media.frameCount+(media.keyInterval?', a keyframe every '+media.keyInterval:'')],['Length',fmt(media.duration)],['Colour',media.channels===4?'RGBA':'RGB']);
+    if(media.kind==='adi')rows.push(['Type','Sound (.adi)'],['Length',fmt(media.duration)]);
+    if(a)rows.push(['Sound',a.format+', '+(a.sampleRate/1000)+' kHz, '+(a.channels===1?'mono':'stereo')],['File volume',Math.round(a.volume*100)+'%']);
+    else if(media.kind==='vid')rows.push(['Sound','None']);
+    rows.push(['File',name+' · '+size(bytes)]);
+    info.innerHTML='';
+    rows.forEach(function(r){
+      var d=document.createElement('div'),t=document.createElement('dt'),v=document.createElement('dd');
+      t.textContent=r[0];v.textContent=r[1];d.appendChild(t);d.appendChild(v);info.appendChild(d);
+    });
+  }
+
+  // ---- drawing
+  function fit(){
+    if(!media)return;
+    var sw=stage.clientWidth,sh=stage.clientHeight;
+    if(media.kind==='adi'){
+      var dpr=window.devicePixelRatio||1,w=Math.max(100,sw-40),h=Math.min(sh-40,280);
+      cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.width=w+'px';cv.style.height=h+'px';
+      peaks=wavePeaks(cv.width);draw();return;
+    }
+    var k=Math.min((sw-2)/media.width,(sh-2)/media.height,8);
+    cv.style.width=Math.max(1,Math.floor(media.width*k))+'px';cv.style.height=Math.max(1,Math.floor(media.height*k))+'px';
+    cv.classList.toggle('pixel',k>=2);
+  }
+  function put(px){
+    var out=new Uint32Array(image.data.buffer);
+    for(var i=0;i<px.length;i++){var v=px[i];out[i]=(v&0xFF00FF00)|((v>>>16)&255)|((v&255)<<16)}
+    g.putImageData(image,0,0);
+  }
+  function wavePeaks(cols){
+    var a=media,ch=a.channels,n=a.frames,lo=new Float32Array(cols),hi=new Float32Array(cols);
+    for(var c=0;c<cols;c++){
+      var s=Math.floor(c*n/cols),e=Math.max(s+1,Math.floor((c+1)*n/cols)),mn=0,mx=0;
+      var step=Math.max(1,((e-s)/400)|0);
+      for(var i=s;i<e;i+=step){var v=a.pcm[i*ch];if(ch===2)v=(v+a.pcm[i*ch+1])/2;if(v<mn)mn=v;if(v>mx)mx=v}
+      lo[c]=mn/32768;hi[c]=mx/32768;
+    }
+    return {lo:lo,hi:hi};
+  }
+  function drawWave(){
+    var w=cv.width,h=cv.height,mid=h/2,at=length()?pos/length()*w:0;
+    g.clearRect(0,0,w,h);
+    g.fillStyle='rgba(255,255,255,.06)';g.fillRect(0,mid,w,1);
+    for(var c=0;c<w;c++){
+      g.fillStyle=c<at?'#7C90FF':'#4A4F58';
+      var top=mid-peaks.hi[c]*mid*.92,bot=mid-peaks.lo[c]*mid*.92;
+      g.fillRect(c,top,1,Math.max(1,bot-top));
+    }
+    g.fillStyle='#E6E8EB';g.fillRect(Math.min(w-2,Math.round(at)),0,2,h);
+  }
+  function draw(){
+    if(!media)return;
+    if(media.kind==='img'){put(media.pixels);return}
+    if(media.kind==='adi'){if(peaks)drawWave();return}
+    var f=media.frameAt(pos);
+    if(f===lastFrame)return;
+    try{put(media.frame(f));lastFrame=f}
+    catch(e){pause();say('This video is damaged',e.message+'.',true)}
+  }
+  function ui(){
+    icon.setAttribute('d',playing?PAUSE:PLAY);
+    playB.setAttribute('aria-label',playing?'Pause':'Play');playB.title=(playing?'Pause':'Play')+' (Space)';
+    cur.textContent=fmt(pos);
+    if(!dragging)seek.value=pos;
+    if(media&&media.kind==='vid')frameL.textContent='frame '+(media.frameAt(pos)+1)+'/'+media.frameCount;
+  }
+
+  // ---- playback
+  function audioReady(){
+    var a=sound();
+    if(!a||abuf||noSound)return;
+    try{
+      actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      if(!gain){gain=actx.createGain();gain.connect(actx.destination)}
+      abuf=actx.createBuffer(a.channels,a.frames,a.sampleRate);
+      for(var c=0;c<a.channels;c++){
+        var d=abuf.getChannelData(c);
+        for(var i=0;i<a.frames;i++)d[i]=a.pcm[i*a.channels+c]/32768;
+      }
+    }catch(e){abuf=null;noSound='This browser cannot play the sound ('+a.sampleRate+' Hz).'}
+  }
+  function play(){
+    if(!media||media.kind==='img'||playing)return;
+    if(pos>=length()-1e-3)pos=0;
+    audioReady();
+    useCtx=!!abuf;
+    if(abuf){
+      gain.gain.value=vol.value/100;
+      if(actx.state==='suspended')actx.resume();
+      if(pos<abuf.duration){src=actx.createBufferSource();src.buffer=abuf;src.connect(gain);src.start(0,pos)}
+      t0=actx.currentTime-pos;
+    }else t0=performance.now()-pos*1000;
+    playing=true;ui();
+    if(noSound&&!info.querySelector('.mp-warn')){var d=document.createElement('div');d.className='mp-warn';d.innerHTML='<dt>Note</dt><dd></dd>';d.lastChild.textContent=noSound;info.appendChild(d)}
+    cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
+  }
+  function pause(){
+    if(!playing)return;
+    pos=Math.min(clock(),length());playing=false;
+    if(src){src.onended=null;try{src.stop()}catch(e){}src.disconnect();src=null}
+    cancelAnimationFrame(raf);ui();
+  }
+  function tick(){
+    if(!playing)return;
+    pos=clock();
+    if(pos>=length()){pos=length();draw();pause();return}
+    draw();ui();raf=requestAnimationFrame(tick);
+  }
+  function seekTo(s){
+    if(!media||media.kind==='img')return;
+    var was=playing;pause();
+    pos=Math.max(0,Math.min(length(),s));draw();ui();
+    if(was&&pos<length())play();
+  }
+  function step(n){
+    if(!media||media.kind!=='vid')return;
+    pause();
+    var f=Math.max(0,Math.min(media.frameCount-1,media.frameAt(pos)+n));
+    pos=Math.min(length(),f/media.fps);draw();ui();
+  }
+
+  // ---- saving
+  function saveBlob(blob,fname){
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(function(){URL.revokeObjectURL(a.href)},4000);
+  }
+  saveB.addEventListener('click',function(){
+    if(!media)return;
+    var base=name.replace(/\.[^.]*$/,'')||'media';
+    if(media.kind==='adi'){saveBlob(new Blob([M.toWav(media)],{type:'audio/wav'}),base+'.wav');return}
+    var f=media.kind==='vid'?'-frame'+(media.frameAt(pos)+1):'';
+    cv.toBlob(function(b){if(b)saveBlob(b,base+f+'.png')},'image/png');
+  });
+
+  // ---- controls
+  $('mp-open').addEventListener('click',function(){fileIn.click()});
+  fileIn.addEventListener('change',function(){openFile(fileIn.files[0]);fileIn.value=''});
+  sampleB.addEventListener('click',function(){
+    say('Downloading sample.vid…','A 2-second colour test video from the Minimal-OS repository.');
+    fetch(SAMPLE).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer()})
+      .then(function(b){load(b,'sample.vid')},function(e){reset();say('Could not download the sample',e.message+'.',true)});
+  });
+  playB.addEventListener('click',function(){playing?pause():play()});
+  seek.addEventListener('input',function(){dragging=true;seekTo(+seek.value)});
+  seek.addEventListener('change',function(){dragging=false;ui()});
+  vol.addEventListener('input',function(){if(gain)gain.gain.value=vol.value/100});
+  cv.addEventListener('click',function(e){
+    if(!media||media.kind!=='adi')return;
+    var r=cv.getBoundingClientRect();seekTo((e.clientX-r.left)/r.width*length());
+  });
+  ['dragenter','dragover'].forEach(function(t){stage.addEventListener(t,function(e){e.preventDefault();stage.classList.add('drag')})});
+  ['dragleave','drop'].forEach(function(t){stage.addEventListener(t,function(e){e.preventDefault();stage.classList.remove('drag')})});
+  stage.addEventListener('drop',function(e){openFile(e.dataTransfer.files[0])});
+  document.addEventListener('keydown',function(e){
+    if(!/^#\/player/.test(location.hash)||!media||e.ctrlKey||e.metaKey||e.altKey)return;
+    var t=e.target,tag=t.tagName;
+    if(tag==='TEXTAREA'||tag==='SELECT'||(tag==='INPUT'&&t.type!=='range')||t.isContentEditable||document.querySelector('dialog[open]'))return;
+    if(e.key===' '&&tag!=='BUTTON'){e.preventDefault();playing?pause():play()}
+    else if(tag==='INPUT')return;
+    else if(e.key==='ArrowLeft'){e.preventDefault();seekTo(clock()-5)}
+    else if(e.key==='ArrowRight'){e.preventDefault();seekTo(clock()+5)}
+    else if(e.key===','){step(-1)}
+    else if(e.key==='.'){step(1)}
+  });
+  if(window.ResizeObserver)new ResizeObserver(fit).observe(stage);else window.addEventListener('resize',fit);
+  // stop the sound when leaving the page
+  window.addEventListener('hashchange',function(){if(!/^#\/player/.test(location.hash))pause()});
 })();
 </script>
 <script src="assets/highlight.js"></script>
@@ -3809,7 +4118,7 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
     document.querySelectorAll('#pages [data-page]').forEach(function(art){
       index.push({t:txt(art.querySelector('h1')),w:'Project',u:'#/p/'+art.dataset.page,k:0});
     });
-    index.push({t:'Red Sandbox',w:'Project',u:'#/red-sandbox',k:0},{t:'Haul & Wrench',w:'Game',u:'#/haul-and-wrench',k:0},{t:'Hash Tycoon',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/hashtycoon',k:0},{t:'Last Shelter',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/last',k:0},{t:'Run Studio',w:'Open the studio',u:'studio/',k:0});
+    index.push({t:'Red Sandbox',w:'Project',u:'#/red-sandbox',k:0},{t:'Haul & Wrench',w:'Game',u:'#/haul-and-wrench',k:0},{t:'Hash Tycoon',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/hashtycoon',k:0},{t:'Last Shelter',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/last',k:0},{t:'Run Studio',w:'Open the studio',u:'studio/',k:0},{t:'Media Player',w:'Open .img, .vid and .adi files',u:'#/player',k:0});
     var fns={};index.forEach(function(e){if(e.k===1)fns[e.t]=1});
     index=index.filter(function(e){return !(e.c&&fns[e.t])});
     index.forEach(function(e){e.l=e.t.toLowerCase()});

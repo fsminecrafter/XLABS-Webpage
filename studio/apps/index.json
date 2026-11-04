@@ -1,5 +1,5 @@
 {
- "source": "MOSdesk c2c8222",
+ "source": "MOSdesk 081da68",
  "apps": [
   {
    "id": "mxplorer",
@@ -11,7 +11,7 @@
     "0:/data/mxplorer-homepage.txt": "1\n"
    },
    "description": "The Minimal-OS web browser: its own HTML, CSS and JavaScript engines, tabs and developer tools (F12).",
-   "bytes": 1307835
+   "bytes": 1356753
   },
   {
    "id": "terminal",
@@ -19,7 +19,7 @@
    "title": "Terminal",
    "icon": "terminal",
    "description": "The MOSdesk command line: ls, cat, cd, ps, run and more, all through user-mode system calls.",
-   "bytes": 79887
+   "bytes": 81529
   },
   {
    "id": "edit",

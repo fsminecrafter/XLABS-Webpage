@@ -67,6 +67,11 @@ const PATCHES = {
       'static double mx_clz32(double x) { uint32_t v = (uint32_t)js_to_int32(js_num(x)); int n = 0; if (!v) n = 32; else while (!(v & 0x80000000u)) { v <<= 1; n++; } return n; }\nMATH1(clz32, mx_clz32(x))'],
     ['js_runtime.c', '        return iterate_to_array(self.u.obj->cls == CLS_SET\n            ? ({ js_obj* out = js_new_array(c->length);\n                 for (uint32_t i = 0; i < c->length; i++) {\n                     js_obj* pair = js_new_array(2);\n                     js_array_push(pair, c->items[i]);\n                     js_array_push(pair, c->items[i]);\n                     js_array_push(out, js_obj_val(pair));\n                 }\n                 js_obj_val(out); })\n            : self);',
       '        if (self.u.obj->cls == CLS_SET) {\n            js_obj* out = js_new_array(c->length);\n            for (uint32_t i = 0; i < c->length; i++) {\n                js_obj* pair = js_new_array(2);\n                js_array_push(pair, c->items[i]);\n                js_array_push(pair, c->items[i]);\n                js_array_push(out, js_obj_val(pair));\n            }\n            return iterate_to_array(js_obj_val(out));\n        }\n        return iterate_to_array(self);'],
+    // nor goto: mx_url_local_path skips its last copy with a NULL path instead
+    ['util.c', '            mx_copy(out + 2, capacity - 2, path);\n            goto cut;',
+      '            mx_copy(out + 2, capacity - 2, path);\n            path = NULL;'],
+    ['util.c', '    mx_copy(out, capacity, path);\ncut:\n',
+      '    if (path) mx_copy(out, capacity, path);\n'],
   ],
 };
 
