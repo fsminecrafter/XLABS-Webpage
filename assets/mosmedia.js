@@ -1,4 +1,5 @@
-// Decoders for Minimal-OS media: .img pictures, .vid videos and .adi sound.
+// Decoders for Minimal-OS media: .img pictures, .vid videos (tiles and
+// motion codecs) and .adi sound.
 // A port of tools/media/mosplayer.py in fsminecrafter/Minimal-OS; the
 // formats are described in that repo's docs/media.md and docs/audio.md.
 // Pixels are 0xAARRGGBB in a Uint32Array, as in mosmedia.h.
@@ -105,10 +106,357 @@
     return { kind: 'img', width: w, height: h, channels: d[5], pixels: px };
   }
 
+  // ---- The "motion" .vid codec (Minimal-OS-SDK/include/mosmedia_motion.h)
+  // A bit-exact port of the decoder in mosplayer.py: YCbCr 4:2:0, 16x16
+  // macroblocks, intra or motion-compensated prediction, H.264's 4x4
+  // transform, deblocking and an LZMA-style binary range coder.
+  var MMC_ZIGZAG = [0, 1, 4, 8, 5, 2, 3, 6, 9, 12, 13, 10, 7, 11, 14, 15];
+  var MMC_V = [[10, 16, 13], [11, 18, 14], [13, 20, 16], [14, 23, 18], [16, 25, 20], [18, 29, 23]];
+  var MMC_CLASS = [];
+  for (var ci = 0; ci < 16; ci++)
+    MMC_CLASS.push(!((ci >> 2) & 1) && !(ci & 1) ? 0 : ((ci >> 2) & 1) && (ci & 1) ? 1 : 2);
+  var MMC_CHROMA_QP = [
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+    26, 27, 28, 29, 29, 30, 31, 32, 32, 33, 34, 34, 35, 35, 36, 36, 37, 37, 37, 38, 38, 38, 39, 39, 39, 39];
+  var MMC_ALPHA = [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 5, 6, 7, 8, 9, 10, 12, 13,
+    15, 17, 20, 22, 25, 28, 32, 36, 40, 45, 50, 56, 63, 71, 80, 90, 101, 113, 127, 144, 162, 182, 203, 226, 255, 255];
+  var MMC_BETA = [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,
+    6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18];
+  var MMC_TC0 = [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 6, 6, 7, 8, 9, 10, 13];
+  var MMC_UBINS = 14, MMC_MV_MAX = 16383;
+
+  function clip(v) { return v < 0 ? 0 : v > 255 ? 255 : v; }
+  function probs(n) { var p = new Uint16Array(n); p.fill(1024); return p; }
+
+  function RangeDecoder(d) {
+    this.d = d; this.pos = 0; this.range = 0xFFFFFFFF; this.code = 0; this.over = 0;
+    for (var i = 0; i < 5; i++) this.code = ((this.code << 8) | this.byte()) >>> 0;
+  }
+  RangeDecoder.prototype.byte = function () {
+    if (this.pos < this.d.length) return this.d[this.pos++];
+    this.over++;
+    return 0;
+  };
+  RangeDecoder.prototype.bit = function (p, i) {
+    var v = p[i], bound = (this.range >>> 11) * v, b;
+    if (this.code < bound) { this.range = bound; p[i] = v + ((2048 - v) >> 5); b = 0; }
+    else { this.code -= bound; this.range -= bound; p[i] = v - (v >> 5); b = 1; }
+    while (this.range < 0x1000000) {
+      this.range = (this.range << 8) >>> 0;
+      this.code = ((this.code << 8) | this.byte()) >>> 0;
+    }
+    return b;
+  };
+  RangeDecoder.prototype.direct = function () {
+    this.range >>>= 1;
+    var b = 0;
+    if (this.code >= this.range) { this.code -= this.range; b = 1; }
+    while (this.range < 0x1000000) {
+      this.range = (this.range << 8) >>> 0;
+      this.code = ((this.code << 8) | this.byte()) >>> 0;
+    }
+    return b;
+  };
+  RangeDecoder.prototype.eg = function () {
+    var n = 0;
+    while (this.direct()) if (++n > 24) { this.over += 1000; return 0; }
+    var v = 1;
+    for (var i = 0; i < n; i++) v = v * 2 + this.direct();
+    return v - 1;
+  };
+  RangeDecoder.prototype.uint = function (p, at) {
+    var i = 0;
+    while (i < MMC_UBINS && this.bit(p, at + i)) i++;
+    return i < MMC_UBINS ? i : MMC_UBINS + this.eg();
+  };
+
+  function MotionDecoder(width, height) {
+    this.w = (width + 15) & ~15; this.h = (height + 15) & ~15;
+    this.mbw = this.w >> 4; this.mbh = this.h >> 4;
+    this.cw = this.w >> 1; this.ch = this.h >> 1;
+    var sy = this.w * this.h, sc = this.cw * this.ch, mbs = this.mbw * this.mbh;
+    this.cur = [new Uint8Array(sy), new Uint8Array(sc), new Uint8Array(sc)];
+    this.ref = [new Uint8Array(sy), new Uint8Array(sc), new Uint8Array(sc)];
+    this.nzY = new Uint8Array(sy >> 4);
+    this.mode = new Uint8Array(sy >> 4);
+    this.nzC = [new Uint8Array(sc >> 4), new Uint8Array(sc >> 4)];
+    this.mbIntra = new Uint8Array(mbs);
+    this.mbSkip = new Uint8Array(mbs);
+    this.mv = new Int32Array(mbs * 2);
+    this.qp = 26;
+    this.z = new Int32Array(16);
+    this.t = new Int32Array(16);
+    this.above = new Int32Array(16);
+    this.left = new Int32Array(16);
+  }
+
+  // Predicts an n x n block from the pixels above and to its left, in place
+  MotionDecoder.prototype.intra = function (plane, stride, x, y, n, mode) {
+    var ha = y > 0, hl = x > 0, above = this.above, left = this.left, i, j, sa = 0, sl = 0;
+    for (i = 0; i < n; i++) {
+      above[i] = ha ? plane[(y - 1) * stride + x + i] : 128; sa += above[i];
+      left[i] = hl ? plane[(y + i) * stride + x - 1] : 128; sl += left[i];
+    }
+    var corner = ha && hl ? plane[(y - 1) * stride + x - 1] : 128;
+    var shift = n === 4 ? 2 : 3, dc = 128;
+    if (ha && hl) dc = (sa + sl + n) >> (shift + 1);
+    else if (ha || hl) dc = ((ha ? sa : sl) + (n >> 1)) >> shift;
+    for (j = 0; j < n; j++) {
+      var at = (y + j) * stride + x;
+      for (i = 0; i < n; i++)
+        plane[at + i] = mode === 0 ? dc : mode === 1 ? above[i] : mode === 2 ? left[j] : clip(left[j] + above[i] - corner);
+    }
+  };
+
+  // Copies an n x n block moved by (mvx, mvy) in 1/2^frac pixels from ref into cur (bilinear, edges repeated)
+  MotionDecoder.prototype.mc = function (ref, cur, pw, ph, x, y, n, mvx, mvy, frac) {
+    var one = 1 << frac, ix0 = x + (mvx >> frac), iy0 = y + (mvy >> frac);
+    var fx = mvx & (one - 1), fy = mvy & (one - 1);
+    var w00 = (one - fx) * (one - fy), w01 = fx * (one - fy), w10 = (one - fx) * fy, w11 = fx * fy;
+    var sh = 2 * frac, rnd = 1 << (sh - 1), maxx = pw - 1, maxy = ph - 1;
+    for (var j = 0; j < n; j++) {
+      var yy = iy0 + j, r0 = (yy < 0 ? 0 : yy > maxy ? maxy : yy) * pw;
+      yy++;
+      var r1 = (yy < 0 ? 0 : yy > maxy ? maxy : yy) * pw, out = (y + j) * pw + x;
+      for (var i = 0; i < n; i++) {
+        var a = ix0 + i, b = a + 1;
+        a = a < 0 ? 0 : a > maxx ? maxx : a;
+        if (!fx && !fy) { cur[out + i] = ref[r0 + a]; continue; }
+        b = b < 0 ? 0 : b > maxx ? maxx : b;
+        cur[out + i] = (w00 * ref[r0 + a] + w01 * ref[r0 + b] + w10 * ref[r1 + a] + w11 * ref[r1 + b] + rnd) >> sh;
+      }
+    }
+  };
+
+  // Dequantizes this.z, runs the inverse 4x4 transform and adds it to the plane
+  MotionDecoder.prototype.residual = function (qp, plane, at, stride) {
+    var z = this.z, t = this.t, scale = 1 << ((qp / 6) | 0), rowV = MMC_V[qp % 6], i, v;
+    var d0, d1, d2, d3, e0, e1, e2, e3;
+    for (i = 0; i < 16; i++) {
+      v = z[i] ? z[i] * rowV[MMC_CLASS[i]] * scale : 0;
+      t[i] = v < -1048576 ? -1048576 : v > 1048576 ? 1048576 : v;
+    }
+    for (i = 0; i < 4; i++) {
+      d0 = t[i * 4]; d1 = t[i * 4 + 1]; d2 = t[i * 4 + 2]; d3 = t[i * 4 + 3];
+      e0 = d0 + d2; e1 = d0 - d2; e2 = (d1 >> 1) - d3; e3 = d1 + (d3 >> 1);
+      t[i * 4] = e0 + e3; t[i * 4 + 1] = e1 + e2; t[i * 4 + 2] = e1 - e2; t[i * 4 + 3] = e0 - e3;
+    }
+    for (i = 0; i < 4; i++) {
+      d0 = t[i]; d1 = t[4 + i]; d2 = t[8 + i]; d3 = t[12 + i];
+      e0 = d0 + d2; e1 = d0 - d2; e2 = (d1 >> 1) - d3; e3 = d1 + (d3 >> 1);
+      var q = at + i;
+      plane[q] = clip(plane[q] + ((e0 + e3 + 32) >> 6)); q += stride;
+      plane[q] = clip(plane[q] + ((e1 + e2 + 32) >> 6)); q += stride;
+      plane[q] = clip(plane[q] + ((e1 - e2 + 32) >> 6)); q += stride;
+      plane[q] = clip(plane[q] + ((e0 - e3 + 32) >> 6));
+    }
+  };
+
+  // The predicted vector: the median of the left, above and above-right macroblocks'
+  MotionDecoder.prototype.mvp = function (mx, my, out) {
+    var w = this.mbw, mv = this.mv, intra = this.mbIntra, ax = 0, ay = 0, bx = 0, by = 0, cx = 0, cy = 0;
+    if (mx > 0) { var i = my * w + mx - 1; if (!intra[i]) { ax = mv[i * 2]; ay = mv[i * 2 + 1]; } }
+    if (my === 0) { out[0] = ax; out[1] = ay; return; }
+    var bi = (my - 1) * w + mx;
+    if (!intra[bi]) { bx = mv[bi * 2]; by = mv[bi * 2 + 1]; }
+    var c = mx + 1 < w ? bi + 1 : mx > 0 ? bi - 1 : bi;
+    if (c !== bi && !intra[c]) { cx = mv[c * 2]; cy = mv[c * 2 + 1]; }
+    out[0] = median(ax, bx, cx); out[1] = median(ay, by, cy);
+  };
+  function median(a, b, c) {
+    var lo = Math.min(a, b), hi = Math.max(a, b);
+    return c < lo ? lo : c > hi ? hi : c;
+  }
+
+  // Reads one block's coefficients into this.z; false when the block has none
+  MotionDecoder.prototype.coeffs = function (d, c, typ, ctx) {
+    if (!d.bit(c.cbf, typ * 3 + ctx)) return false;
+    var z = this.z, pos = this.pos || (this.pos = new Int32Array(16)), np = 0, last = 15, i;
+    z.fill(0);
+    for (i = 0; i < 15; i++) {
+      if (d.bit(c.sig, typ * 15 + i)) {
+        pos[np++] = i;
+        if (d.bit(c.last, typ * 15 + i)) { last = i; break; }
+      }
+    }
+    if (last === 15) pos[np++] = 15;
+    var gt1 = 0, eq1 = 0;
+    for (var k = np - 1; k >= 0; k--) {
+      var inc = gt1 ? 0 : Math.min(eq1 + 1, 4), a = 1;
+      if (d.bit(c.gt1, typ * 5 + inc)) { a = Math.min(2 + d.uint(c.lev, typ * MMC_UBINS), 65535); gt1++; }
+      else eq1++;
+      z[MMC_ZIGZAG[pos[k]]] = d.direct() ? -a : a;
+    }
+    return true;
+  };
+
+  MotionDecoder.prototype.mvd = function (d, c, k) {
+    if (!d.bit(c.mvZero, k)) return 0;
+    var s = d.direct(), a = Math.min(1 + d.uint(c.mvBins, k * MMC_UBINS), MMC_MV_MAX * 2);
+    return s ? -a : a;
+  };
+
+  MotionDecoder.prototype.luma = function (d, c, mx, my, k, qp) {
+    var bw = this.w >> 2, bx = mx * 4 + (k & 3), by = my * 4 + (k >> 2), nz = this.nzY;
+    var ctx = (bx > 0 && nz[by * bw + bx - 1] ? 1 : 0) + (by > 0 && nz[(by - 1) * bw + bx] ? 1 : 0);
+    var has = this.coeffs(d, c, 0, ctx);
+    nz[by * bw + bx] = has ? 1 : 0;
+    if (has) this.residual(qp, this.cur[0], by * 4 * this.w + bx * 4, this.w);
+  };
+
+  MotionDecoder.prototype.chroma = function (d, c, mx, my) {
+    var qpc = MMC_CHROMA_QP[this.qp], cw = this.cw, cbw = this.w >> 3;
+    for (var pl = 0; pl < 2; pl++) {
+      var plane = this.cur[1 + pl], nz = this.nzC[pl];
+      for (var k = 0; k < 4; k++) {
+        var bx = mx * 2 + (k & 1), by = my * 2 + (k >> 1);
+        var ctx = (bx > 0 && nz[by * cbw + bx - 1] ? 1 : 0) + (by > 0 && nz[(by - 1) * cbw + bx] ? 1 : 0);
+        var has = this.coeffs(d, c, 1, ctx);
+        nz[by * cbw + bx] = has ? 1 : 0;
+        if (has) this.residual(qpc, plane, by * 4 * cw + bx * 4, cw);
+      }
+    }
+  };
+
+  // Decodes one range-coded frame; the result is in this.ref afterwards
+  MotionDecoder.prototype.decode = function (data, key, qp) {
+    if (!(qp >= 0 && qp <= 51)) fail('invalid motion frame QP');
+    this.qp = qp;
+    var d = new RangeDecoder(data);
+    var c = { skip: probs(3), intra: probs(3), mpm: probs(1), rem: probs(2), cmode: probs(3), mvZero: probs(2),
+      mvBins: probs(2 * MMC_UBINS), cbf: probs(6), sig: probs(30), last: probs(30), gt1: probs(10), lev: probs(2 * MMC_UBINS) };
+    var w = this.w, cw = this.cw, bw = w >> 2, cbw = w >> 3, mbw = this.mbw;
+    var Y = this.cur[0], U = this.cur[1], V = this.cur[2], ref = this.ref;
+    var skipA = this.mbSkip, intraA = this.mbIntra, modeA = this.mode, mv = this.mv;
+    var modes = new Uint8Array(16), p = new Int32Array(2), k, i;
+    for (var my = 0; my < this.mbh; my++) {
+      for (var mx = 0; mx < mbw; mx++) {
+        var mb = my * mbw + mx;
+        var nskip = (mx > 0 && skipA[mb - 1] ? 1 : 0) + (my > 0 && skipA[mb - mbw] ? 1 : 0);
+        var nintra = (mx > 0 && intraA[mb - 1] ? 1 : 0) + (my > 0 && intraA[mb - mbw] ? 1 : 0);
+        var skip = !key && d.bit(c.skip, nskip) === 1;
+        var intra = key || (!skip && d.bit(c.intra, nintra) === 1);
+        skipA[mb] = skip ? 1 : 0; intraA[mb] = intra ? 1 : 0;
+        if (intra) {
+          mv[mb * 2] = mv[mb * 2 + 1] = 0;
+          for (k = 0; k < 16; k++) {
+            var bx = mx * 4 + (k & 3), by = my * 4 + (k >> 2);
+            var ma = bx > 0 ? modeA[by * bw + bx - 1] : 0, mbm = by > 0 ? modeA[(by - 1) * bw + bx] : 0;
+            var mpm = Math.min(ma, mbm), mode = mpm;
+            if (d.bit(c.mpm, 0)) {
+              var rem = d.bit(c.rem, 0) ? 1 + d.bit(c.rem, 1) : 0;
+              mode = rem < mpm ? rem : rem + 1;
+            }
+            modeA[by * bw + bx] = mode;
+            modes[k] = mode;
+          }
+          var b0 = d.bit(c.cmode, 0), cmode = b0 * 2 + d.bit(c.cmode, 1 + b0);
+          for (k = 0; k < 16; k++) {
+            this.intra(Y, w, (mx * 4 + (k & 3)) * 4, (my * 4 + (k >> 2)) * 4, 4, modes[k]);
+            this.luma(d, c, mx, my, k, qp);
+          }
+          this.intra(U, cw, mx * 8, my * 8, 8, cmode);
+          this.intra(V, cw, mx * 8, my * 8, 8, cmode);
+          this.chroma(d, c, mx, my);
+        } else {
+          this.mvp(mx, my, p);
+          var px = p[0], py = p[1];
+          if (!skip) {
+            px = Math.min(Math.max(px + this.mvd(d, c, 0), -MMC_MV_MAX), MMC_MV_MAX);
+            py = Math.min(Math.max(py + this.mvd(d, c, 1), -MMC_MV_MAX), MMC_MV_MAX);
+          }
+          mv[mb * 2] = px; mv[mb * 2 + 1] = py;
+          this.mc(ref[0], Y, w, this.h, mx * 16, my * 16, 16, px, py, 2);
+          this.mc(ref[1], U, cw, this.ch, mx * 8, my * 8, 8, px, py, 3);
+          this.mc(ref[2], V, cw, this.ch, mx * 8, my * 8, 8, px, py, 3);
+          for (k = 0; k < 16; k++) {
+            i = (my * 4 + (k >> 2)) * bw + mx * 4 + (k & 3);
+            modeA[i] = 0; this.nzY[i] = 0;
+          }
+          if (skip) {
+            for (k = 0; k < 4; k++) {
+              i = (my * 2 + (k >> 1)) * cbw + mx * 2 + (k & 1);
+              this.nzC[0][i] = this.nzC[1][i] = 0;
+            }
+          } else {
+            for (k = 0; k < 16; k++) this.luma(d, c, mx, my, k, qp);
+            this.chroma(d, c, mx, my);
+          }
+        }
+        if (d.over > 16) fail('damaged motion frame');
+      }
+    }
+    this.deblock(Y, w, this.h, this.nzY, 2, qp);
+    var qpc = MMC_CHROMA_QP[qp];
+    this.deblock(U, cw, this.ch, this.nzC[0], 1, qpc);
+    this.deblock(V, cw, this.ch, this.nzC[1], 1, qpc);
+    var swap = this.cur; this.cur = this.ref; this.ref = swap;
+  };
+
+  MotionDecoder.prototype.deblock = function (plane, pw, ph, nz, mbsh, qp) {
+    var alpha = MMC_ALPHA[qp], beta = MMC_BETA[qp];
+    if (!alpha) return;
+    var bw = pw >> 2, bh = ph >> 2, intra = this.mbIntra, mv = this.mv, mbw = this.mbw;
+    for (var dir = 0; dir < 2; dir++) {
+      var step = dir ? pw : 1;
+      for (var by = dir; by < bh; by++) {
+        for (var bx = 1 - dir; bx < bw; bx++) {
+          var ax = dir ? bx : bx - 1, ay = dir ? by - 1 : by;
+          var mba = (ay >> mbsh) * mbw + (ax >> mbsh), mbb = (by >> mbsh) * mbw + (bx >> mbsh), s;
+          if (intra[mba] || intra[mbb]) s = 2;
+          else if (nz[ay * bw + ax] || nz[by * bw + bx]) s = 1;
+          else if (mba !== mbb && (Math.abs(mv[mba * 2] - mv[mbb * 2]) >= 4 ||
+                                   Math.abs(mv[mba * 2 + 1] - mv[mbb * 2 + 1]) >= 4)) s = 1;
+          else continue;
+          var tc = MMC_TC0[qp] + (s === 2 ? 1 : 0), base = by * 4 * pw + bx * 4;
+          for (var k = 0; k < 4; k++) {
+            var q = dir ? base + k : base + k * pw;
+            var p1 = plane[q - 2 * step], p0 = plane[q - step], q0 = plane[q], q1 = plane[q + step];
+            if (Math.abs(p0 - q0) < alpha && Math.abs(p1 - p0) < beta && Math.abs(q1 - q0) < beta) {
+              var dl = ((q0 - p0) * 4 + (p1 - q1) + 4) >> 3;
+              dl = dl < -tc ? -tc : dl > tc ? tc : dl;
+              plane[q - step] = clip(p0 + dl);
+              plane[q] = clip(q0 - dl);
+            }
+          }
+        }
+      }
+    }
+  };
+
+  // The last decoded frame as 0xAARRGGBB (colour upsampled 9:3:3:1, BT.601 full range)
+  MotionDecoder.prototype.toArgb = function (width, height, out) {
+    var Y = this.ref[0], U = this.ref[1], V = this.ref[2], cw = this.cw, ch = this.ch;
+    for (var y = 0; y < height; y++) {
+      var cy = y >> 1, cy2 = (y & 1) ? cy + 1 : cy - 1;
+      cy2 = cy2 < 0 ? 0 : cy2 > ch - 1 ? ch - 1 : cy2;
+      var r0 = cy * cw, r1 = cy2 * cw, row = y * this.w, o = y * width;
+      for (var x = 0; x < width; x++) {
+        var cx = x >> 1, cx2 = (x & 1) ? cx + 1 : cx - 1;
+        cx2 = cx2 < 0 ? 0 : cx2 > cw - 1 ? cw - 1 : cx2;
+        var cb = ((9 * U[r0 + cx] + 3 * U[r0 + cx2] + 3 * U[r1 + cx] + U[r1 + cx2] + 8) >> 4) - 128;
+        var cr = ((9 * V[r0 + cx] + 3 * V[r0 + cx2] + 3 * V[r1 + cx] + V[r1 + cx2] + 8) >> 4) - 128;
+        var lum = Y[row + x];
+        var r = clip(lum + ((359 * cr + 128) >> 8));
+        var g = clip(lum - ((88 * cb + 183 * cr + 128) >> 8));
+        var b = clip(lum + ((454 * cb + 128) >> 8));
+        out[o + x] = (0xFF000000 | r << 16 | g << 8 | b) >>> 0;
+      }
+    }
+  };
+
   // .vid -> a video whose frame(n) returns that frame's pixels (one shared buffer)
   function Video(d) {
-    if (d.length < 64 || tag(d) !== 'MVID' || d[4] !== 1 || (d[5] !== 3 && d[5] !== 4) || d[6] !== 6)
+    if (d.length < 64 || tag(d) !== 'MVID' || (d[4] !== 1 && d[4] !== 2) || (d[5] !== 3 && d[5] !== 4) || d[6] !== 6)
       fail('not a supported .vid file');
+    // version 1 is always tiles; version 2 names the codec at offset 60
+    var codec = d[4] === 2 ? u32(d, 60) : 0;
+    if (codec > 1 || (codec === 1 && d[5] !== 3)) fail('unsupported .vid codec ' + codec);
+    this.codec = codec ? 'motion' : 'tiles';
     this.kind = 'vid';
     this.data = d;
     this.channels = d[5];
@@ -143,9 +491,19 @@
     this.tiles = this.across * Math.ceil(this.height / 64);
     this.pixels = new Uint32Array(this.width * this.height);
     this.decoded = -1;
+    this.motion = codec ? new MotionDecoder(this.width, this.height) : null;
   }
   Video.prototype.decodeOne = function (n) {
     var d = this.data, at = this.offsets[n], end = at + this.sizes[n];
+    if (this.motion) {
+      // flags (bit 0: keyframe), QP, 2 zero bytes, then the range-coded frame
+      if (this.sizes[n] < 5) fail('truncated .vid frame ' + n);
+      if (!(d[at] & 1) && this.decoded !== n - 1) fail('.vid frame ' + n + ' needs the frame before it');
+      this.motion.decode(d.subarray(at + 4, end), (d[at] & 1) === 1, d[at + 1]);
+      this.motion.toArgb(this.width, this.height, this.pixels);
+      this.decoded = n;
+      return;
+    }
     var bitmapSize = (this.tiles + 7) >> 3, bitmap = at + 4, sizes = bitmap + bitmapSize;
     if (sizes > end) fail('truncated .vid frame ' + n);
     var key = d[at] & 1;

@@ -3593,11 +3593,11 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
   <div class="sandbox-info">
     <div>
       <h2>What it opens</h2>
-      <p><code>.img</code> pictures (RGB or with transparency), <code>.vid</code> videos with their soundtrack, and <code>.adi</code> sound in IMA-ADPCM or PCM16. These are the formats Photos, Video and Player use in <a href="#/p/mosdesk">MOSdesk</a>.</p>
+      <p><code>.img</code> pictures (RGB or with transparency), <code>.vid</code> videos with their soundtrack (both the lossless <code>tiles</code> codec and the lossy <code>motion</code> codec), and <code>.adi</code> sound in IMA-ADPCM or PCM16. These are the formats Photos, Video and Player use in <a href="#/p/mosdesk">MOSdesk</a>.</p>
     </div>
     <div>
       <h2>Making files</h2>
-      <p><code>mosmedia img photo.png out.img</code> and <code>mosmedia vid clip.mp4 out.vid</code> convert pictures and videos; <code>wavtoadi.py</code> turns a WAV into <code>.adi</code>. See <a href="#/docs/media">Images and videos</a> in the docs.</p>
+      <p><code>mosmedia img photo.png out.img</code> and <code>mosmedia vid clip.mp4 out.vid</code> convert pictures and videos (add <code>--codec tiles</code> for lossless video); <code>wavtoadi.py</code> turns a WAV into <code>.adi</code>. See <a href="#/docs/media">Images and videos</a> in the docs.</p>
     </div>
     <div>
       <h2>Controls</h2>
@@ -3734,7 +3734,7 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
   var box=$('mp'),stage=$('mp-stage'),cv=$('mp-canvas'),g=cv.getContext('2d'),empty=$('mp-empty'),bar=$('mp-bar'),
       fileIn=$('mp-file'),playB=$('mp-play'),icon=$('mp-icon'),seek=$('mp-seek'),cur=$('mp-cur'),dur=$('mp-dur'),
       frameL=$('mp-frame'),nameL=$('mp-name'),vol=$('mp-vol'),saveB=$('mp-save'),info=$('mp-info'),sampleB=$('mp-sample');
-  var SAMPLE='https://raw.githubusercontent.com/fsminecrafter/Minimal-OS/main/docs/examples/sample.vid';
+  var SAMPLE='https://raw.githubusercontent.com/fsminecrafter/Minimal-OS/main/docs/examples/sample-motion.vid';
   var media=null,name='',bytes=0,image=null,lastFrame=-1,playing=false,pos=0,t0=0,raf=0,dragging=false;
   var actx=null,gain=null,abuf=null,src=null,useCtx=false,noSound='',peaks=null;
   var PLAY='M8 5v14l11-7z',PAUSE='M7 5h4v14H7zM13 5h4v14h-4z';
@@ -3788,7 +3788,7 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
   function describe(){
     var rows=[],a=sound();
     if(media.kind==='img')rows.push(['Type','Picture (.img)'],['Size',media.width+' × '+media.height],['Colour',media.channels===4?'RGBA, with transparency':'RGB']);
-    if(media.kind==='vid')rows.push(['Type','Video (.vid)'],['Size',media.width+' × '+media.height],['Frame rate',(+media.fps.toFixed(3))+' fps'],['Frames',media.frameCount+(media.keyInterval?', a keyframe every '+media.keyInterval:'')],['Length',fmt(media.duration)],['Colour',media.channels===4?'RGBA':'RGB']);
+    if(media.kind==='vid')rows.push(['Type','Video (.vid)'],['Codec',media.codec==='motion'?'Motion (lossy, like H.264)':'Tiles'],['Size',media.width+' × '+media.height],['Frame rate',(+media.fps.toFixed(3))+' fps'],['Frames',media.frameCount+(media.keyInterval?', a keyframe every '+media.keyInterval:'')],['Length',fmt(media.duration)],['Colour',media.channels===4?'RGBA':'RGB']);
     if(media.kind==='adi')rows.push(['Type','Sound (.adi)'],['Length',fmt(media.duration)]);
     if(a)rows.push(['Sound',a.format+', '+(a.sampleRate/1000)+' kHz, '+(a.channels===1?'mono':'stereo')],['File volume',Math.round(a.volume*100)+'%']);
     else if(media.kind==='vid')rows.push(['Sound','None']);
@@ -3928,9 +3928,9 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
   $('mp-open').addEventListener('click',function(){fileIn.click()});
   fileIn.addEventListener('change',function(){openFile(fileIn.files[0]);fileIn.value=''});
   sampleB.addEventListener('click',function(){
-    say('Downloading sample.vid…','A 2-second colour test video from the Minimal-OS repository.');
+    say('Downloading sample-motion.vid…','A 2-second colour test video (motion codec) from the Minimal-OS repository.');
     fetch(SAMPLE).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer()})
-      .then(function(b){load(b,'sample.vid')},function(e){reset();say('Could not download the sample',e.message+'.',true)});
+      .then(function(b){load(b,'sample-motion.vid')},function(e){reset();say('Could not download the sample',e.message+'.',true)});
   });
   playB.addEventListener('click',function(){playing?pause():play()});
   seek.addEventListener('input',function(){dragging=true;seekTo(+seek.value)});
