@@ -8,48 +8,40 @@
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#080B12">
+<meta name="theme-color" content="#EEEFF1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111214" media="(prefers-color-scheme: dark)">
 <meta name="description" content="Xlabs builds small low-level software: Minimal-OS, its SDK, the FarcadeGL 3D library, MinimaSSL, the MOSdesk desktop and mosWM, plus Run Studio for building .run apps in the browser.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#080B12;--ink:#E8EEF9;--muted:#8995AA;--line:#202A3A;--panel:#0C111B;--panel-ink:#E6EDF8;--panel-dim:#8290A6;--accent:#62A8FF;--glow:rgba(26,159,255,.15);
+  --bg:#EEEFF1;--ink:#17191C;--muted:#62666D;--line:#D2D4D9;--panel:#17191C;--panel-ink:#E6E8EB;--panel-dim:#8A8F98;--accent:#2845F5;
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
-:root[data-theme="light"]{--bg:#EEEFF1;--ink:#17191C;--muted:#62666D;--line:#D2D4D9;--panel:#17191C;--panel-ink:#E6E8EB;--panel-dim:#8A8F98;--accent:#2845F5;--glow:rgba(40,69,245,.08)}
+:root[data-theme="dark"]{--bg:#111214;--ink:#ECEDEF;--muted:#8E939B;--line:#2A2D32;--panel:#1A1C20;--panel-ink:#E6E8EB;--panel-dim:#80858E;--accent:#7C90FF}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111214;--ink:#ECEDEF;--muted:#8E939B;--line:#2A2D32;--panel:#1A1C20;--panel-ink:#E6E8EB;--panel-dim:#80858E;--accent:#7C90FF}}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-html{scroll-behavior:smooth}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.6 "Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;isolation:isolate}
-body::before{content:"";position:fixed;inset:-22%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 18% 12%,var(--glow),transparent 42%),radial-gradient(ellipse at 82% 78%,rgba(35,75,180,.09),transparent 38%);animation:ambient-drift 28s ease-in-out infinite alternate}
-@keyframes ambient-drift{to{transform:translate3d(2%,-1.5%,0) scale(1.04)}}
-.scroll-progress{position:fixed;inset:0 0 auto;height:2px;z-index:1000;pointer-events:none;background:linear-gradient(90deg,var(--accent),#69E1FF);box-shadow:0 0 12px color-mix(in srgb,var(--accent) 70%,transparent);transform:scaleX(0);transform-origin:left center}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.6 "Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
 a{color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-.wrap{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:0 28px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 28px}
 header{display:flex;justify-content:space-between;align-items:center;padding:28px 0}
 .logo{display:inline-flex;align-items:center;gap:10px;font-weight:600;font-size:20px;letter-spacing:-.02em;text-decoration:none}
-.logo img{border-radius:6px;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
-.logo:hover img{transform:rotate(-8deg) scale(1.08);box-shadow:0 0 20px color-mix(in srgb,var(--accent) 45%,transparent)}
+.logo img{border-radius:6px}
 nav{display:flex;gap:28px;font-size:15px}
-nav a{text-decoration:none;color:var(--muted);transition:color .2s}
-nav a:not(.logo){position:relative}
-nav a:not(.logo)::after{content:"";position:absolute;left:0;right:0;bottom:-5px;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .22s}
-nav a:not(.logo):hover::after,nav a[aria-current="page"]::after{transform:scaleX(1)}
-nav a:hover,nav a[aria-current="page"]{color:var(--ink)}
+nav a{text-decoration:none;color:var(--muted)}
+nav a:hover{color:var(--ink)}
 .hero{padding:88px 0 96px;display:grid;grid-template-columns:1.05fr 1fr;gap:56px;align-items:center}
 h1{font-size:clamp(38px,5.6vw,64px);line-height:1.04;letter-spacing:-.035em;font-weight:500;margin:0 0 24px}
 .lede{color:var(--muted);max-width:30em;margin:0 0 32px}
 .btns{display:flex;gap:12px;flex-wrap:wrap}
-.btn{display:inline-block;padding:12px 20px;border-radius:6px;font-size:15px;font-weight:500;text-decoration:none;border:1px solid var(--ink);transition:transform .2s,border-color .2s,background-color .2s,color .2s,box-shadow .2s}
+.btn{display:inline-block;padding:12px 20px;border-radius:6px;font-size:15px;font-weight:500;text-decoration:none;border:1px solid var(--ink)}
 .btn.primary{background:var(--ink);color:var(--bg)}
-.btn:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 7px 22px color-mix(in srgb,var(--accent) 18%,transparent)}
-.btn:active{transform:translateY(0) scale(.98)}
+.btn:hover{border-color:var(--accent)}
 .btn.primary:hover{background:var(--accent);color:#fff}
-.term{background:var(--panel);color:var(--panel-ink);border:1px solid var(--line);border-radius:10px;padding:20px 22px;font:400 13.5px/1.7 "JetBrains Mono",ui-monospace,Menlo,monospace;min-height:392px;overflow-x:auto;box-shadow:0 20px 65px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.025);transition:border-color .3s,box-shadow .3s}
-.term:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));box-shadow:0 24px 70px rgba(0,0,0,.26),0 0 34px color-mix(in srgb,var(--accent) 10%,transparent)}
+.term{background:var(--panel);color:var(--panel-ink);border-radius:8px;padding:20px 22px;font:400 13.5px/1.7 "JetBrains Mono",ui-monospace,Menlo,monospace;min-height:392px;overflow-x:auto}
 .term .bar{color:var(--panel-dim);margin-bottom:12px}
 .term .p{color:var(--accent);filter:brightness(1.35)}
 .term .d{color:var(--panel-dim)}
@@ -71,16 +63,16 @@ h2{font-size:15px;font-weight:600;margin:0 0 28px;color:var(--muted);letter-spac
 .cols p{margin:0;color:var(--muted);font-size:16px}
 .tick{color:var(--accent);flex:none;width:1.2em}
 .todo .tick{color:var(--muted)}
-.timeline{position:relative;list-style:none;margin:36px 0 0;padding:0 0 0 32px}
-.timeline::before{content:"";position:absolute;top:7px;bottom:10px;left:8px;width:2px;background:linear-gradient(var(--accent),var(--line));box-shadow:0 0 16px color-mix(in srgb,var(--accent) 35%,transparent)}
-.milestone{position:relative;padding:0 0 34px 16px;animation:milestone-in .55s both}
-.milestone:nth-child(2){animation-delay:.06s}.milestone:nth-child(3){animation-delay:.12s}.milestone:nth-child(4){animation-delay:.18s}
-.milestone::before{content:"";position:absolute;left:-28px;top:7px;width:12px;height:12px;border:2px solid var(--accent);border-radius:50%;background:var(--bg);box-shadow:0 0 14px color-mix(in srgb,var(--accent) 60%,transparent)}
+.timeline{position:relative;list-style:none;margin:36px 0 0;padding:0}
+.timeline::before{content:"";position:absolute;top:7px;bottom:10px;left:50%;width:2px;background:var(--line);transform:translateX(-50%)}
+.milestone{position:relative;width:50%;padding:0 36px 34px 0;text-align:right}
+.milestone:nth-child(even){margin-left:50%;padding:0 0 34px 36px;text-align:left}
+.milestone::before{content:"";position:absolute;left:100%;top:7px;width:12px;height:12px;border:2px solid var(--accent);border-radius:50%;background:var(--bg);transform:translateX(-50%)}
+.milestone:nth-child(even)::before{left:0}
 .milestone time,.milestone .date{font:500 12px/1.5 "JetBrains Mono",ui-monospace,monospace;color:var(--accent);letter-spacing:.04em}
 .doc .timeline-title{font-size:21px;line-height:1.3;letter-spacing:-.02em;color:var(--ink);margin:5px 0 7px}
 .milestone p{margin:0;color:var(--muted);font-size:15.5px}
 .milestone p strong{color:var(--ink);font-weight:500}
-@keyframes milestone-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 footer{border-top:1px solid var(--line);padding:40px 0 56px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;color:var(--muted);font-size:15px}
 footer a{margin-left:20px}
 @media (max-width:820px){
@@ -88,8 +80,12 @@ footer a{margin-left:20px}
   .hero{padding:48px 0 64px}
   .cols{grid-template-columns:1fr;gap:28px}
   nav{gap:18px}
+  .timeline{padding-left:0}
+  .timeline::before{left:7px}
+  .milestone,.milestone:nth-child(even){width:auto;margin:0;padding:0 0 30px 28px;text-align:left}
+  .milestone::before,.milestone:nth-child(even)::before{left:7px}
 }
-@media (prefers-reduced-motion:reduce){body::before,.cursor,.milestone{animation:none}}
+@media (prefers-reduced-motion:reduce){.cursor{animation:none}}
 
 .docs{display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px;padding:24px 0 96px}
 .side{position:sticky;top:24px;align-self:start;display:flex;flex-direction:column;gap:0;font-size:14.5px;max-height:calc(100vh - 48px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
@@ -133,15 +129,12 @@ footer a{margin-left:20px}
  .side{max-height:none;overflow:visible}
 }
 .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 40px}
-.card{display:flex;flex-direction:column;gap:8px;padding:22px 0 30px;border-top:1px solid var(--line);text-decoration:none;transition:transform .24s cubic-bezier(.2,.8,.2,1),border-color .24s,background-color .24s,box-shadow .24s;padding-inline:0}
-.card:hover{transform:translateY(-4px);border-color:var(--accent);background:linear-gradient(120deg,color-mix(in srgb,var(--accent) 7%,transparent),transparent 75%);box-shadow:0 12px 30px -22px color-mix(in srgb,var(--accent) 55%,transparent)}
+.card{display:flex;flex-direction:column;gap:8px;padding:22px 0 30px;border-top:1px solid var(--line);text-decoration:none}
 .card .tag,.eyebrow,.poster .tag{font:500 12px/1.4 "JetBrains Mono",ui-monospace,monospace;color:var(--muted);letter-spacing:.01em}
 .card h3{font-size:24px;letter-spacing:-.025em;font-weight:500;margin:0}
 .card p{margin:0;color:var(--muted);font-size:16px;flex:1}
 .card .more{font-size:15px;font-weight:500}
-.card h3,.card .more{transition:color .2s,transform .2s}
 .card:hover h3,.card:hover .more{color:var(--accent)}
-.card:hover .more{transform:translateX(3px)}
 code{font:400 .88em "JetBrains Mono",ui-monospace,Menlo,monospace}
 .stack{list-style:none;margin:0;padding:0;counter-reset:s}
 .stack li{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;padding:14px 0 14px 18px;border-bottom:1px solid var(--line);position:relative;color:var(--muted)}
@@ -156,12 +149,9 @@ h3.big{font-size:clamp(26px,3vw,34px);letter-spacing:-.03em;font-weight:500;marg
 .checks{list-style:none;margin:0 0 28px;padding:0}
 .checks li{padding:7px 0 7px 26px;position:relative;border-bottom:1px solid var(--line);font-size:16px}
 .checks li::before{content:"✓";position:absolute;left:2px;color:var(--accent)}
-.shot{display:block;border-radius:10px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 40px rgba(0,0,0,.12);transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .3s,box-shadow .3s}
-.shot:hover{transform:translateY(-4px) scale(1.006);border-color:color-mix(in srgb,var(--accent) 55%,var(--line));box-shadow:0 25px 55px rgba(0,0,0,.25),0 0 28px color-mix(in srgb,var(--accent) 12%,transparent)}
-.shot img{display:block;width:100%;height:auto;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
-.shot:hover img{transform:scale(1.015)}
-.embed{position:relative;aspect-ratio:16/10;border-radius:10px;overflow:hidden;background:var(--panel);border:1px solid var(--line);transition:border-color .3s,box-shadow .3s}
-.embed:hover{border-color:color-mix(in srgb,var(--accent) 48%,var(--line));box-shadow:0 14px 40px rgba(0,0,0,.2),0 0 28px color-mix(in srgb,var(--accent) 10%,transparent)}
+.shot{display:block;border-radius:8px;overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 40px rgba(0,0,0,.12)}
+.shot img{display:block;width:100%;height:auto}
+.embed{position:relative;aspect-ratio:16/10;border-radius:8px;overflow:hidden;background:var(--panel);border:1px solid var(--line)}
 .embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .embed.tall{aspect-ratio:auto;height:min(78vh,820px);min-height:420px}
 .mp{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);color:var(--panel-ink)}
@@ -190,8 +180,7 @@ h3.big{font-size:clamp(26px,3vw,34px);letter-spacing:-.03em;font-weight:500;marg
 .mp-info dt{font:500 12px/1.4 "JetBrains Mono",ui-monospace,monospace;color:var(--muted)}
 .mp-info dd{margin:2px 0 0;font-size:15px;overflow-wrap:anywhere}
 @media (max-width:640px){.mp-stage{height:52vh;min-height:240px}.mp-frame,.mp-volw,#mp-dur{display:none!important}.mp-bar{gap:6px;padding:8px}.mp-time{gap:8px}.mp-bar button{padding:0 8px}.mp-info{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px}}
-.poster{position:absolute;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:8px;padding:28px;color:var(--panel-ink);background:radial-gradient(120% 90% at 85% 10%,rgba(212,56,42,.55),transparent 60%),repeating-linear-gradient(0deg,transparent 0 39px,rgba(255,255,255,.05) 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,rgba(255,255,255,.05) 39px 40px),var(--panel);background-size:auto,40px 40px,40px 40px,auto;transition:background-position .6s}
-.embed:hover .poster{background-position:center,0 8px,8px 0,center}
+.poster{position:absolute;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:8px;padding:28px;color:var(--panel-ink);background:radial-gradient(120% 90% at 85% 10%,rgba(212,56,42,.55),transparent 60%),repeating-linear-gradient(0deg,transparent 0 39px,rgba(255,255,255,.05) 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,rgba(255,255,255,.05) 39px 40px),var(--panel)}
 .poster strong{font-size:30px;font-weight:500;letter-spacing:-.03em}
 .poster span:not(.tag){color:var(--panel-dim);font-size:15px;margin-bottom:8px}
 .poster .tag{color:var(--panel-dim)}
@@ -226,22 +215,33 @@ kbd{font:500 12px "JetBrains Mono",monospace;border:1px solid var(--line);border
 @media (max-width:640px){nav .opt{display:none}}
 /* header tools: search and theme */
 header nav{align-items:center}
-.tools{display:flex;gap:6px;margin-left:4px}
-.ib{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 8px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;transition:color .2s,border-color .2s,background-color .2s,transform .2s}
-.ib:hover{color:var(--ink);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent);transform:translateY(-1px)}
-.ib:active{transform:scale(.96)}
+.tools{display:flex;align-items:center;gap:6px;margin-left:4px}
+.ib{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 8px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--muted);font:inherit;font-size:14px;cursor:pointer}
+.ib:hover{color:var(--ink);border-color:var(--muted)}
 .ib kbd{border:0;padding:0;color:inherit}
-.status{display:inline-flex;align-items:center;gap:10px;margin:0 0 22px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;font-size:14px;color:var(--muted);text-decoration:none;transition:color .2s,border-color .2s,transform .2s,box-shadow .2s}
-.status:hover{color:var(--ink);border-color:var(--accent);transform:translateY(-1px);box-shadow:0 5px 20px color-mix(in srgb,var(--accent) 12%,transparent)}
-.status .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 20%,transparent);animation:status-pulse 2.8s ease-out infinite}
-@keyframes status-pulse{50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--accent) 0%,transparent)}}
+.google-signin{white-space:nowrap}
+#google-button:empty{display:none}
+.account-profile{display:inline-flex;align-items:center;gap:7px;max-width:180px;padding:3px 9px 3px 4px}
+.account-profile img{width:24px;height:24px;border-radius:50%;object-fit:cover}
+.account-profile .account-initial{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--line);color:var(--ink);font-size:12px}
+.account-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.account-dialog{max-width:440px}
+.account-body{padding:18px 20px 20px}
+.account-body p{margin:0 0 16px;color:var(--muted);font-size:15px}
+.account-body label{display:block;color:var(--muted);font-size:13px}
+.account-body input{display:block;width:100%;margin-top:5px;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+.account-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.account-error{color:#B42318!important}
+.status{display:inline-flex;align-items:center;gap:10px;margin:0 0 22px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;font-size:14px;color:var(--muted);text-decoration:none}
+.status:hover{color:var(--ink);border-color:var(--accent)}
+.status .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 20%,transparent)}
 .note{font-size:15px;color:var(--muted)}
 .note a{color:var(--accent)}
 .proj .note{margin:20px 0 0}
 /* what's new */
 .news{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-.nitem{display:flex;flex-direction:column;padding:20px 22px 22px;border:1px solid var(--line);border-radius:10px;text-decoration:none;background:color-mix(in srgb,var(--panel) 22%,transparent);transition:border-color .22s,transform .22s,background-color .22s,box-shadow .22s}
-.nitem:hover{border-color:var(--accent);transform:translateY(-3px);background:color-mix(in srgb,var(--accent) 7%,var(--bg));box-shadow:0 14px 32px -24px color-mix(in srgb,var(--accent) 65%,transparent)}
+.nitem{display:flex;flex-direction:column;padding:20px 22px 22px;border:1px solid var(--line);border-radius:10px;text-decoration:none;transition:border-color .15s,transform .15s}
+.nitem:hover{border-color:var(--accent);transform:translateY(-2px)}
 .nitem h4{margin:0 0 8px;font-size:18px;font-weight:600;letter-spacing:-.01em}
 .nitem p{margin:0;color:var(--muted);font-size:15.5px}
 .timeline+.note{margin:16px 0 0}
@@ -250,10 +250,10 @@ header nav{align-items:center}
 .fn-index.toc a:last-child{border-right:0}
 .fn-index.toc a:hover{color:var(--accent)}
 .pager{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:64px}
-.pager a{display:flex;flex-direction:column;gap:2px;padding:14px 18px;border:1px solid var(--line);border-radius:8px;text-decoration:none;color:var(--ink);font-weight:500;transition:transform .2s,border-color .2s,background-color .2s}
+.pager a{display:flex;flex-direction:column;gap:2px;padding:14px 18px;border:1px solid var(--line);border-radius:8px;text-decoration:none;color:var(--ink);font-weight:500}
 .doc .pager a{color:var(--ink)}
 .pager a span{font-size:13px;color:var(--muted);font-weight:400}
-.pager a:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,transparent);transform:translateY(-2px)}
+.pager a:hover{border-color:var(--accent)}
 .pager .nx{text-align:right;grid-column:2}
 .doc .src{margin-top:24px}
 .doc h2[id],.doc h3[id]{position:relative}
@@ -284,8 +284,7 @@ header nav{align-items:center}
 .side-toggle{display:none}
 /* search */
 .search{width:min(640px,calc(100vw - 32px));max-height:min(560px,calc(100vh - 96px));margin:12vh auto auto;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);box-shadow:0 24px 64px rgba(0,0,0,.28);overflow:hidden}
-.search[open]{display:flex;flex-direction:column;animation:dialog-in .2s cubic-bezier(.2,.8,.2,1) both}
-@keyframes dialog-in{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+.search[open]{display:flex;flex-direction:column}
 .search::backdrop{background:rgba(10,12,16,.45)}
 .search-box{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
 .search-box input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:inherit;font-size:17px;padding:6px 4px;outline:none}
@@ -313,25 +312,13 @@ header nav{align-items:center}
   .side .sub{display:none}
 }
 @media (max-width:640px){.ib kbd{display:none}.search{margin-top:16px}}
-@media (prefers-reduced-motion:reduce){.nitem,.card{transition:none}.nitem:hover,.card:hover{transform:none}}
-.route-arrive{animation:route-arrive .42s cubic-bezier(.2,.8,.2,1) both}
-@keyframes route-arrive{from{opacity:.55;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
-html.motion-ready .motion-reveal{opacity:0;transform:translateY(18px);transition:opacity .62s cubic-bezier(.2,.7,.2,1),transform .62s cubic-bezier(.2,.7,.2,1);transition-delay:var(--reveal-delay,0ms)}
-html.motion-ready .motion-reveal.is-visible{opacity:1;transform:translateY(0)}
-@media (prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}
-  body::before,.cursor,.milestone,.status .dot,.route-arrive{animation:none}
-  .logo img,.btn,.term,.status,.card,.nitem,.shot,.shot img,.embed,.ib,.pager a{transition:none}
-  .btn:hover,.card:hover,.nitem:hover,.shot:hover,.shot:hover img,.ib:hover,.pager a:hover{transform:none}
-  .motion-reveal{opacity:1!important;transform:none!important;transition:none!important}
-}
+@media (prefers-reduced-motion:reduce){.nitem{transition:none}.nitem:hover{transform:none}}
 code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
 [hidden]{display:none!important}
 </style>
 <script>try{var t=localStorage.getItem('xlabs-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
-<div class="scroll-progress" aria-hidden="true"></div>
 <div class="wrap">
   <header>
     <a class="logo" href="#/"><img src="assets/icon.svg" width="26" height="26" alt="">Xlabs</a>
@@ -345,9 +332,31 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
       <span class="tools">
         <button type="button" class="ib search-open" aria-label="Search the docs" title="Search (/)"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><kbd>/</kbd></button>
         <button type="button" class="ib theme-btn" aria-label="Colour theme: system" title="Colour theme"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
+        <button type="button" class="ib google-signin" id="google-signin">Sign in with Google</button>
+        <div id="google-button" aria-label="Google account sign-in"></div>
+        <button type="button" class="ib account-profile" id="account-profile" hidden aria-label="Account profile"></button>
       </span>
     </nav>
   </header>
+  <dialog class="search account-dialog" id="account-dialog" aria-labelledby="account-title">
+    <form method="dialog" class="search-box">
+      <strong id="account-title">Google account</strong>
+      <button type="submit" class="ib" aria-label="Close">Close</button>
+    </form>
+    <div class="account-body">
+      <p id="account-message" role="status"></p>
+      <div id="account-editor" hidden>
+        <label for="account-username">Display name
+          <input id="account-username" type="text" maxlength="32" autocomplete="nickname">
+        </label>
+        <p id="account-email"></p>
+        <div class="account-actions">
+          <button type="button" class="btn primary" id="account-save">Save name</button>
+          <button type="button" class="btn" id="account-signout">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
   <dialog class="search" aria-label="Search">
     <form method="dialog" class="search-box">
       <input type="search" placeholder="Search docs, functions and projects" autocomplete="off" spellcheck="false" aria-label="Search" aria-controls="search-results">
@@ -528,7 +537,7 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
 
   </main>
 <main id="docs" class="docs" hidden>
-<nav class="side" aria-label="Documentation"><!-- os-docs:nav --><span class="h">Minimal-OS docs</span><a href="#/docs/system-overview" data-nav="system-overview">Overview</a><a href="#/docs/build-and-debugging" data-nav="build-and-debugging">Build and debugging</a><a href="#/docs/boot-and-kernel" data-nav="boot-and-kernel">Boot and kernel</a><a href="#/docs/hardware-and-drivers" data-nav="hardware-and-drivers">Hardware and drivers</a><a href="#/docs/audio" data-nav="audio">Audio</a><a href="#/docs/media" data-nav="media">Images and video</a><a href="#/docs/gpu" data-nav="gpu">GPU and 3D</a><a href="#/docs/storage-and-packages" data-nav="storage-and-packages">Storage and packages</a><a href="#/docs/installing" data-nav="installing">Installing to a disk</a><a href="#/docs/networking" data-nav="networking">Networking</a><a href="#/docs/services" data-nav="services">Services</a><a href="#/docs/install-and-services" data-nav="install-and-services">Install and services</a><a href="#/docs/user-programs" data-nav="user-programs">User programs</a><a href="#/docs/user-sdk-syscalls" data-nav="user-sdk-syscalls">SDK and syscalls</a><!-- /os-docs:nav --><!-- sdk-docs:nav --><span class="h">SDK functions</span><a href="#/docs/sdk-functions" data-nav="sdk-functions">Overview</a><a href="#/docs/sdk-conventions" data-nav="sdk-conventions">Conventions and errors</a><a href="#/docs/sdk-process" data-nav="sdk-process">Process and terminal</a><a href="#/docs/sdk-files" data-nav="sdk-files">Files</a><a href="#/docs/sdk-memory" data-nav="sdk-memory">Memory and randomness</a><a href="#/docs/sdk-strings" data-nav="sdk-strings">Strings and memory</a><a href="#/docs/sdk-output" data-nav="sdk-output">Formatted output</a><a href="#/docs/sdk-windows" data-nav="sdk-windows">Windows</a><a href="#/docs/sdk-easyui" data-nav="sdk-easyui">easyui widgets</a><a href="#/docs/sdk-font" data-nav="sdk-font">Text in your own pixels</a><a href="#/docs/sdk-graphics" data-nav="sdk-graphics">Graphics</a><a href="#/docs/sdk-input" data-nav="sdk-input">Input</a><a href="#/docs/sdk-network" data-nav="sdk-network">Networking</a><a href="#/docs/sdk-sysinfo" data-nav="sdk-sysinfo">System information</a><a href="#/docs/sdk-packages" data-nav="sdk-packages">Packages</a><a href="#/docs/sdk-managers" data-nav="sdk-managers">Device managers</a><a href="#/docs/sdk-farcadegl" data-nav="sdk-farcadegl">FarcadeGL 3D</a><a href="#/docs/sdk-fgsl" data-nav="sdk-fgsl">FGSL shading language</a><a href="#/docs/sdk-storage" data-nav="sdk-storage">Disks and root commands</a><a href="#/docs/sdk-audio" data-nav="sdk-audio">Playing audio</a><!-- /sdk-docs:nav --></nav>
+<nav class="side" aria-label="Documentation"><!-- os-docs:nav --><span class="h">Minimal-OS docs</span><a href="#/docs/system-overview" data-nav="system-overview">Overview</a><a href="#/docs/build-and-debugging" data-nav="build-and-debugging">Build and debugging</a><a href="#/docs/boot-and-kernel" data-nav="boot-and-kernel">Boot and kernel</a><a href="#/docs/hardware-and-drivers" data-nav="hardware-and-drivers">Hardware and drivers</a><a href="#/docs/audio" data-nav="audio">Audio</a><a href="#/docs/media" data-nav="media">Images and video</a><a href="#/docs/gpu" data-nav="gpu">GPU and 3D</a><a href="#/docs/storage-and-packages" data-nav="storage-and-packages">Storage and packages</a><a href="#/docs/installing" data-nav="installing">Installing to a disk</a><a href="#/docs/networking" data-nav="networking">Networking</a><a href="#/docs/services" data-nav="services">Services</a><a href="#/docs/install-and-services" data-nav="install-and-services">Install and services</a><a href="#/docs/user-programs" data-nav="user-programs">User programs</a><a href="#/docs/user-sdk-syscalls" data-nav="user-sdk-syscalls">SDK and syscalls</a><!-- /os-docs:nav --><!-- sdk-docs:nav --><span class="h">SDK functions</span><a href="#/docs/sdk-functions" data-nav="sdk-functions">Overview</a><a href="#/docs/sdk-conventions" data-nav="sdk-conventions">Conventions and errors</a><a href="#/docs/sdk-process" data-nav="sdk-process">Process and terminal</a><a href="#/docs/sdk-files" data-nav="sdk-files">Files</a><a href="#/docs/sdk-memory" data-nav="sdk-memory">Memory and randomness</a><a href="#/docs/sdk-strings" data-nav="sdk-strings">Strings and memory</a><a href="#/docs/sdk-output" data-nav="sdk-output">Formatted output</a><a href="#/docs/sdk-windows" data-nav="sdk-windows">Windows</a><a href="#/docs/sdk-easyui" data-nav="sdk-easyui">easyui widgets</a><a href="#/docs/sdk-font" data-nav="sdk-font">Text in your own pixels</a><a href="#/docs/sdk-graphics" data-nav="sdk-graphics">Graphics</a><a href="#/docs/sdk-input" data-nav="sdk-input">Input</a><a href="#/docs/sdk-network" data-nav="sdk-network">Networking</a><a href="#/docs/sdk-sysinfo" data-nav="sdk-sysinfo">System information</a><a href="#/docs/sdk-packages" data-nav="sdk-packages">Packages</a><a href="#/docs/sdk-managers" data-nav="sdk-managers">Device managers</a><a href="#/docs/sdk-farcadegl" data-nav="sdk-farcadegl">FarcadeGL 3D</a><a href="#/docs/sdk-fgsl" data-nav="sdk-fgsl">FGSL shading language</a><a href="#/docs/sdk-storage" data-nav="sdk-storage">Disks and root commands</a><a href="#/docs/sdk-audio" data-nav="sdk-audio">Playing audio</a><!-- /sdk-docs:nav --><span class="h">Documentation updates</span><a href="#/docs/whats-new" data-nav="whats-new">What's New?</a></nav>
 <div><!-- os-docs:pages -->
 <article class="doc" data-doc="system-overview" hidden><h1>Minimal-OS Documentation Index</h1>
 <p>This directory contains the system documentation. Start with the guide that matches the layer you are changing.</p>
@@ -3139,7 +3148,21 @@ int main(void) {
 <h2 id="sdk-audio--making-adi-files">Making <code>.adi</code> files</h2>
 <pre><code class="lang-sh">python3 tools/audioconverter/wavtoadi.py --format IADPCM song.wav song.adi</code></pre>
 <p>Takes 16-bit mono or stereo WAV. Rates from 8 to 48 kHz play as they are; the HD Audio driver resamples when the codec lacks the file's rate.</p><nav class="pager" aria-label="More pages"><a class="pv" href="#/docs/sdk-storage" rel="prev"><span>Previous</span>Disks and root commands</a><span></span></nav><p class="src"><a href="https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/audio.md" target="_blank" rel="noopener">Edit this page on GitHub</a></p></article>
-<!-- /sdk-docs:pages --></div></main>
+<!-- /sdk-docs:pages -->
+<article class="doc" data-doc="whats-new" hidden>
+<p class="eyebrow">Documentation updates</p>
+<h1>What's New?</h1>
+<p class="intro">A guide to recently added and expanded documentation. Follow a link to read the new material in context.</p>
+<h2>Media formats and playback</h2>
+<p>The <a href="#/docs/media">Images and video guide</a> now covers the <code>.vid</code> format, its converter commands and file layout, playback, and decoding. Start with <a href="#/docs/media/making-files">making media files</a>, then read the <a href="#/docs/media/vid-layout">video layout</a> and <a href="#/docs/media/hardware-decoding">hardware decoding</a> sections.</p>
+<h2>GPU and 3D graphics</h2>
+<p>The <a href="#/docs/gpu">GPU and 3D guide</a> explains GPU adapters, the FGPU rendering pipeline and shader support. The SDK references add details for <a href="#/docs/sdk-farcadegl">FarcadeGL</a> and the <a href="#/docs/sdk-fgsl">FGSL shading language</a>.</p>
+<h2>Networking and browser preview</h2>
+<p>Newer networking guidance is collected in the <a href="#/docs/networking">Minimal-OS networking guide</a> and the <a href="#/docs/sdk-network">SDK networking reference</a>. The <a href="#/p/studio">Run Studio page</a> describes browser networking, the optional self-hosted relay and its configuration.</p>
+<h2>Storage and installation</h2>
+<p>Find the expanded disk and file-system material in <a href="#/docs/storage-and-packages">Storage and packages</a>, including partitions, MinimaFS and NVMe. The <a href="#/docs/installing">Installing guide</a> covers creating a bootable disk and notes for real hardware.</p>
+</article>
+</div></main>
 <main id="pages" class="docs" hidden>
 <nav class="side" aria-label="Projects"><span class="h">Projects</span><a href="#/p/minimal-os" data-page-nav="minimal-os">Minimal-OS</a><a href="#/p/sdk" data-page-nav="sdk">Minimal-OS SDK</a><a href="#/p/farcadegl" data-page-nav="farcadegl">FarcadeGL</a><a href="#/p/minimassl" data-page-nav="minimassl">MinimaSSL</a><a href="#/p/mosdesk" data-page-nav="mosdesk">MOSdesk</a><a href="#/p/moswm" data-page-nav="moswm">mosWM</a><a href="#/p/studio" data-page-nav="studio">Run Studio</a><a href="#/p/roadmap" data-page-nav="roadmap">Roadmap</a><a href="#/red-sandbox" data-page-nav="red-sandbox">Red Sandbox</a></nav>
 <div>
@@ -3705,6 +3728,136 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
 </script>
 <script>
 (function(){
+  var GOOGLE_CLIENT_ID='';
+  var signIn=document.getElementById('google-signin');
+  var googleButton=document.getElementById('google-button');
+  var profileButton=document.getElementById('account-profile');
+  var dialog=document.getElementById('account-dialog');
+  var message=document.getElementById('account-message');
+  var editor=document.getElementById('account-editor');
+  var username=document.getElementById('account-username');
+  var email=document.getElementById('account-email');
+  var signedIn=null;
+
+  function showMessage(text,isError){
+    document.getElementById('account-title').textContent='Google account';
+    message.textContent=text;
+    message.classList.toggle('account-error',!!isError);
+    editor.hidden=true;
+    if(!dialog.open)dialog.showModal();
+  }
+  function setupMessage(){
+    showMessage('Google sign-in needs an OAuth client ID before it can be enabled. Create a Google OAuth client for this website, add its exact HTTPS origin as an authorized JavaScript origin, then set GOOGLE_CLIENT_ID in the Google sign-in script near the bottom of index.html. Google handles new and returning accounts with the same sign-in flow. This static site only displays your Google profile in this browser; it does not create stored Xlabs accounts or protect private features.',false);
+  }
+  function renderProfile(){
+    var name=signedIn.displayName||signedIn.name||signedIn.email||'Google account';
+    profileButton.replaceChildren();
+    if(signedIn.picture){
+      var img=document.createElement('img');
+      img.src=signedIn.picture;img.alt='';img.referrerPolicy='no-referrer';
+      profileButton.appendChild(img);
+    }else{
+      var initial=document.createElement('span');
+      initial.className='account-initial';
+      initial.textContent=(name.charAt(0)||'G').toUpperCase();
+      profileButton.appendChild(initial);
+    }
+    var label=document.createElement('span');
+    label.className='account-name';label.textContent=name;
+    profileButton.appendChild(label);
+    profileButton.title=name+' · Account settings';
+    profileButton.setAttribute('aria-label',name+' · Account settings');
+    googleButton.hidden=true;
+    signIn.hidden=true;
+    profileButton.hidden=false;
+  }
+  // Claims are displayed only; this client-only site does not use them to authorize anything.
+  function decodeCredential(credential){
+    var part=credential.split('.')[1];
+    if(!part)throw new Error('Google did not return a profile.');
+    var binary=atob(part.replace(/-/g,'+').replace(/_/g,'/'));
+    var bytes=Uint8Array.from(binary,function(c){return c.charCodeAt(0)});
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+  function onCredential(response){
+    try{
+      var claims=decodeCredential(response.credential);
+      if(typeof claims.email!=='string'||typeof claims.name!=='string')throw new Error('Google did not return a name and email address.');
+      var picture='';
+      if(typeof claims.picture==='string'){
+        var imageUrl=new URL(claims.picture);
+        if(imageUrl.protocol==='https:'&&imageUrl.hostname.endsWith('.googleusercontent.com'))picture=imageUrl.href;
+      }
+      signedIn={name:claims.name,displayName:claims.name,email:claims.email,picture:picture};
+      renderProfile();
+    }catch(error){
+      showMessage(error.message||'Could not read the Google profile. Try signing in again.',true);
+    }
+  }
+  function openProfile(){
+    if(!signedIn)return;
+    document.getElementById('account-title').textContent='Your profile';
+    message.textContent='Choose the name shown on this page. Your profile and display name stay in this browser tab and are cleared when you sign out.';
+    message.classList.remove('account-error');
+    editor.hidden=false;
+    username.value=signedIn.displayName;
+    email.textContent=signedIn.email;
+    if(!dialog.open)dialog.showModal();
+    username.focus();
+  }
+  signIn.addEventListener('click',function(){
+    if(!GOOGLE_CLIENT_ID){setupMessage();return}
+    showMessage('Google sign-in could not be loaded. Check the client ID and network connection, then reload the page.',true);
+  });
+  profileButton.addEventListener('click',openProfile);
+  document.getElementById('account-save').addEventListener('click',function(){
+    if(!signedIn)return;
+    var value=username.value.trim();
+    if(!value){username.setCustomValidity('Enter a display name.');username.reportValidity();return}
+    username.setCustomValidity('');
+    signedIn.displayName=value.slice(0,32);
+    renderProfile();
+    dialog.close();
+  });
+  username.addEventListener('input',function(){username.setCustomValidity('')});
+  document.getElementById('account-signout').addEventListener('click',function(){
+    signedIn=null;
+    profileButton.hidden=true;
+    if(GOOGLE_CLIENT_ID)googleButton.hidden=false;else signIn.hidden=false;
+    if(window.google&&window.google.accounts&&window.google.accounts.id)window.google.accounts.id.disableAutoSelect();
+    dialog.close();
+  });
+  dialog.addEventListener('click',function(event){if(event.target===dialog)dialog.close()});
+
+  signIn.hidden=false;
+  if(!GOOGLE_CLIENT_ID)return;
+  signIn.hidden=true;
+  var script=document.createElement('script');
+  script.src='https://accounts.google.com/gsi/client';
+  script.async=true;
+  script.onload=function(){
+    if(!window.google||!window.google.accounts||!window.google.accounts.id){
+      signIn.hidden=false;
+      showMessage('Google sign-in loaded without its identity API. Reload the page and try again.',true);
+      return;
+    }
+    try{
+      window.google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:onCredential,auto_select:false});
+      window.google.accounts.id.renderButton(googleButton,{type:'standard',theme:'outline',size:'medium',text:'signin_with',shape:'rectangular'});
+    }catch(error){
+      signIn.hidden=false;
+      showMessage('Google sign-in could not be initialized: '+error.message,true);
+    }
+  };
+  script.onerror=function(){
+    signIn.hidden=false;
+    showMessage('Could not load Google sign-in. Check your connection and try again.',true);
+  };
+  document.head.appendChild(script);
+})();
+</script>
+<script>
+(function(){
   var home=document.getElementById('home'),docs=document.getElementById('docs'),pages=document.getElementById('pages'),sandbox=document.getElementById('sandbox'),haul=document.getElementById('haul'),media=document.getElementById('media');
   var mains=[home,docs,pages,sandbox,haul,media];
   var arts=docs.querySelectorAll('.doc'),links=docs.querySelectorAll('[data-nav]');
@@ -3765,55 +3918,6 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
     });
   });
   window.addEventListener('hashchange',route);route();
-})();
-</script>
-<script>
-(function(){
-  var progress=document.querySelector('.scroll-progress'),frame=0;
-  function updateProgress(){
-    frame=0;
-    var max=document.documentElement.scrollHeight-window.innerHeight;
-    progress.style.transform='scaleX('+(max>0?Math.min(1,Math.max(0,window.scrollY/max)):0)+')';
-  }
-  function onScroll(){
-    if(!frame)frame=requestAnimationFrame(updateProgress);
-  }
-  window.addEventListener('scroll',onScroll,{passive:true});
-  window.addEventListener('resize',onScroll,{passive:true});
-  updateProgress();
-
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches||!('IntersectionObserver' in window))return;
-  document.documentElement.classList.add('motion-ready');
-  var observer=new IntersectionObserver(function(entries){
-    entries.forEach(function(entry){
-      if(entry.isIntersecting){
-        entry.target.classList.add('is-visible');
-        observer.unobserve(entry.target);
-      }
-    });
-  },{rootMargin:'0px 0px -6% 0px',threshold:.08});
-  var selectors='#home .hero > div, #home > section, #home .card, #home .nitem, #docs .side, #docs .doc:not([hidden]) > h1, #docs .doc:not([hidden]) > .intro, #docs .doc:not([hidden]) > h2:not(.fn), #docs .doc:not([hidden]) > .tw, #pages [data-page]:not([hidden]) > h1, #pages [data-page]:not([hidden]) > .intro, #pages [data-page]:not([hidden]) .card, #pages [data-page]:not([hidden]) .nitem, #sandbox > *, #haul > *, #media > *';
-  function revealRoute(){
-    observer.disconnect();
-    document.querySelectorAll('.motion-reveal').forEach(function(el){
-      el.classList.remove('motion-reveal','is-visible');
-      el.style.removeProperty('--reveal-delay');
-    });
-    var targets=[].filter.call(document.querySelectorAll(selectors),function(el){return !el.closest('[hidden]')});
-    targets.forEach(function(el,i){
-      el.classList.add('motion-reveal');
-      el.style.setProperty('--reveal-delay',(Math.min(i%4,3)*65)+'ms');
-      observer.observe(el);
-    });
-    var main=document.querySelector('main:not([hidden])');
-    if(main){
-      main.classList.remove('route-arrive');
-      void main.offsetWidth;
-      main.classList.add('route-arrive');
-    }
-  }
-  window.addEventListener('hashchange',revealRoute);
-  revealRoute();
 })();
 </script>
 <script src="assets/mosmedia.js"></script>
@@ -4055,22 +4159,20 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
 // Theme, search, copy buttons, heading anchors and the mobile docs menu
 (function(){
   var root=document.documentElement;
-  // ---- colour theme: dark by default, with a light option
-  var themeBtn=document.querySelector('.theme-btn'),pic=document.querySelector('.shot source'),themeColor=document.querySelector('meta[name="theme-color"]');
+  // ---- colour theme: system -> light -> dark
+  var themeBtn=document.querySelector('.theme-btn'),pic=document.querySelector('.shot source');
   function applyTheme(t){
     if(t==='light'||t==='dark')root.dataset.theme=t;else delete root.dataset.theme;
-    var current=t||'dark';
-    themeBtn.setAttribute('aria-label','Colour theme: '+current);
-    themeBtn.title='Colour theme: '+current+' (click to change)';
-    if(themeColor)themeColor.content=current==='dark'?'#080B12':'#EEEFF1';
+    themeBtn.setAttribute('aria-label','Colour theme: '+(t||'system'));
+    themeBtn.title='Colour theme: '+(t||'system')+' (click to change)';
     // the Studio screenshot follows the page, not just the OS setting
-    if(pic)pic.media=current==='dark'?'all':'not all';
+    if(pic)pic.media=t==='dark'?'all':t==='light'?'not all':'(prefers-color-scheme: dark)';
   }
   applyTheme(root.dataset.theme);
   themeBtn.addEventListener('click',function(){
-    var next=(root.dataset.theme||'dark')==='dark'?'light':'dark';
+    var next={'':'light',light:'dark',dark:''}[root.dataset.theme||''];
     applyTheme(next);
-    try{localStorage.setItem('xlabs-theme',next)}catch(e){}
+    try{next?localStorage.setItem('xlabs-theme',next):localStorage.removeItem('xlabs-theme')}catch(e){}
   });
 
   // ---- copy buttons on code blocks
