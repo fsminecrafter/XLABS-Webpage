@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#EEEFF1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#111214" media="(prefers-color-scheme: dark)">
-<meta name="description" content="Xlabs builds small low-level software: Minimal-OS, its SDK, the FarcadeGL 3D library, MinimaSSL, the MOSdesk desktop and mosWM, plus Run Studio for building .run apps in the browser.">
+<meta name="description" content="Xlabs builds small low-level software: Minimal-OS, its SDK, the FarcadeGL 3D library, MinimaSSL, the MOSdesk desktop and mosWM, plus Run Studio for building .run apps in the browser, and browser games like NewtShooter.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -188,6 +188,8 @@ h3.big{font-size:clamp(26px,3vw,34px);letter-spacing:-.03em;font-weight:500;marg
 .poster .btn.primary:hover{background:#D4382A;border-color:#D4382A;color:#fff}
 .poster.hw{background:radial-gradient(120% 90% at 85% 10%,rgba(242,181,28,.45),transparent 60%),repeating-linear-gradient(-45deg,rgba(242,181,28,.10) 0 14px,transparent 14px 28px),#14171A}
 .poster.hw .btn.primary:hover{background:#F2B51C;border-color:#F2B51C;color:#16130C}
+.poster.ns{background:radial-gradient(110% 90% at 85% 8%,rgba(255,106,43,.5),transparent 58%),radial-gradient(80% 70% at 8% 100%,rgba(63,224,255,.26),transparent 60%),repeating-linear-gradient(0deg,transparent 0 31px,rgba(63,224,255,.08) 31px 32px),repeating-linear-gradient(90deg,transparent 0 31px,rgba(63,224,255,.08) 31px 32px),#0B0E14}
+.poster.ns .btn.primary:hover{background:#FF6A2B;border-color:#FF6A2B;color:#120804}
 .tick.done{color:var(--accent)}
 .cols{row-gap:36px}
 .eyebrow{margin:0 0 8px}
@@ -325,6 +327,7 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
     <nav>
       <a href="#projects" data-route="projects">Projects</a>
       <a href="#/red-sandbox" data-route="sandbox">Red Sandbox</a>
+      <a href="#/newtshooter" data-route="newt" class="opt">NewtShooter</a>
       <a href="studio/">Studio</a>
       <a href="#/p/roadmap" data-route="roadmap" class="opt">Roadmap</a>
       <a href="#/player" data-route="player" class="opt">Player</a>
@@ -406,6 +409,7 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
     <section id="games">
       <h2>Games</h2>
       <div class="cards">
+        <a class="card" href="#/newtshooter"><span class="tag">Game · JavaScript, WebGL2 · new</span><h3>NewtShooter</h3><p>A physics FPS with parkour movement: slide, wall-run, grapple, lean and slow time with G while momentum weapons throw drones, and you, around.</p><span class="more">Play it here →</span></a>
         <a class="card" href="#/haul-and-wrench"><span class="tag">Game · JavaScript, Canvas · new</span><h3>Haul &amp; Wrench</h3><p>Run deliveries between towns in a tired 1968 Volta Bug and keep it alive yourself: diagnose faults by ear, scan codes, and torque every bolt by hand.</p><span class="more">Play it here →</span></a>
         <a class="card" href="https://joel-minecrafter.itch.io/hashtycoon" target="_blank" rel="noopener"><span class="tag">Game · itch.io</span><h3>Hash Tycoon</h3><p>A tycoon game, published on itch.io.</p><span class="more">Play on itch.io ↗</span></a>
         <a class="card" href="https://joel-minecrafter.itch.io/last" target="_blank" rel="noopener"><span class="tag">Game · itch.io</span><h3>Last Shelter</h3><p>A game published on itch.io.</p><span class="more">Play on itch.io ↗</span></a>
@@ -520,6 +524,25 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
       </div>
     </section>
 
+    <section id="newtshooter">
+      <h2>Play: NewtShooter</h2>
+      <div class="split rev">
+        <div>
+          <h3 class="big">Physics. Parkour. Firepower.</h3>
+          <p>A first-person shooter where everything obeys F = m·a, including you. Slide down ramps to build speed, wall-run, climb, grapple and dash between platforms, lean around cover, and press <kbd>G</kbd> to slow time while you line up the shot. Momentum weapons knock drones, crates and steel balls around, and the shotgun can blast you into the air.</p>
+          <div class="btns"><a class="btn" href="#/newtshooter">Open full page</a><a class="btn" href="games/newtshooter/" target="_blank" rel="noopener">Open in its own tab</a><a class="btn" href="#/docs/newtshooter">Guide</a></div>
+        </div>
+        <div class="embed" data-sandbox data-src="games/newtshooter/" data-title="NewtShooter">
+          <div class="poster ns">
+            <span class="tag">3D · WebGL2 · sound on</span>
+            <strong>NewtShooter</strong>
+            <span>One 170 KB file. Needs a keyboard and mouse.</span>
+            <button class="btn primary" type="button" data-launch>Start the game</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section>
       <h2>What Minimal-OS does today</h2>
       <div class="cols">
@@ -537,7 +560,7 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
 
   </main>
 <main id="docs" class="docs" hidden>
-<nav class="side" aria-label="Documentation"><!-- os-docs:nav --><span class="h">Minimal-OS docs</span><a href="#/docs/system-overview" data-nav="system-overview">Overview</a><a href="#/docs/build-and-debugging" data-nav="build-and-debugging">Build and debugging</a><a href="#/docs/boot-and-kernel" data-nav="boot-and-kernel">Boot and kernel</a><a href="#/docs/hardware-and-drivers" data-nav="hardware-and-drivers">Hardware and drivers</a><a href="#/docs/audio" data-nav="audio">Audio</a><a href="#/docs/media" data-nav="media">Images and video</a><a href="#/docs/gpu" data-nav="gpu">GPU and 3D</a><a href="#/docs/storage-and-packages" data-nav="storage-and-packages">Storage and packages</a><a href="#/docs/installing" data-nav="installing">Installing to a disk</a><a href="#/docs/networking" data-nav="networking">Networking</a><a href="#/docs/services" data-nav="services">Services</a><a href="#/docs/install-and-services" data-nav="install-and-services">Install and services</a><a href="#/docs/user-programs" data-nav="user-programs">User programs</a><a href="#/docs/user-sdk-syscalls" data-nav="user-sdk-syscalls">SDK and syscalls</a><!-- /os-docs:nav --><!-- sdk-docs:nav --><span class="h">SDK functions</span><a href="#/docs/sdk-functions" data-nav="sdk-functions">Overview</a><a href="#/docs/sdk-conventions" data-nav="sdk-conventions">Conventions and errors</a><a href="#/docs/sdk-process" data-nav="sdk-process">Process and terminal</a><a href="#/docs/sdk-files" data-nav="sdk-files">Files</a><a href="#/docs/sdk-memory" data-nav="sdk-memory">Memory and randomness</a><a href="#/docs/sdk-strings" data-nav="sdk-strings">Strings and memory</a><a href="#/docs/sdk-output" data-nav="sdk-output">Formatted output</a><a href="#/docs/sdk-windows" data-nav="sdk-windows">Windows</a><a href="#/docs/sdk-easyui" data-nav="sdk-easyui">easyui widgets</a><a href="#/docs/sdk-font" data-nav="sdk-font">Text in your own pixels</a><a href="#/docs/sdk-graphics" data-nav="sdk-graphics">Graphics</a><a href="#/docs/sdk-input" data-nav="sdk-input">Input</a><a href="#/docs/sdk-network" data-nav="sdk-network">Networking</a><a href="#/docs/sdk-sysinfo" data-nav="sdk-sysinfo">System information</a><a href="#/docs/sdk-packages" data-nav="sdk-packages">Packages</a><a href="#/docs/sdk-managers" data-nav="sdk-managers">Device managers</a><a href="#/docs/sdk-farcadegl" data-nav="sdk-farcadegl">FarcadeGL 3D</a><a href="#/docs/sdk-fgsl" data-nav="sdk-fgsl">FGSL shading language</a><a href="#/docs/sdk-storage" data-nav="sdk-storage">Disks and root commands</a><a href="#/docs/sdk-audio" data-nav="sdk-audio">Playing audio</a><!-- /sdk-docs:nav --><span class="h">Documentation updates</span><a href="#/docs/whats-new" data-nav="whats-new">What's New?</a></nav>
+<nav class="side" aria-label="Documentation"><!-- os-docs:nav --><span class="h">Minimal-OS docs</span><a href="#/docs/system-overview" data-nav="system-overview">Overview</a><a href="#/docs/build-and-debugging" data-nav="build-and-debugging">Build and debugging</a><a href="#/docs/boot-and-kernel" data-nav="boot-and-kernel">Boot and kernel</a><a href="#/docs/hardware-and-drivers" data-nav="hardware-and-drivers">Hardware and drivers</a><a href="#/docs/audio" data-nav="audio">Audio</a><a href="#/docs/media" data-nav="media">Images and video</a><a href="#/docs/gpu" data-nav="gpu">GPU and 3D</a><a href="#/docs/storage-and-packages" data-nav="storage-and-packages">Storage and packages</a><a href="#/docs/installing" data-nav="installing">Installing to a disk</a><a href="#/docs/networking" data-nav="networking">Networking</a><a href="#/docs/services" data-nav="services">Services</a><a href="#/docs/install-and-services" data-nav="install-and-services">Install and services</a><a href="#/docs/user-programs" data-nav="user-programs">User programs</a><a href="#/docs/user-sdk-syscalls" data-nav="user-sdk-syscalls">SDK and syscalls</a><!-- /os-docs:nav --><!-- sdk-docs:nav --><span class="h">SDK functions</span><a href="#/docs/sdk-functions" data-nav="sdk-functions">Overview</a><a href="#/docs/sdk-conventions" data-nav="sdk-conventions">Conventions and errors</a><a href="#/docs/sdk-process" data-nav="sdk-process">Process and terminal</a><a href="#/docs/sdk-files" data-nav="sdk-files">Files</a><a href="#/docs/sdk-memory" data-nav="sdk-memory">Memory and randomness</a><a href="#/docs/sdk-strings" data-nav="sdk-strings">Strings and memory</a><a href="#/docs/sdk-output" data-nav="sdk-output">Formatted output</a><a href="#/docs/sdk-windows" data-nav="sdk-windows">Windows</a><a href="#/docs/sdk-easyui" data-nav="sdk-easyui">easyui widgets</a><a href="#/docs/sdk-font" data-nav="sdk-font">Text in your own pixels</a><a href="#/docs/sdk-graphics" data-nav="sdk-graphics">Graphics</a><a href="#/docs/sdk-input" data-nav="sdk-input">Input</a><a href="#/docs/sdk-network" data-nav="sdk-network">Networking</a><a href="#/docs/sdk-sysinfo" data-nav="sdk-sysinfo">System information</a><a href="#/docs/sdk-packages" data-nav="sdk-packages">Packages</a><a href="#/docs/sdk-managers" data-nav="sdk-managers">Device managers</a><a href="#/docs/sdk-farcadegl" data-nav="sdk-farcadegl">FarcadeGL 3D</a><a href="#/docs/sdk-fgsl" data-nav="sdk-fgsl">FGSL shading language</a><a href="#/docs/sdk-storage" data-nav="sdk-storage">Disks and root commands</a><a href="#/docs/sdk-audio" data-nav="sdk-audio">Playing audio</a><!-- /sdk-docs:nav --><span class="h">Documentation updates</span><a href="#/docs/whats-new" data-nav="whats-new">What's New?</a><span class="h">Games</span><a href="#/docs/newtshooter" data-nav="newtshooter">NewtShooter</a></nav>
 <div><!-- os-docs:pages -->
 <article class="doc" data-doc="system-overview" hidden><h1>Minimal-OS Documentation Index</h1>
 <p>This directory contains the system documentation. Start with the guide that matches the layer you are changing.</p>
@@ -3153,6 +3176,8 @@ int main(void) {
 <p class="eyebrow">Documentation updates</p>
 <h1>What's New?</h1>
 <p class="intro">A guide to recently added and expanded documentation. Follow a link to read the new material in context.</p>
+<h2>New game: NewtShooter</h2>
+<p>A new <a href="#/docs/newtshooter">NewtShooter guide</a> covers the physics parkour shooter on this site: the <a href="#/docs/newtshooter/controls">controls</a>, every <a href="#/docs/newtshooter/movement">movement technique</a> with its numbers, <a href="#/docs/newtshooter/slow-motion">slow motion</a>, the <a href="#/docs/newtshooter/weapons">weapons</a> and <a href="#/docs/newtshooter/enemies">enemies</a>, <a href="#/docs/newtshooter/arena-and-scoring">scoring and style bonuses</a>, the <a href="#/docs/newtshooter/the-course">Sky Trial course</a> and <a href="#/docs/newtshooter/how-it-works">how the renderer, physics and soundtrack work</a>.</p>
 <h2>Media formats and playback</h2>
 <p>The <a href="#/docs/media">Images and video guide</a> now covers the <code>.vid</code> format, its converter commands and file layout, playback, and decoding. Start with <a href="#/docs/media/making-files">making media files</a>, then read the <a href="#/docs/media/vid-layout">video layout</a> and <a href="#/docs/media/hardware-decoding">hardware decoding</a> sections.</p>
 <h2>GPU and 3D graphics</h2>
@@ -3161,6 +3186,101 @@ int main(void) {
 <p>Newer networking guidance is collected in the <a href="#/docs/networking">Minimal-OS networking guide</a> and the <a href="#/docs/sdk-network">SDK networking reference</a>. The <a href="#/p/studio">Run Studio page</a> describes browser networking, the optional self-hosted relay and its configuration.</p>
 <h2>Storage and installation</h2>
 <p>Find the expanded disk and file-system material in <a href="#/docs/storage-and-packages">Storage and packages</a>, including partitions, MinimaFS and NVMe. The <a href="#/docs/installing">Installing guide</a> covers creating a bootable disk and notes for real hardware.</p>
+</article>
+<article class="doc" data-doc="newtshooter" hidden>
+<h1>NewtShooter</h1>
+<p class="intro">A first-person shooter where everything obeys F = m·a, including you. It mixes physics, parkour movement and gunplay, and runs from a single HTML file with no libraries: its own WebGL2 renderer, rigid-body physics, movement controller and synthesized sound.</p>
+<div class="btns"><a class="btn primary" href="#/newtshooter">Play it here</a><a class="btn" href="games/newtshooter/" target="_blank" rel="noopener">Open in its own tab</a></div>
+<nav class="fn-index toc" aria-label="On this page"><span>On this page</span><a href="#/docs/newtshooter/getting-started">Getting started</a><a href="#/docs/newtshooter/controls">Controls</a><a href="#/docs/newtshooter/movement">Movement</a><a href="#/docs/newtshooter/slow-motion">Slow motion</a><a href="#/docs/newtshooter/weapons">Weapons</a><a href="#/docs/newtshooter/enemies">Enemies</a><a href="#/docs/newtshooter/arena-and-scoring">Arena and scoring</a><a href="#/docs/newtshooter/the-course">The course</a><a href="#/docs/newtshooter/settings-and-saves">Settings and saves</a><a href="#/docs/newtshooter/how-it-works">How it works</a></nav>
+<h2 id="newtshooter--getting-started">Getting started</h2>
+<p>Open the game, pick a mode and the game captures the mouse. <kbd>Esc</kbd> releases it and pauses. It needs a keyboard and mouse and a browser with WebGL2 (current Chrome, Edge, Firefox or Safari).</p>
+<ul>
+<li><strong>Arena</strong>: survive waves of drones in Inertia Hall, a walled test chamber with a tower, ramps, pillars, launch pads and plenty of loose crates and steel balls.</li>
+<li><strong>Course</strong>: the Sky Trial, a parkour time trial over floating platforms. Hints along the way teach every move, so play it first.</li>
+</ul>
+<h2 id="newtshooter--controls">Controls</h2>
+<div class="tw"><table><thead><tr><th>Input</th><th>Action</th></tr></thead><tbody>
+<tr><td><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></td><td>Run</td></tr>
+<tr><td><kbd>Space</kbd></td><td>Jump; again in the air to double jump; near a wall to wall jump</td></tr>
+<tr><td><kbd>C</kbd></td><td>Crouch; while running, slide; while standing still, charge a high jump</td></tr>
+<tr><td><kbd>Shift</kbd></td><td>Dash in the direction you are moving</td></tr>
+<tr><td><kbd>V</kbd> or middle mouse (hold)</td><td>Grapple</td></tr>
+<tr><td><kbd>F</kbd></td><td>Kick</td></tr>
+<tr><td><kbd>Q</kbd> / <kbd>E</kbd> (hold)</td><td>Lean left / right to tilt and peek around cover</td></tr>
+<tr><td><kbd>G</kbd></td><td>Slow motion on or off</td></tr>
+<tr><td>Left mouse</td><td>Fire</td></tr>
+<tr><td>Right mouse</td><td>Zoom (rifle); detonate gravity wells early (launcher)</td></tr>
+<tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>, wheel</td><td>Switch weapon; <kbd>X</kbd> swaps to the last one</td></tr>
+<tr><td><kbd>R</kbd></td><td>Reload</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Pause</td></tr>
+</tbody></table></div>
+<h2 id="newtshooter--movement">Movement</h2>
+<p>You run at 9.6 m/s. Friction only bites hard at normal speed; above it you keep momentum for a while, and in the air nothing slows you down, so speed you build stays with you. Jumping on the frame you land skips friction entirely (bunny hopping), and air strafing works.</p>
+<div class="tw"><table><thead><tr><th>Move</th><th>How</th><th>What it does</th></tr></thead><tbody>
+<tr><td>Double jump</td><td><kbd>Space</kbd> in the air</td><td>8.6 m/s upward and turns you towards the keys you hold. Landing, a wall-run, a climb or the grapple gives it back.</td></tr>
+<tr><td>Slide</td><td><kbd>C</kbd> while running faster than 6.2 m/s</td><td>Adds 4.5 m/s (once every 1.15 s) and glides with little friction. Down a slope gravity speeds you up: the Sky Trial ramp takes you from 11 to about 22 m/s. Land holding <kbd>C</kbd> to keep sliding.</td></tr>
+<tr><td>Slide jump</td><td><kbd>Space</kbd> while sliding</td><td>Keeps the slide's speed and adds a little more.</td></tr>
+<tr><td>Wall-run</td><td>Jump at a wall while moving along it, holding <kbd>W</kbd></td><td>Runs along any wall at 10 m/s or more for up to 2.2 s, sinking slowly. <kbd>Space</kbd> leaps off it, away and upward; <kbd>C</kbd> drops off. A new wall resets your double jump.</td></tr>
+<tr><td>Wall jump</td><td><kbd>Space</kbd> next to a wall in the air</td><td>Kicks you off the wall without needing a wall-run.</td></tr>
+<tr><td>Climb</td><td>Run straight at a wall, hold <kbd>W</kbd> and <kbd>Space</kbd></td><td>Runs up the wall at 7.4 m/s for about 0.6 s, once per jump. <kbd>Space</kbd> again turns it into a jump backwards off the wall.</td></tr>
+<tr><td>Mantle</td><td>Hold <kbd>W</kbd> at a ledge</td><td>Pulls you onto a ledge up to 1.8 m above your feet (2.2 m while climbing) when you would otherwise fall short.</td></tr>
+<tr><td>High jump</td><td>Hold <kbd>C</kbd> standing still, then <kbd>Space</kbd></td><td>Charges for 0.8 s, up to 19.5 m/s: about 8 m straight up.</td></tr>
+<tr><td>Dash</td><td><kbd>Shift</kbd></td><td>Sets your speed to at least 21.5 m/s in the direction you move (or look). Two charges, 1.45 s each to refill.</td></tr>
+<tr><td>Grapple</td><td>Hold <kbd>V</kbd> or middle mouse, aiming at a surface up to 62 m away</td><td>Reels you in while gravity drops to 40%, with a top speed of 25 m/s, and lets go when you arrive or swing past. Release to fly; <kbd>Space</kbd> on the rope launches you upward. Aimed at a crate or an enemy it yanks that to you instead.</td></tr>
+<tr><td>Kick</td><td><kbd>F</kbd></td><td>Launches props, hurts and stuns enemies (much harder while sliding) and bats enemy orbs back. Kick a wall in mid-air to push yourself off it.</td></tr>
+<tr><td>Lean</td><td>Hold <kbd>Q</kbd> or <kbd>E</kbd></td><td>Tilts your head and moves your eyes up to 0.6 m sideways to peek and shoot around cover, never through walls.</td></tr>
+<tr><td>Launch pads</td><td>Step on a glowing pad</td><td>Throw you high and forward. Bodies and rolling enemies get thrown too.</td></tr>
+<tr><td>Blast jump</td><td>Fire the shotgun at your feet in mid-air, or stand near your own gravity well</td><td>Recoil and blasts push you; you never take damage from your own weapons.</td></tr>
+</tbody></table></div>
+<h2 id="newtshooter--slow-motion">Slow motion</h2>
+<p><kbd>G</kbd> slows the world to 28% while you move at about 60%, so you are relatively twice as fast as everything else. Orbs, lasers and wrecking balls become easy to read, and your aim stays at full speed. A full meter lasts 6 s. It refills over 15 s after a short pause, and every kill adds 10%. The picture shifts to a cool, desaturated grade and the sound gets muffled while it is on.</p>
+<h2 id="newtshooter--weapons">Weapons</h2>
+<div class="tw"><table><thead><tr><th>Weapon</th><th>Ammo</th><th>Details</th></tr></thead><tbody>
+<tr><td>Newton-9 impulse rifle <kbd>1</kbd></td><td>32 rounds, 1.25 s reload</td><td>Automatic, about 11 shots a second, 14 damage. Every hit pushes what it hits. Hitting a drone's or warden's glowing core doubles the damage. Right mouse zooms and tightens the spread.</td></tr>
+<tr><td>Momentum scattergun <kbd>2</kbd></td><td>6 shells, loaded one at a time</td><td>11 pellets of 9.5 damage with a heavy shove. Firing pushes you backwards at 11.5 m/s (less on the ground unless you aim down), which makes it a movement tool too. Firing interrupts a reload.</td></tr>
+<tr><td>Singularity launcher <kbd>3</kbd></td><td>3 charges, one back every 4.2 s</td><td>Lobs a shot that falls under gravity and opens a gravity well where it lands. For 1.35 s the well pulls in drones, crates, debris, orbs and (gently) you within 11 m, then bursts for up to 120 damage within 7.5 m and throws everything outward. Right mouse detonates early.</td></tr>
+</tbody></table></div>
+<p>Physics does damage too. A crate, ball or chunk of debris that hits an enemy faster than 7.5 m/s hurts it in proportion to its mass and speed, and an enemy knocked into a wall hard enough takes damage from the impact.</p>
+<h2 id="newtshooter--enemies">Enemies</h2>
+<div class="tw"><table><thead><tr><th>Enemy</th><th>Health</th><th>Behaviour</th></tr></thead><tbody>
+<tr><td>Drone</td><td>45</td><td>Circles you at range and fires slow orange orbs that lead your movement. Its eye flashes red just before it shoots. Shoot orbs down or kick them back.</td></tr>
+<tr><td>Roller</td><td>35</td><td>A rolling physics ball that chases you, hops onto ledges, and arms itself when it gets within 2.5 m. It explodes when it dies, however it dies, hurting anything nearby, other enemies included.</td></tr>
+<tr><td>Warden</td><td>230</td><td>A heavy flyer that stops, tracks you with a thin red laser for 1.45 s, locks for 0.34 s (the beam flickers) and fires for 26 damage. Move out of the line once it locks. A kick, grapple yank or blast that stuns it cancels the shot.</td></tr>
+</tbody></table></div>
+<p>From wave 4 on, enemies get 7% more health each wave. Destroyed enemies break into physics debris you can kick around.</p>
+<h2 id="newtshooter--arena-and-scoring">Arena and scoring</h2>
+<p>Wave <em>n</em> brings 2 + <em>n</em> drones (up to 13), about 1.2 × <em>n</em> rollers (up to 10) and a warden for every two waves after the first (up to 4). Clearing a wave scores 250 × the wave number and restores 25 health. Health also regenerates 4 s after you were last hit, and drones and wardens sometimes drop health orbs worth 15.</p>
+<p>Kills score 100 (drone), 75 (roller) or 250 (warden), plus style bonuses for how you got them. Each kill within 4 s of the last raises a chain multiplier by 0.15, up to ×4.</p>
+<div class="tw"><table><thead><tr><th>Style</th><th>Bonus</th><th>When</th></tr></thead><tbody>
+<tr><td>Newton's law</td><td>150</td><td>Killed by an impact: a thrown crate, debris, or a wall</td></tr>
+<tr><td>Return to sender</td><td>150</td><td>Killed by its own orb, kicked back</td></tr>
+<tr><td>Chain reaction</td><td>120</td><td>Killed by an exploding roller</td></tr>
+<tr><td>Boot / Slide kick</td><td>120</td><td>Killed by a kick</td></tr>
+<tr><td>Event horizon</td><td>100</td><td>Killed by a gravity well</td></tr>
+<tr><td>Get over here</td><td>100</td><td>Killed by a grapple yank</td></tr>
+<tr><td>Wall runner, Swinger, Slide kill, Airborne</td><td>100, 100, 75, 60</td><td>You were wall-running, on the rope, sliding, or in the air</td></tr>
+<tr><td>Speed demon</td><td>80</td><td>You were moving faster than 20 m/s</td></tr>
+<tr><td>Long shot</td><td>80</td><td>A gun kill from more than 45 m</td></tr>
+<tr><td>Close call</td><td>60</td><td>You had less than 25 health</td></tr>
+<tr><td>Bullet time</td><td>40</td><td>Slow motion was on</td></tr>
+<tr><td>Core hit</td><td>40</td><td>The last hit was on the glowing core</td></tr>
+<tr><td>Double, triple, quad, mega kill</td><td>100 per extra kill</td><td>Kills less than 0.7 s apart</td></tr>
+</tbody></table></div>
+<p>Shooting down an orb scores 25 and kicking one back 120. The results screen shows your score, wave, kills, top speed, time survived and the style that earned you the most.</p>
+<h2 id="newtshooter--the-course">The course</h2>
+<p>The Sky Trial is a line of platforms in the sky, about 450 m long, in twelve sections: gaps, a slide under barriers and down a ramp, a wall-run, a wall-to-wall chain, a climb, a high jump, a grapple swing, a dash gap, a launch pad, a gate that opens when you shoot five targets, a bridge swept by wrecking balls (a good place for slow motion) and a last wall you blast-jump or grapple up. The orange arch at the top is the finish.</p>
+<p>The clock starts when you first move and keeps real time, so slow motion is no shortcut. Fall off and you reappear at the last checkpoint; targets you already hit stay hit. Finish in 70 s for gold, 95 s for silver or 130 s for bronze.</p>
+<h2 id="newtshooter--settings-and-saves">Settings and saves</h2>
+<p>Settings has mouse sensitivity, field of view (75–120°, measured horizontally on a 16:9 screen; it widens a little more at speed), sound and music volume, graphics quality and inverted mouse Y. <em>High</em> renders at up to 1.5× pixel density with a 2048 × 2048 shadow map; <em>Fast</em> renders at 0.75× with a 1024 × 1024 one. Settings and your best arena score and course time are kept in this browser's local storage under <code>newtshooter-settings</code> and <code>newtshooter-best</code>.</p>
+<h2 id="newtshooter--how-it-works">How it works</h2>
+<p>Everything lives in <code>games/newtshooter/index.html</code>, about 170 KB of HTML, CSS and JavaScript. The only thing it loads from elsewhere is its fonts.</p>
+<ul>
+<li><strong>Rendering</strong>: WebGL2. The level is one merged mesh of boxes and ramps with procedural lab-panel, wall-run and tech materials drawn in the fragment shader. Moving objects are instanced cubes and spheres. A directional shadow map follows the camera with 3 × 3 filtered samples, then ACES tone mapping, distance fog, a gradient sky and additive glow effects. The weapon is drawn in a second pass with its own field of view.</li>
+<li><strong>Physics</strong>: rigid boxes and spheres with real rotation and inertia. Box corners and spheres collide with the static world; bodies collide with each other through corner-in-box and sphere tests. Contacts are solved with sequential impulses with friction and restitution, and resting bodies go to sleep. Everything steps at 120 Hz, with the world and the player on separate clocks so slow motion can scale them differently.</li>
+<li><strong>Player</strong>: a box collider moved one axis at a time against boxes and ramps, with step-up, ground snapping on slopes (velocity follows the slope, so running up a ramp and off its end launches you), coyote time and jump buffering.</li>
+<li><strong>Sound</strong>: synthesized with Web Audio and positioned by distance and stereo pan. The soundtrack, <em>Terminal Velocity</em>, is a 140 BPM electro track in A minor generated live: kick, claps, hats, a sidechained rolling bass, a supersaw hook through a dotted-eighth echo, chord stabs, pads, arpeggios, risers and crashes. It is built from 8-bar intro, build, drop and breakdown sections and follows the game: drops while enemies are up, breakdowns between waves, a calmer loop on the title screen.</li>
+</ul>
+<p>The website embeds the game in an iframe that loads only when you press Start and unloads when you leave the page. Pointer lock and fullscreen work inside it.</p>
 </article>
 </div></main>
 <main id="pages" class="docs" hidden>
@@ -3627,6 +3747,38 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
   </div>
 </main>
 
+<main id="newt" hidden>
+  <div class="sandbox-head">
+    <div>
+      <p class="eyebrow">Game · JavaScript, WebGL2, Web Audio</p>
+      <h1 class="page-title">NewtShooter</h1>
+    </div>
+    <div class="btns"><a class="btn" href="games/newtshooter/" target="_blank" rel="noopener">Open in its own tab</a><a class="btn" href="#/docs/newtshooter">Read the guide</a></div>
+  </div>
+  <div class="embed tall" data-sandbox data-src="games/newtshooter/" data-title="NewtShooter">
+    <div class="poster ns">
+      <span class="tag">3D · WebGL2 · sound on</span>
+      <strong>NewtShooter</strong>
+      <span>One 170 KB file. Needs a keyboard and mouse.</span>
+      <button class="btn primary" type="button" data-launch>Start the game</button>
+    </div>
+  </div>
+  <div class="sandbox-info">
+    <div>
+      <h2>Move like momentum matters</h2>
+      <p>Slide to keep speed and gain more on slopes, wall-run along any wall and leap off, climb and mantle ledges, charge a high jump, dash, and grapple across gaps. Nothing slows you down in the air, so the speed you build is yours to keep.</p>
+    </div>
+    <div>
+      <h2>Physics does the damage</h2>
+      <p>The Newton-9 rifle pushes whatever it hits, the Momentum shotgun shoves you backwards (aim down to blast-jump), and the Singularity launcher opens gravity wells that pull drones and crates together before they burst. Kick a crate into a drone and the crate does the work. Two modes: Arena waves and the Sky Trial parkour course.</p>
+    </div>
+    <div>
+      <h2>Controls</h2>
+      <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move · <kbd>Space</kbd> jump · <kbd>C</kbd> slide · <kbd>Shift</kbd> dash · <kbd>V</kbd> grapple · <kbd>F</kbd> kick · <kbd>Q</kbd>/<kbd>E</kbd> lean · <kbd>G</kbd> slow time · <kbd>1</kbd>–<kbd>3</kbd> weapons · <kbd>R</kbd> reload · <kbd>Esc</kbd> pause. <a href="#/docs/newtshooter">Full guide</a>.</p>
+    </div>
+  </div>
+</main>
+
 <main id="media" hidden>
   <div class="sandbox-head">
     <div>
@@ -3858,8 +4010,8 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
 </script>
 <script>
 (function(){
-  var home=document.getElementById('home'),docs=document.getElementById('docs'),pages=document.getElementById('pages'),sandbox=document.getElementById('sandbox'),haul=document.getElementById('haul'),media=document.getElementById('media');
-  var mains=[home,docs,pages,sandbox,haul,media];
+  var home=document.getElementById('home'),docs=document.getElementById('docs'),pages=document.getElementById('pages'),sandbox=document.getElementById('sandbox'),haul=document.getElementById('haul'),media=document.getElementById('media'),newt=document.getElementById('newt');
+  var mains=[home,docs,pages,sandbox,haul,media,newt];
   var arts=docs.querySelectorAll('.doc'),links=docs.querySelectorAll('[data-nav]');
   var parts=pages.querySelectorAll('[data-page]'),plinks=pages.querySelectorAll('[data-page-nav]');
   var top=document.querySelectorAll('header nav [data-route]');
@@ -3896,6 +4048,8 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
       show(sandbox);document.title='Red Sandbox · Xlabs';mark('sandbox');window.scrollTo(0,0);
     }else if(/^#\/haul-and-wrench/.test(h)){
       show(haul);document.title='Haul & Wrench · Xlabs';mark('haul');window.scrollTo(0,0);
+    }else if(/^#\/newtshooter/.test(h)){
+      show(newt);document.title='NewtShooter · Xlabs';mark('newt');window.scrollTo(0,0);
     }else if(/^#\/player/.test(h)){
       show(media);document.title='Media Player · Xlabs';mark('player');window.scrollTo(0,0);
     }else{
@@ -4275,7 +4429,7 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
   });
 
   // ---- search
-  var dlg=document.querySelector('dialog.search'),input=dlg.querySelector('input'),list=document.getElementById('search-results');
+  var dlg=document.querySelector('dialog.search:not(.account-dialog)'),input=dlg.querySelector('input'),list=document.getElementById('search-results');
   var index=null,results=[],sel=0;
   function txt(el){var c=el.cloneNode(true);c.querySelectorAll('.anchor,.copy').forEach(function(x){x.remove()});return c.textContent.trim()}
   function build(){
@@ -4313,7 +4467,7 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
     document.querySelectorAll('#pages [data-page]').forEach(function(art){
       index.push({t:txt(art.querySelector('h1')),w:'Project',u:'#/p/'+art.dataset.page,k:0});
     });
-    index.push({t:'Red Sandbox',w:'Project',u:'#/red-sandbox',k:0},{t:'Haul & Wrench',w:'Game',u:'#/haul-and-wrench',k:0},{t:'Hash Tycoon',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/hashtycoon',k:0},{t:'Last Shelter',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/last',k:0},{t:'VRsandbox',w:'Game on GitHub',u:'https://github.com/fsminecrafter/VRsandbox',k:0},{t:'Run Studio',w:'Open the studio',u:'studio/',k:0},{t:'Media Player',w:'Open .img, .vid and .adi files',u:'#/player',k:0});
+    index.push({t:'Red Sandbox',w:'Project',u:'#/red-sandbox',k:0},{t:'NewtShooter',w:'Game',u:'#/newtshooter',k:0},{t:'Haul & Wrench',w:'Game',u:'#/haul-and-wrench',k:0},{t:'Hash Tycoon',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/hashtycoon',k:0},{t:'Last Shelter',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/last',k:0},{t:'VRsandbox',w:'Game on GitHub',u:'https://github.com/fsminecrafter/VRsandbox',k:0},{t:'Run Studio',w:'Open the studio',u:'studio/',k:0},{t:'Media Player',w:'Open .img, .vid and .adi files',u:'#/player',k:0});
     var fns={};index.forEach(function(e){if(e.k===1)fns[e.t]=1});
     index=index.filter(function(e){return !(e.c&&fns[e.t])});
     index.forEach(function(e){e.l=e.t.toLowerCase()});
