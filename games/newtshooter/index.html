@@ -1882,10 +1882,11 @@ const WK=[
   [-2.7,1.4,3.2,-.8,3.8,3.5,'hull'],[.8,1.4,3.2,2.7,3.8,3.5,'hull'],[-.8,3.4,3.2,.8,3.8,3.5,'hull'],
   [-.8,1.4,3.25,.8,3.4,3.45,'door'],[-1.6,1.2,3.5,1.6,1.4,4.8,'porch'],
   [-.8,1.7,-3.2,.8,2.8,-2.95,'panel'],[-3.9,2.5,-1.6,-3,3.3,.6,'turret'],[3,2.5,-1.6,3.9,3.3,.6,'turret']];
-const WH=.65; // legs 1.5x longer: the whole hull rides higher
+const WH=4.6; // long legs: the whole hull rides about 6 m up
 for(const b of WK){b[1]+=WH;b[4]+=WH}
-WK.push([-1,1.0,4.95,1,1.2,5.7,'step']); // hanging boarding step: ground -> step -> porch
-const LEG={hip:1.95,L1:1.25,L2:1.25,stride:3.2};
+// a boarding stair hangs off the rear porch: each step 1.2 m higher and closer, never overhead
+for(let k=0;k<4;k++){const y=1.2*(k+1),z0=4.95+1.2*(3-k);WK.push([-1.05,y-.2,z0,1.05,y,z0+(k?1.2:2),'step'])}
+const LEG={hip:5.55,L1:3.75,L2:3.75,stride:5.6,lift:1.5,hx:2.5,fx:3.4};
 function ik2(hy,hz,fy,fz,L1,L2){const dz=fz-hz,dy=fy-hy;let d=Math.max(1e-3,Math.min(Math.hypot(dz,dy),L1+L2-1e-3));const a=(L1*L1-L2*L2+d*d)/(2*d),h=Math.sqrt(Math.max(0,L1*L1-a*a)),uz=(fz-hz)/Math.hypot(dz,dy||1e-6),uy=dy/Math.hypot(dz,dy||1e-6);let pz=-uy,py=uz;if(pz<0){pz=-pz;py=-py}return [hy+uy*a+py*h,hz+uz*a+pz*h]}
 const _w1=new V3(),_w2=new V3(),_w3=new V3();
 function wLocal(w,p,o){const dx=p.x-w.pos.x,dz=p.z-w.pos.z,c=Math.cos(w.yaw),s=Math.sin(w.yaw);return o.set(dx*c-dz*s,p.y-w.pos.y,dx*s+dz*c)}
@@ -1904,8 +1905,8 @@ function rayWalkers(o,d,maxT){
   let best=maxT,res=null;
   for(const w of walkers){
     if(!w.alive)continue;
-    const cx=w.pos.x-o.x,cy=w.pos.y+3.2-o.y,cz=w.pos.z-o.z,tc=cx*d.x+cy*d.y+cz*d.z;
-    if(cx*cx+cy*cy+cz*cz-tc*tc>49||tc<-7||tc-7>best)continue;
+    const cx=w.pos.x-o.x,cy=w.pos.y+WH+2.6-o.y,cz=w.pos.z-o.z,tc=cx*d.x+cy*d.y+cz*d.z;
+    if(cx*cx+cy*cy+cz*cz-tc*tc>150||tc<-12.5||tc-12.5>best)continue;
     const L=wLocal(w,o,_w1),c=Math.cos(w.yaw),s=Math.sin(w.yaw),dx=d.x*c-d.z*s,dz=d.x*s+d.z*c,dy=d.y;
     for(const b of WK){
       if(!wActive(w,b))continue;
@@ -1946,7 +1947,7 @@ function destroyWalker(w,info){
     addBody(new Body('b',c,{h,mass:Math.max(1,Math.min(14,h.x*h.y*h.z*14)),kind:'debris',life:rand(10,14),q:q.slice(),col:b[6]==='turret'?[.85,.4,.12]:[.24,.26,.3],
       vel:v3(out.x*rand(4,9),rand(4,10),out.z*rand(4,9)),w:v3(rand(-3,3),rand(-3,3),rand(-3,3))}));
   }
-  for(const sd of [-1,1])for(let k=0;k<2;k++)addBody(new Body('b',wWorld(w,_w2.set(sd*2.5,.6+k*1.2,0),v3()),{h:v3(.3,.65,.3),mass:3,kind:'debris',life:12,col:[.2,.22,.25],vel:v3(rand(-4,4),rand(3,7),rand(-4,4)),w:v3(rand(-5,5),rand(-5,5),rand(-5,5))}));
+  for(const sd of [-1,1])for(let k=0;k<4;k++)addBody(new Body('b',wWorld(w,_w2.set(sd*(LEG.hx+.3*k),.9+k*1.35,.6),v3()),{h:v3(.4,.85,.4),mass:3,kind:'debris',life:12,col:[.2,.22,.25],vel:v3(rand(-4,4),rand(3,7),rand(-4,4)),w:v3(rand(-5,5),rand(-5,5),rand(-5,5))}));
   if(GAME.mode==='arena')GAME.onKill(w,info);
 }
 function fireWalkerLaser(w,g,tip){
@@ -1981,10 +1982,14 @@ function walkersStep(dt){
     if(!w.alive)continue;w.flash-=dt;
     const px=P.pos.x-w.pos.x,pz=P.pos.z-w.pos.z,d=Math.hypot(px,pz);
     let da=Math.atan2(-px,-pz)-w.yaw;while(da>Math.PI)da-=TAU;while(da<-Math.PI)da+=TAU;
-    const turn=P.onWalker===w?0:clamp(da,-.35*dt,.35*dt);w.yaw+=turn;w.dYaw=turn;
-    const sp=d>13&&Math.abs(da)<.9&&P.onWalker!==w?1.7:0;
+    const close=d<7.5&&P.onWalker!==w&&P.alive;
+    const turn=P.onWalker===w||(close&&d<4.5)?0:clamp(da,-.35*dt,.35*dt);w.yaw+=turn;w.dYaw=turn;
+    let sp=d>13&&Math.abs(da)<.9&&P.onWalker!==w?1.7:0,mx=-Math.sin(w.yaw),mz=-Math.cos(w.yaw);
+    if(close){ // too close: shuffle so the next foot comes down on the player
+      const rx=Math.cos(w.yaw),rz=-Math.sin(w.yaw),side=px*rx+pz*rz>=0?1:-1,tx=px-rx*side*LEG.fx,tz=pz-rz*side*LEG.fx,tl=Math.hypot(tx,tz);
+      if(tl>.4){mx=tx/tl;mz=tz/tl;sp=1.5}else{sp=0;w.dist+=1.6*dt}}
     const ox=w.pos.x,oz=w.pos.z;
-    w.pos.x-=Math.sin(w.yaw)*sp*dt;w.pos.z-=Math.cos(w.yaw)*sp*dt;
+    w.pos.x+=mx*sp*dt;w.pos.z+=mz*sp*dt;
     query(w.pos.x-4,w.pos.z-4,w.pos.x+4,w.pos.z+4,QE);
     for(const s of QE){if(s.nocol||s.max.y<1.6||s.min.y>4)continue;
       const cx=clamp(w.pos.x,s.min.x,s.max.x),cz=clamp(w.pos.z,s.min.z,s.max.z),dx=w.pos.x-cx,dz=w.pos.z-cz,dd=Math.hypot(dx,dz);
@@ -1992,8 +1997,10 @@ function walkersStep(dt){
     if(W.bounds){w.pos.x=clamp(w.pos.x,W.bounds.x0,W.bounds.x1);w.pos.z=clamp(w.pos.z,W.bounds.z0,W.bounds.z1)}
     w.dPos.set(w.pos.x-ox,0,w.pos.z-oz);w.dist+=Math.hypot(w.dPos.x,w.dPos.z)+Math.abs(turn)*3;
     w.moveK=damp(w.moveK||0,sp>0||Math.abs(turn)>1e-4?1:0,4,dt);
-    w.pos.y=-.11*w.moveK*(1-Math.cos(w.dist/LEG.stride*4*Math.PI))/2; // dips as each foot lands
-    const ph=Math.floor(w.dist/1.6);if(ph!==w.lastStep){w.lastStep=ph;const fp=wWorld(w,_w1.set(ph%2?2.2:-2.2,0,0),_w1);SFX.land(14);noise({ft:'lowpass',f:220,dur:.25,vol:.4,pos:fp});dust(fp,8);P.shake=Math.max(P.shake,clamp(.5-d/40,0,.4))}
+    w.pos.y=-.22*w.moveK*(1-Math.cos(w.dist/LEG.stride*4*Math.PI))/2; // dips as each foot lands
+    const ph=Math.floor(w.dist/(LEG.stride/2));if(ph!==w.lastStep){w.lastStep=ph;const fp=wWorld(w,_w1.set(ph%2?LEG.fx:-LEG.fx,0,-.3*LEG.stride),_w1);fp.y=0;
+      SFX.land(20);noise({ft:'lowpass',f:160,dur:.4,vol:.6,pos:fp});tone({type:'sine',f:70,f2:30,dur:.4,vol:.5,pos:fp});dust(fp,16);P.shake=Math.max(P.shake,clamp(.8-fp.dist(P.pos)/45,0,.6));
+      if(P.alive&&Math.hypot(P.pos.x-fp.x,P.pos.z-fp.z)<2.6&&P.pos.y<1.6){hurt(35,fp);const kx=P.pos.x-fp.x,kz=P.pos.z-fp.z,kl=Math.hypot(kx,kz)||1;P.vel.x+=kx/kl*14;P.vel.z+=kz/kl*14;P.vel.y=7;P.grounded=false;P.jumped=true;flashMove('STOMPED')}}
     for(const b of bodies){if(b.dead||b.pinned)continue;const bx=b.pos.x-w.pos.x,bz=b.pos.z-w.pos.z,bd=Math.hypot(bx,bz);
       if(bd<3.8+b.br&&b.pos.y<4.5&&bd>1e-3){b.wake();b.pos.x+=bx/bd*(3.8+b.br-bd)*.5;b.pos.z+=bz/bd*(3.8+b.br-bd)*.5;b.vel.x+=bx/bd*4;b.vel.z+=bz/bd*4}}
     const outside=d>6&&P.onWalker!==w;
@@ -2019,7 +2026,7 @@ function playerWalkers(){
     P.pos.x=w0.pos.x+ox*c+oz*s;P.pos.z=w0.pos.z-ox*s+oz*c;P.yaw+=w0.dYaw;w0.dPos.set(0,0,0);w0.dYaw=0}
   P.onWalker=null;
   for(const w of walkers){
-    if(!w.alive||Math.hypot(P.pos.x-w.pos.x,P.pos.z-w.pos.z)>10)continue;
+    if(!w.alive||Math.hypot(P.pos.x-w.pos.x,P.pos.z-w.pos.z)>14)continue;
     const L=wLocal(w,P.pos,_w1),r=MV.HW+.02,h=P.h,py0=P._py;
     for(const b of WK){
       if(!wActive(w,b)||L.y>=b[4]||L.y+h<=b[1])continue;
@@ -2054,7 +2061,7 @@ function drawWalkers(C,FC){
     for(const sd of [-1,1]){part(sd*3.06,1.95+H,0,.12,.9,6.2,st,0);part(sd*3.06,1.55+H,0,.14,.12,6.4,[1,.76,.08],.15)} // armour skirts
     part(1.6,4.1+H+.9,1.8,.06,1.8,.06,dk,0);part(1.6,4.1+H+1.8,1.8,.16,.16,.16,[1,.3,.2],Math.sin(NOW*5)>0?1:.2); // antenna
     for(const sd of [-1,1]){part(sd*1.6,4.1+H+.45,2.9,.45,.9,.45,dk,0);part(sd*1.6,4.1+H+.92,2.9,.5,.06,.5,or,.2)} // exhausts
-    part(0,.82,5.33,.14,.5,.14,dk,0);part(-.9,1.4,5.2,.1,.8,.1,dk,0);part(.9,1.4,5.2,.1,.8,.1,dk,0); // step hangers
+    for(const sd of [-1,1]){const a=wWorld(w,_w2.set(sd*1.1,1.3+WH,4.9),v3()),b2=wWorld(w,_w3.set(sd*1.1,1.1,9.75),v3());C.beam(a,b2,.12,.16,.17,.2,0);const c2=wWorld(w,_w2.set(sd*1.1,1.6,9.6),v3()),d2=wWorld(w,_w3.set(sd*1.1,5,9.6),v3());C.beam(c2,d2,.08,.16,.17,.2,0)} // stair stringers
     if(!w.doorOpen)part(0,2.4+H,3.47,1.2,.12,.03,[1,.6,.1],.9);
     for(const g of w.guns){
       part(g.side*3.45,2.9+H,-2.5,.3,.3,1.8,dk,0);
@@ -2066,17 +2073,19 @@ function drawWalkers(C,FC){
     const S=LEG.stride,ph=w.dist/S,by=w.pos.y;
     for(const sd of [-1,1]){
       const p=((ph+(sd>0?.5:0))%1+1)%1;let fz,fy;
-      if(p<.6){fz=lerp(-.3*S,.3*S,p/.6);fy=0}else{const t=(p-.6)/.4;fz=lerp(.3*S,-.3*S,(1-Math.cos(t*Math.PI))/2);fy=Math.sin(t*Math.PI)*.7}
-      fy=fy*w.moveK+.14-by;fz*=w.moveK;
-      const hx=sd*2.45,fx=sd*2.75,[ky,kz]=ik2(LEG.hip,0,fy,fz,LEG.L1,LEG.L2);
+      if(p<.6){fz=lerp(-.3*S,.3*S,p/.6);fy=0}else{const t=(p-.6)/.4;fz=lerp(.3*S,-.3*S,(1-Math.cos(t*Math.PI))/2);fy=Math.sin(t*Math.PI)*LEG.lift}
+      fy=fy*w.moveK+.2-by;fz*=w.moveK;
+      const hx=sd*LEG.hx,fx=sd*LEG.fx,[ky,kz]=ik2(LEG.hip,0,fy,fz,LEG.L1,LEG.L2);
       const hip=wWorld(w,_w1.set(hx,LEG.hip,0),v3()),knee=wWorld(w,_w2.set((hx+fx)/2+sd*.12,ky,kz),v3()),foot=wWorld(w,_w3.set(fx,fy,fz),v3());
-      C.beam(hip,knee,.62,.2,.22,.25,0);C.beam(knee,foot,.48,.3,.32,.36,0);
-      const pis=wWorld(w,_w3.set(hx,LEG.hip+.25,-.55),v3()),mid=v3((knee.x+foot.x)/2,(knee.y+foot.y)/2,(knee.z+foot.z)/2);C.beam(pis,mid,.12,.75,.77,.8,0); // hydraulic piston
-      part(hx,LEG.hip,0,1,1,1.3,or,.1);                                         // hip housing
-      C.trs(knee.x,knee.y,knee.z,q,.62,.62,.62,...or,.15);                         // knee joint
+      C.beam(hip,knee,1,.2,.22,.25,0);C.beam(knee,foot,.75,.3,.32,.36,0);
+      const pis=wWorld(w,_w3.set(hx,LEG.hip+.3,-.9),v3()),mid=v3(lerp(knee.x,foot.x,.4),lerp(knee.y,foot.y,.4),lerp(knee.z,foot.z,.4));C.beam(pis,mid,.2,.75,.77,.8,0); // hydraulic piston
+      const tm=v3(lerp(hip.x,knee.x,.5),lerp(hip.y,knee.y,.5),lerp(hip.z,knee.z,.5));C.beam(tm,knee,.5,.85,.4,.12,.05); // thigh armour
+      part(hx,LEG.hip,0,1.5,1.5,1.9,or,.1);                                     // hip housing
+      C.trs(knee.x,knee.y,knee.z,q,1,1,1,...or,.15);                               // knee joint
       const toe=Math.max(0,Math.sin(Math.max(0,(p-.6)/.4)*Math.PI))*-.35*w.moveK,fq=qMul(q,qAxis(1,0,0,toe));
-      C.trs(foot.x,foot.y,foot.z,fq,1.15,.3,1.7,...or,0);
-      for(const cx of [-.35,0,.35]){qRot(fq,_w3.set(cx,-.05,-1.0),_w3).add(foot);C.trs(_w3.x,_w3.y,_w3.z,fq,.2,.2,.45,...dk,0)} // claws
+      C.trs(foot.x,foot.y,foot.z,fq,1.7,.45,2.5,...or,0);
+      for(const cx of [-.55,0,.55]){qRot(fq,_w3.set(cx,-.08,-1.5),_w3).add(foot);C.trs(_w3.x,_w3.y,_w3.z,fq,.3,.3,.7,...dk,0)} // claws
+      qRot(fq,_w3.set(0,0,1.25),_w3).add(foot);C.trs(_w3.x,_w3.y,_w3.z,fq,.35,.35,.6,...dk,0); // heel spur
     }
   }
   for(const f of fires){const k=Math.min(1,f.t/.4)*Math.min(1,(f.dur-f.t)/1.2);
@@ -2885,7 +2894,7 @@ function frame(t){
 }
 const TEST=/[?&]test=/.test(location.search);
 buildArena();W.fogD=.0056;buildStatic();refreshBest();showPane('pTitle');MUS.on=true;MUS.intensity=.1;
-if(TEST){window.__ns={P,GAME,IN,W,SET,SLOW,WS,GUN,AU,MUS,MV,TUT,TUT_STEPS,BEST,walkers:()=>walkers,fires:()=>fires,spawnWalker,wWorld,playerStep,fireGrapple,releaseGrapple,startMode,hitscan,rayStatic,rayBodies,enemies:()=>enemies,bodies:()=>bodies,spawnEnemy,v3,toTitle,pauseGame,CAM};
+if(TEST){window.__ns={P,GAME,IN,W,SET,SLOW,WS,GUN,AU,MUS,MV,TUT,TUT_STEPS,BEST,walkers:()=>walkers,fires:()=>fires,spawnWalker,wWorld,WK,wLocal,playerWalkers,playerStep,fireGrapple,releaseGrapple,startMode,hitscan,rayStatic,rayBodies,enemies:()=>enemies,bodies:()=>bodies,spawnEnemy,v3,toTitle,pauseGame,CAM};
   const m=location.search.match(/test=(\w+)/);if(m&&m[1]!=='menu'){startMode(m[1]);IN.locked=true}}
 requestAnimationFrame(frame);
 })();
