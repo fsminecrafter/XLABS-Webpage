@@ -536,7 +536,7 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
           <div class="poster ns">
             <span class="tag">3D · WebGL2 · sound on</span>
             <strong>NewtShooter</strong>
-            <span>One 180 KB file. Needs a keyboard and mouse.</span>
+            <span>One 200 KB file. Needs a keyboard and mouse.</span>
             <button class="btn primary" type="button" data-launch>Start the game</button>
           </div>
         </div>
@@ -3176,6 +3176,8 @@ int main(void) {
 <p class="eyebrow">Documentation updates</p>
 <h1>What's New?</h1>
 <p class="intro">A guide to recently added and expanded documentation. Follow a link to read the new material in context.</p>
+<h2>NewtShooter: walkers, sprinting and grapple kicks</h2>
+<p>The guide now documents the <a href="#/docs/newtshooter/enemies">walker</a>, a two-legged robot you board and destroy from the inside; sprinting on <kbd>Shift</kbd> (tap it to dash); the <a href="#/docs/newtshooter/movement">grapple kick</a>; and the larger arena.</p>
 <h2>NewtShooter: tutorial and Sky Marathon</h2>
 <p>The guide now covers the new <a href="#/docs/newtshooter/tutorial">tutorial</a> (skip any step with Enter, replay it from the title screen) and the <a href="#/docs/newtshooter/marathon">Sky Marathon</a>, a 1.2 km course with 29 checkpoints.</p>
 <h2>New game: NewtShooter</h2>
@@ -3198,7 +3200,7 @@ int main(void) {
 <p>Open the game, pick a mode and the game captures the mouse. <kbd>Esc</kbd> releases it and pauses. It needs a keyboard and mouse and a browser with WebGL2 (current Chrome, Edge, Firefox or Safari).</p>
 <ul>
 <li><strong>Tutorial</strong>: a guided training hall that teaches one move or weapon per step. The game offers it the first time you pick a mode.</li>
-<li><strong>Arena</strong>: survive waves of drones in Inertia Hall, a walled test chamber with a tower, ramps, pillars, launch pads and plenty of loose crates and steel balls.</li>
+<li><strong>Arena</strong>: survive waves of drones in Inertia Hall, a 220 m walled test chamber: a central hall with a tower, ramps, pillars and launch pads, ringed by an outer yard where walkers roam, with ramps up to the corner platforms and plenty of loose crates and steel balls.</li>
 <li><strong>Sky Trial</strong>: a short parkour time trial over floating platforms, with a hint for each section.</li>
 <li><strong>Marathon</strong>: the long course, 1.2 km of mixed parkour with 29 checkpoints.</li>
 </ul>
@@ -3215,7 +3217,7 @@ int main(void) {
 <tr><td><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></td><td>Run</td></tr>
 <tr><td><kbd>Space</kbd></td><td>Jump; again in the air to double jump; near a wall to wall jump</td></tr>
 <tr><td><kbd>C</kbd></td><td>Crouch; while running, slide; while standing still, charge a high jump</td></tr>
-<tr><td><kbd>Shift</kbd></td><td>Dash in the direction you are moving</td></tr>
+<tr><td><kbd>Shift</kbd></td><td>Hold to sprint; tap to dash in the direction you are moving</td></tr>
 <tr><td><kbd>V</kbd> or middle mouse (hold)</td><td>Grapple</td></tr>
 <tr><td><kbd>F</kbd></td><td>Kick</td></tr>
 <tr><td><kbd>Q</kbd> / <kbd>E</kbd> (hold)</td><td>Lean left / right to tilt and peek around cover</td></tr>
@@ -3228,7 +3230,7 @@ int main(void) {
 <tr><td><kbd>Enter</kbd></td><td>Skip the current tutorial step</td></tr>
 </tbody></table></div>
 <h2 id="newtshooter--movement">Movement</h2>
-<p>You run at 9.6 m/s. Friction only bites hard at normal speed; above it you keep momentum for a while, and in the air nothing slows you down, so speed you build stays with you. Jumping on the frame you land skips friction entirely (bunny hopping), and air strafing works.</p>
+<p>You run at 9.6 m/s, or sprint at 13.5 m/s while you hold <kbd>Shift</kbd> and move forward. Friction only bites hard at normal speed; above it you keep momentum for a while, and in the air nothing slows you down, so speed you build stays with you. Jumping on the frame you land skips friction entirely (bunny hopping), and air strafing works.</p>
 <div class="tw"><table><thead><tr><th>Move</th><th>How</th><th>What it does</th></tr></thead><tbody>
 <tr><td>Double jump</td><td><kbd>Space</kbd> in the air</td><td>8.6 m/s upward and turns you towards the keys you hold. Landing, a wall-run, a climb or the grapple gives it back.</td></tr>
 <tr><td>Slide</td><td><kbd>C</kbd> while running faster than 6.2 m/s</td><td>Adds 4.5 m/s (once every 1.15 s) and glides with little friction. Down a slope gravity speeds you up: the Sky Trial ramp takes you from 11 to about 22 m/s. Land holding <kbd>C</kbd> to keep sliding.</td></tr>
@@ -3238,8 +3240,10 @@ int main(void) {
 <tr><td>Climb</td><td>Run straight at a wall, hold <kbd>W</kbd> and <kbd>Space</kbd></td><td>Runs up the wall at 7.4 m/s for about 0.6 s, once per jump. <kbd>Space</kbd> again turns it into a jump backwards off the wall.</td></tr>
 <tr><td>Mantle</td><td>Hold <kbd>W</kbd> at a ledge</td><td>Pulls you onto a ledge up to 1.8 m above your feet (2.2 m while climbing) when you would otherwise fall short.</td></tr>
 <tr><td>High jump</td><td>Hold <kbd>C</kbd> standing still, then <kbd>Space</kbd></td><td>Charges for 0.8 s, up to 19.5 m/s: about 8 m straight up.</td></tr>
-<tr><td>Dash</td><td><kbd>Shift</kbd></td><td>Sets your speed to at least 21.5 m/s in the direction you move (or look). Two charges, 1.45 s each to refill.</td></tr>
-<tr><td>Grapple</td><td>Hold <kbd>V</kbd> or middle mouse, aiming at a surface up to 62 m away</td><td>Reels you in while gravity drops to 40%, with a top speed of 25 m/s, and lets go when you arrive or swing past. Release to fly; <kbd>Space</kbd> on the rope launches you upward. Aimed at a crate or an enemy it yanks that to you instead.</td></tr>
+<tr><td>Sprint</td><td>Hold <kbd>Shift</kbd> while moving forward</td><td>Raises your running speed from 9.6 to 13.5 m/s.</td></tr>
+<tr><td>Dash</td><td>Tap <kbd>Shift</kbd></td><td>Sets your speed to at least 21.5 m/s in the direction you move (or look). Two charges, 1.45 s each to refill.</td></tr>
+<tr><td>Grapple</td><td>Hold <kbd>V</kbd> or middle mouse, aiming at a surface up to 62 m away</td><td>Reels you in while gravity drops to 40%, with a top speed of 25 m/s, and lets go when you arrive or swing past. Release to fly; <kbd>Space</kbd> on the rope launches you upward. Aimed at a drone or warden (it snaps onto one near your crosshair; the dot turns orange), it pulls <em>you</em> to the enemy and holds it in the air. Aimed at a walker it hooks onto the hull and follows it. Aimed at a crate or a roller it yanks that to you.</td></tr>
+<tr><td>Grapple kick</td><td>Grapple a drone, then <kbd>F</kbd> on the rope or within a second of arriving</td><td>Kills a drone instantly, takes half a warden's health, and briefly slows time.</td></tr>
 <tr><td>Kick</td><td><kbd>F</kbd></td><td>Launches props, hurts and stuns enemies (much harder while sliding) and bats enemy orbs back. Kick a wall in mid-air to push yourself off it.</td></tr>
 <tr><td>Lean</td><td>Hold <kbd>Q</kbd> or <kbd>E</kbd></td><td>Tilts your head and moves your eyes up to 0.6 m sideways to peek and shoot around cover, never through walls.</td></tr>
 <tr><td>Launch pads</td><td>Step on a glowing pad</td><td>Throw you high and forward. Bodies and rolling enemies get thrown too.</td></tr>
@@ -3258,18 +3262,20 @@ int main(void) {
 <div class="tw"><table><thead><tr><th>Enemy</th><th>Health</th><th>Behaviour</th></tr></thead><tbody>
 <tr><td>Drone</td><td>45</td><td>Circles you at range and fires slow orange orbs that lead your movement. Its eye flashes red just before it shoots. Shoot orbs down or kick them back.</td></tr>
 <tr><td>Roller</td><td>35</td><td>A rolling physics ball that chases you, hops onto ledges, and arms itself when it gets within 2.5 m. It explodes when it dies, however it dies, hurting anything nearby, other enemies included.</td></tr>
+<tr><td>Walker</td><td>Control panel: 170</td><td>A slow, low two-legged robot with a hollow hull, from wave 3 on every other wave. Its armour shrugs off everything from outside; the only weak spot is the control panel inside. Jump onto the rear step, kick in the back door with <kbd>F</kbd> and shoot the panel, or put a gravity well inside. You can stand on its roof and ride it. Two side lasers track you slowly for 2 s and do 42 damage each. A miss sets the ground on fire, and fire spreads and burns for about 15 health a second. It can't aim at you while you are on or inside it. When the panel goes, the walker blows apart into physics wreckage.</td></tr>
 <tr><td>Warden</td><td>230</td><td>A heavy flyer that stops, tracks you with a thin red laser for 1.45 s, locks for 0.34 s (the beam flickers) and fires for 26 damage. Move out of the line once it locks. A kick, grapple yank or blast that stuns it cancels the shot.</td></tr>
 </tbody></table></div>
 <p>From wave 4 on, enemies get 7% more health each wave. Destroyed enemies break into physics debris you can kick around.</p>
 <h2 id="newtshooter--arena-and-scoring">Arena and scoring</h2>
-<p>Wave <em>n</em> brings 2 + <em>n</em> drones (up to 13), about 1.2 × <em>n</em> rollers (up to 10) and a warden for every two waves after the first (up to 4). Clearing a wave scores 250 × the wave number and restores 25 health. Health also regenerates 4 s after you were last hit, and drones and wardens sometimes drop health orbs worth 15.</p>
-<p>Kills score 100 (drone), 75 (roller) or 250 (warden), plus style bonuses for how you got them. Each kill within 4 s of the last raises a chain multiplier by 0.15, up to ×4.</p>
+<p>Wave <em>n</em> brings 2 + <em>n</em> drones (up to 13), about 1.2 × <em>n</em> rollers (up to 10) and a warden for every two waves after the first (up to 4), and a walker on wave 3 and every odd wave after it (two from wave 9). Clearing a wave scores 250 × the wave number and restores 25 health. Health also regenerates 4 s after you were last hit, and drones and wardens sometimes drop health orbs worth 15.</p>
+<p>Kills score 100 (drone), 75 (roller), 250 (warden) or 1000 (walker), plus style bonuses for how you got them. Each kill within 4 s of the last raises a chain multiplier by 0.15, up to ×4.</p>
 <div class="tw"><table><thead><tr><th>Style</th><th>Bonus</th><th>When</th></tr></thead><tbody>
 <tr><td>Newton's law</td><td>150</td><td>Killed by an impact: a thrown crate, debris, or a wall</td></tr>
 <tr><td>Return to sender</td><td>150</td><td>Killed by its own orb, kicked back</td></tr>
 <tr><td>Chain reaction</td><td>120</td><td>Killed by an exploding roller</td></tr>
 <tr><td>Boot / Slide kick</td><td>120</td><td>Killed by a kick</td></tr>
 <tr><td>Event horizon</td><td>100</td><td>Killed by a gravity well</td></tr>
+<tr><td>Grapple kick</td><td>250</td><td>Killed by a kick after grappling to it</td></tr>
 <tr><td>Get over here</td><td>100</td><td>Killed by a grapple yank</td></tr>
 <tr><td>Wall runner, Swinger, Slide kill, Airborne</td><td>100, 100, 75, 60</td><td>You were wall-running, on the rope, sliding, or in the air</td></tr>
 <tr><td>Speed demon</td><td>80</td><td>You were moving faster than 20 m/s</td></tr>
@@ -3279,7 +3285,7 @@ int main(void) {
 <tr><td>Core hit</td><td>40</td><td>The last hit was on the glowing core</td></tr>
 <tr><td>Double, triple, quad, mega kill</td><td>100 per extra kill</td><td>Kills less than 0.7 s apart</td></tr>
 </tbody></table></div>
-<p>Shooting down an orb scores 25 and kicking one back 120. The results screen shows your score, wave, kills, top speed, time survived and the style that earned you the most.</p>
+<p>Shooting down an orb scores 25, kicking one back 120 and kicking in a walker's door 100. The results screen shows your score, wave, kills, top speed, time survived and the style that earned you the most.</p>
 <h2 id="newtshooter--the-courses">The courses</h2>
 <p>Both courses run in the sky over floating platforms. The clock starts when you first move and keeps real time, so slow motion is no shortcut. Fall off and you reappear at the last checkpoint; targets you already hit stay hit.</p>
 <h3 id="newtshooter--sky-trial">Sky Trial</h3>
@@ -3290,7 +3296,7 @@ int main(void) {
 <h2 id="newtshooter--settings-and-saves">Settings and saves</h2>
 <p>Settings has mouse sensitivity, field of view (75–120°, measured horizontally on a 16:9 screen; it widens a little more at speed), sound and music volume, graphics quality and inverted mouse Y. <em>High</em> renders at up to 1.5× pixel density with a 2048 × 2048 shadow map; <em>Fast</em> renders at 0.75× with a 1024 × 1024 one. Settings together with your best arena score, both best course times and whether you have seen the tutorial, are kept in this browser's local storage under <code>newtshooter-settings</code> and <code>newtshooter-best</code>.</p>
 <h2 id="newtshooter--how-it-works">How it works</h2>
-<p>Everything lives in <code>games/newtshooter/index.html</code>, about 180 KB of HTML, CSS and JavaScript. The only thing it loads from elsewhere is its fonts.</p>
+<p>Everything lives in <code>games/newtshooter/index.html</code>, about 200 KB of HTML, CSS and JavaScript. The only thing it loads from elsewhere is its fonts.</p>
 <ul>
 <li><strong>Rendering</strong>: WebGL2. The level is one merged mesh of boxes and ramps with procedural lab-panel, wall-run and tech materials drawn in the fragment shader. Moving objects are instanced cubes and spheres. A directional shadow map follows the camera with 3 × 3 filtered samples, then ACES tone mapping, distance fog, a gradient sky and additive glow effects. The weapon is drawn in a second pass with its own field of view.</li>
 <li><strong>Physics</strong>: rigid boxes and spheres with real rotation and inertia. Box corners and spheres collide with the static world; bodies collide with each other through corner-in-box and sphere tests. Contacts are solved with sequential impulses with friction and restitution, and resting bodies go to sleep. Everything steps at 120 Hz, with the world and the player on separate clocks so slow motion can scale them differently.</li>
@@ -3776,7 +3782,7 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
     <div class="poster ns">
       <span class="tag">3D · WebGL2 · sound on</span>
       <strong>NewtShooter</strong>
-      <span>One 180 KB file. Needs a keyboard and mouse.</span>
+      <span>One 200 KB file. Needs a keyboard and mouse.</span>
       <button class="btn primary" type="button" data-launch>Start the game</button>
     </div>
   </div>
@@ -3787,11 +3793,11 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
     </div>
     <div>
       <h2>Physics does the damage</h2>
-      <p>The Newton-9 rifle pushes whatever it hits, the Momentum shotgun shoves you backwards (aim down to blast-jump), and the Singularity launcher opens gravity wells that pull drones and crates together before they burst. Kick a crate into a drone and the crate does the work. Modes: a guided tutorial, Arena waves, the Sky Trial and the 1.2 km Sky Marathon.</p>
+      <p>The Newton-9 rifle pushes whatever it hits, the Momentum shotgun shoves you backwards (aim down to blast-jump), and the Singularity launcher opens gravity wells that pull drones and crates together before they burst. Kick a crate into a drone and the crate does the work, grapple to a drone and kick it out of the sky, or break into a walker and shoot it from the inside. Modes: a guided tutorial, Arena waves, the Sky Trial and the 1.2 km Sky Marathon.</p>
     </div>
     <div>
       <h2>Controls</h2>
-      <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move · <kbd>Space</kbd> jump · <kbd>C</kbd> slide · <kbd>Shift</kbd> dash · <kbd>V</kbd> grapple · <kbd>F</kbd> kick · <kbd>Q</kbd>/<kbd>E</kbd> lean · <kbd>G</kbd> slow time · <kbd>1</kbd>–<kbd>3</kbd> weapons · <kbd>R</kbd> reload · <kbd>Esc</kbd> pause · <kbd>Enter</kbd> skip a tutorial step. <a href="#/docs/newtshooter">Full guide</a>.</p>
+      <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move · <kbd>Space</kbd> jump · <kbd>C</kbd> slide · <kbd>Shift</kbd> sprint, tap to dash · <kbd>V</kbd> grapple · <kbd>F</kbd> kick · <kbd>Q</kbd>/<kbd>E</kbd> lean · <kbd>G</kbd> slow time · <kbd>1</kbd>–<kbd>3</kbd> weapons · <kbd>R</kbd> reload · <kbd>Esc</kbd> pause · <kbd>Enter</kbd> skip a tutorial step. <a href="#/docs/newtshooter">Full guide</a>.</p>
     </div>
   </div>
 </main>
