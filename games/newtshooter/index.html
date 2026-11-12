@@ -1074,7 +1074,7 @@ const P={pos:v3(),vel:v3(),yaw:0,pitch:0,h:1.8,eyeCur:1.62,grounded:false,wasGro
   wr:{on:false,n:v3(),t:0,s:null},lastWall:null,lastWallN:v3(),lastWallT:-9,wallTouchT:-9,wallN:v3(),
   climb:{on:false,t:0,used:false,n:v3()},mantle:{on:false,t:0,dur:.25,from:v3(),to:v3(),exit:v3()},
   dash:{ch:2,t:0},grap:{on:false,anchor:v3(),len:0,t:0,cd:0,show:0,end:v3(),body:null},
-  lean:0,leanOff:0,comboT:0,comboE:null,onWalker:null,_py:0,charge:0,hp:100,hurtT:-9,alive:true,kickCd:0,kickT:0,padCd:0,roll:0,bob:0,bobAmp:0,dip:0,dipV:0,fovKick:0,shake:0,stepT:0,
+  lean:0,leanOff:0,comboT:0,comboE:null,onWalker:null,_py:0,onLadder:false,ladderW:null,ladderHold:false,charge:0,hp:100,hurtT:-9,alive:true,kickCd:0,kickT:0,padCd:0,roll:0,bob:0,bobAmp:0,dip:0,dipV:0,fovKick:0,shake:0,stepT:0,
   airT:0,peakFall:0,topSpeed:0,_ground:false,_gN:v3(0,1,0),_gS:null,_wall:false,_wallN:v3(),_wallS:null};
 let NOW=0; // real seconds since load
 const QP2=[],QF=[],QM=[];
@@ -1139,7 +1139,7 @@ function movePlayer(dt){
     if(hc-p.y<=.75||prevY>=hc-.75){p.y=hc;P._ground=true;P._gN.copy(s.n);P._gS=s}
   }
   // stick to the floor when walking down slopes and steps
-  if(!P._ground&&P.wasGrounded&&!P.jumped&&P.dash.t<=0&&P.padCd<=0&&!P.grap.on){
+  if(!P._ground&&P.wasGrounded&&!P.jumped&&P.dash.t<=0&&P.padCd<=0&&!P.grap.on&&!P.ladderHold){
     const sb=supportBelow(.5);if(sb){p.y=sb.y;P._ground=true;P._gN.copy(sb.n);P._gS=sb.s}
   }
   // standing still on a floor: confirm contact
@@ -1293,7 +1293,8 @@ function playerStep(dt){
     }
   }
   if(P.grap.on)grappleForces(dt);
-  if(!P.wr.on&&!P.climb.on&&P.dash.t<=0)v.y-=MV.G*dt*(P.grap.on?.4:1);
+  P.ladderHold=P.onLadder;
+  if(!P.wr.on&&!P.climb.on&&P.dash.t<=0&&!P.onLadder)v.y-=MV.G*dt*(P.grap.on?.4:1);
   hs=Math.hypot(v.x,v.z);if(hs>MV.MAXH){v.x*=MV.MAXH/hs;v.z*=MV.MAXH/hs}
   if(v.y<-56)v.y=-56;
   // ---- move ----
@@ -1301,7 +1302,7 @@ function playerStep(dt){
   const vyBefore=v.y;
   P._py=P.pos.y;
   movePlayer(dt);
-  playerWalkers();
+  playerWalkers(dt);
   if(P._wall&&!P.grounded){P.wallTouchT=NOW;P.wallN.copy(P._wallN)}
   if(P.grounded&&!P.wasGrounded){
     const imp=-vyBefore;P.airJumps=1;P.climb.used=false;P.climb.on=false;P.lastWall=null;endWallrun(0);P.justLanded=true;
@@ -1448,7 +1449,7 @@ function doKick(){
     if(b.kind==='target'){hitTarget(b,d);hit=true;continue}
     _t2.copy(d).scale((30+b.mass*2)*strong);_t2.y+=(7+b.mass*.5)*strong;impulseAt(b,_t2,_t3.copy(b.pos).addS(d,-b.br*.4).addS(UP,.2));hit=true;
   }
-  for(const w of walkers){if(!w.alive||w.doorOpen)continue;const dc=wWorld(w,_w1.set(0,2.4+WH,3.35),_w1),to=_t1.subV(dc,eye),dist=to.len();if(dist<2.9&&to.dot(d)/dist>.35){kickDoor(w,d);hit=true}}
+  for(const w of walkers){if(!w.alive||w.doorOpen)continue;const dc=wWorld(w,_w1.copy(HATCH),_w1),to=_t1.subV(dc,eye),dist=to.len();if(dist<3.1&&to.dot(d)/dist>.3){kickDoor(w,d);hit=true}}
   for(const e of enemies){
     if(!e.alive||e.body)continue;const to=_t1.subV(e.pos,eye),dist=to.len();if(dist>2.8+e.r)continue;to.scale(1/dist);if(to.dot(d)<.4)continue;
     kickEnemy(e,d,strong);hit=true}
@@ -1877,15 +1878,17 @@ function pendulumsStep(dt){
 let walkers=[],fires=[];
 // hull parts in the walker's own frame: [x0,y0,z0,x1,y1,z1,kind]; forward is -z
 const WK=[
-  [-3,1.1,-3.5,3,1.4,3.5,'floor'],[-3,3.8,-3.5,3,4.1,3.5,'roof'],
-  [-3,1.4,-3.5,-2.7,3.8,3.5,'hull'],[2.7,1.4,-3.5,3,3.8,3.5,'hull'],[-2.7,1.4,-3.5,2.7,3.8,-3.2,'hull'],
-  [-2.7,1.4,3.2,-.8,3.8,3.5,'hull'],[.8,1.4,3.2,2.7,3.8,3.5,'hull'],[-.8,3.4,3.2,.8,3.8,3.5,'hull'],
-  [-.8,1.4,3.25,.8,3.4,3.45,'door'],[-1.6,1.2,3.5,1.6,1.4,4.8,'porch'],
+  [-3,1.1,-3.5,3,1.4,3.5,'floor'],
+  // roof around a 1.6 m hatch near the back
+  [-3,3.8,-3.5,3,4.1,1.2,'roof'],[-3,3.8,2.8,3,4.1,3.5,'roof'],[-3,3.8,1.2,-.8,4.1,2.8,'roof'],[.8,3.8,1.2,3,4.1,2.8,'roof'],
+  [-.8,3.95,1.2,.8,4.18,2.8,'door'], // the hatch lid: kick it in from the roof
+  [-3,1.4,-3.5,-2.7,3.8,3.5,'hull'],[2.7,1.4,-3.5,3,3.8,3.5,'hull'],[-2.7,1.4,-3.5,2.7,3.8,-3.2,'hull'],[-2.7,1.4,3.2,2.7,3.8,3.5,'hull'],
   [-.8,1.7,-3.2,.8,2.8,-2.95,'panel'],[-3.9,2.5,-1.6,-3,3.3,.6,'turret'],[3,2.5,-1.6,3.9,3.3,.6,'turret']];
 const WH=4.6; // long legs: the whole hull rides about 6 m up
 for(const b of WK){b[1]+=WH;b[4]+=WH}
-// a boarding stair hangs off the rear porch: each step 1.2 m higher and closer, never overhead
-for(let k=0;k<4;k++){const y=1.2*(k+1),z0=4.95+1.2*(3-k);WK.push([-1.05,y-.2,z0,1.05,y,z0+(k?1.2:2),'step'])}
+// ladders: one up the back from the ground to the roof, one inside under the hatch
+const LADDERS=[{x0:-.6,x1:.6,z0:3.45,z1:4.4,y0:0,y1:4.1+WH,exitZ:3.05,exitY:4.18+WH},{x0:-.8,x1:.8,z0:1.2,z1:2.8,y0:1.3+WH,y1:4.1+WH,exitZ:3.15,exitY:4.18+WH,inside:true}];
+const HATCH=v3(0,4.07+WH,2);
 const LEG={hip:5.55,L1:3.75,L2:3.75,stride:5.6,lift:1.5,hx:2.5,fx:3.4};
 function ik2(hy,hz,fy,fz,L1,L2){const dz=fz-hz,dy=fy-hy;let d=Math.max(1e-3,Math.min(Math.hypot(dz,dy),L1+L2-1e-3));const a=(L1*L1-L2*L2+d*d)/(2*d),h=Math.sqrt(Math.max(0,L1*L1-a*a)),uz=(fz-hz)/Math.hypot(dz,dy||1e-6),uy=dy/Math.hypot(dz,dy||1e-6);let pz=-uy,py=uz;if(pz<0){pz=-pz;py=-py}return [hy+uy*a+py*h,hz+uz*a+pz*h]}
 const _w1=new V3(),_w2=new V3(),_w3=new V3();
@@ -1930,9 +1933,9 @@ function walkerHit(w,dmg){
 }
 function kickDoor(w,d){
   w.doorOpen=true;
-  const dc=wWorld(w,_w1.set(0,2.4+WH,3.35),v3());
-  addBody(new Body('b',dc,{h:v3(.8,1,.1),mass:4,kind:'debris',life:10,col:[.5,.52,.56],q:qAxis(0,1,0,w.yaw),vel:v3(d.x*14,4,d.z*14),w:v3(rand(-4,4),rand(-6,6),rand(-4,4))}));
-  SFX.clank(dc,30);SFX.kick();flashMove('DOOR KICKED');P.shake=Math.max(P.shake,.35);
+  const dc=wWorld(w,_w1.copy(HATCH),v3());
+  addBody(new Body('b',dc,{h:v3(.8,.11,.8),mass:4,kind:'debris',life:10,col:[.55,.57,.6],q:qAxis(0,1,0,w.yaw),vel:v3(d.x*6,9,d.z*6),w:v3(rand(-4,4),rand(-6,6),rand(-4,4))}));
+  SFX.clank(dc,30);SFX.kick();flashMove('HATCH KICKED');P.shake=Math.max(P.shake,.35);
   addStyle('BREACH',100,'s');if(GAME.mode==='arena')GAME.score+=100;
 }
 function destroyWalker(w,info){
@@ -1982,9 +1985,11 @@ function walkersStep(dt){
     if(!w.alive)continue;w.flash-=dt;
     const px=P.pos.x-w.pos.x,pz=P.pos.z-w.pos.z,d=Math.hypot(px,pz);
     let da=Math.atan2(-px,-pz)-w.yaw;while(da>Math.PI)da-=TAU;while(da<-Math.PI)da+=TAU;
-    const close=d<7.5&&P.onWalker!==w&&P.alive;
-    const turn=P.onWalker===w||(close&&d<4.5)?0:clamp(da,-.35*dt,.35*dt);w.yaw+=turn;w.dYaw=turn;
-    let sp=d>13&&Math.abs(da)<.9&&P.onWalker!==w?1.7:0,mx=-Math.sin(w.yaw),mz=-Math.cos(w.yaw);
+    // hold still while the player is on it, climbing it, or in the air next to it
+    const boarding=P.onWalker===w||P.ladderW===w||(d<12&&P.pos.y>1.2);
+    const close=!boarding&&d<7.5&&P.alive;
+    const turn=boarding||d<9?0:clamp(da,-.35*dt,.35*dt);w.yaw+=turn;w.dYaw=turn;
+    let sp=!boarding&&d>13&&Math.abs(da)<.9?1.7:0,mx=-Math.sin(w.yaw),mz=-Math.cos(w.yaw);
     if(close){ // too close: shuffle so the next foot comes down on the player
       const rx=Math.cos(w.yaw),rz=-Math.sin(w.yaw),side=px*rx+pz*rz>=0?1:-1,tx=px-rx*side*LEG.fx,tz=pz-rz*side*LEG.fx,tl=Math.hypot(tx,tz);
       if(tl>.4){mx=tx/tl;mz=tz/tl;sp=1.5}else{sp=0;w.dist+=1.6*dt}}
@@ -2003,14 +2008,15 @@ function walkersStep(dt){
       if(P.alive&&Math.hypot(P.pos.x-fp.x,P.pos.z-fp.z)<2.6&&P.pos.y<1.6){hurt(35,fp);const kx=P.pos.x-fp.x,kz=P.pos.z-fp.z,kl=Math.hypot(kx,kz)||1;P.vel.x+=kx/kl*14;P.vel.z+=kz/kl*14;P.vel.y=7;P.grounded=false;P.jumped=true;flashMove('STOMPED')}}
     for(const b of bodies){if(b.dead||b.pinned)continue;const bx=b.pos.x-w.pos.x,bz=b.pos.z-w.pos.z,bd=Math.hypot(bx,bz);
       if(bd<3.8+b.br&&b.pos.y<4.5&&bd>1e-3){b.wake();b.pos.x+=bx/bd*(3.8+b.br-bd)*.5;b.pos.z+=bz/bd*(3.8+b.br-bd)*.5;b.vel.x+=bx/bd*4;b.vel.z+=bz/bd*4}}
-    const outside=d>6&&P.onWalker!==w;
+    const outside=d>6&&P.onWalker!==w&&P.ladderW!==w;
+    const fwx=-Math.sin(w.yaw),fwz=-Math.cos(w.yaw),inArc=v=>{const l=Math.hypot(v.x,v.z)||1;return (v.x*fwx+v.z*fwz)/l>.42}; // guns cover +-65 deg ahead
     const tgt=_w2.set(P.pos.x,P.pos.y+1.1,P.pos.z);
     for(const g of w.guns){
       g.t-=dt;const tip=wWorld(w,_w1.set(g.side*3.45,2.9+WH,-3.4),g.tip||(g.tip=v3()));
       const want=_w3.subV(tgt,tip).norm();
       switch(g.st){
-        case 'cool':if(g.t<=0&&outside&&P.alive){const los=rayStatic(tip,want,Math.max(0,tgt.dist(tip)-.6));if(!los){g.st='aim';g.t=2;g.dir.copy(want);SFX.laserCharge(tip)}else g.t=.5}break;
-        case 'aim':g.dir.addS(want,Math.min(1,1.1*dt)).norm();if(g.t<=0){g.st='lock';g.t=.45}break;
+        case 'cool':if(g.t<=0&&outside&&P.alive&&inArc(want)){const los=rayStatic(tip,want,Math.max(0,tgt.dist(tip)-.6));if(!los){g.st='aim';g.t=2;g.dir.copy(want);SFX.laserCharge(tip)}else g.t=.5}break;
+        case 'aim':if(!inArc(want)||!outside){g.st='cool';g.t=1;break}g.dir.addS(want,Math.min(1,1.1*dt)).norm();if(g.t<=0){g.st='lock';g.t=.45}break;
         case 'lock':if(g.t<=0){fireWalkerLaser(w,g,tip);g.st='fire';g.t=.3}break;
         case 'fire':if(g.t<=0){g.st='cool';g.t=rand(3,4.5)}break;
       }
@@ -2020,11 +2026,11 @@ function walkersStep(dt){
   if(walkers.some(w=>!w.alive))walkers=walkers.filter(w=>w.alive);
 }
 // the player against walker hulls: stand on them (and ride along), get blocked by walls
-function playerWalkers(){
+function playerWalkers(dt){
   const w0=P.onWalker;
   if(w0&&w0.alive){const ox=P.pos.x-(w0.pos.x-w0.dPos.x),oz=P.pos.z-(w0.pos.z-w0.dPos.z),c=Math.cos(w0.dYaw),s=Math.sin(w0.dYaw);
     P.pos.x=w0.pos.x+ox*c+oz*s;P.pos.z=w0.pos.z-ox*s+oz*c;P.yaw+=w0.dYaw;w0.dPos.set(0,0,0);w0.dYaw=0}
-  P.onWalker=null;
+  P.onWalker=null;P.onLadder=false;P.ladderW=null;
   for(const w of walkers){
     if(!w.alive||Math.hypot(P.pos.x-w.pos.x,P.pos.z-w.pos.z)>14)continue;
     const L=wLocal(w,P.pos,_w1),r=MV.HW+.02,h=P.h,py0=P._py;
@@ -2038,6 +2044,19 @@ function playerWalkers(){
       else{const c4=[[L.x-b[0],-1,0],[b[3]-L.x,1,0],[L.z-b[2],0,-1],[b[5]-L.z,0,1]].sort((a,b2)=>a[0]-b2[0])[0];nx=c4[1];nz=c4[2];pen=c4[0]+r}
       L.x+=nx*pen;L.z+=nz*pen;
       const wn=wDirW(w,nx,nz,_w2),vn=P.vel.x*wn.x+P.vel.z*wn.z;if(vn<0){P.vel.x-=wn.x*vn;P.vel.z-=wn.z*vn}
+    }
+    // ladders: hold W or Space to climb, S to go down; you step off onto the roof at the top
+    const up=IN.keys.KeyW||IN.keys.Space,down=IN.keys.KeyS&&!up;
+    for(const ld of LADDERS){
+      if((ld.inside&&!w.doorOpen)||L.x<ld.x0-.25||L.x>ld.x1+.25||L.z<ld.z0-.25||L.z>ld.z1+.25||L.y<ld.y0||L.y>ld.y1+.2)continue;
+      if(!up&&!down&&!(P.ladderHold&&L.y>ld.y0+.3))continue;
+      if((IN.keys.KeyA||IN.keys.KeyD)&&!up)continue; // step off sideways
+      P.onLadder=true;P.ladderW=w;P.onWalker=w;P.vel.set(0,0,0);P.airJumps=1;P.climb.used=false;if(up)P.grounded=false;
+      const cx=(ld.x0+ld.x1)/2,cz=ld.inside?(ld.z0+ld.z1)/2:(ld.z0+.45);L.x+=(cx-L.x)*Math.min(1,10*dt);L.z+=(cz-L.z)*Math.min(1,10*dt);
+      if(up)L.y+=4.6*dt;else if(down)L.y=Math.max(ld.y0+.01,L.y-3.4*dt);
+      if(L.y>=ld.exitY-1.0){L.y=ld.exitY+.01;L.z=ld.exitZ;L.x=0;P.grounded=true;P.coyote=.12;flashMove('ON TOP')}
+      else if(up&&P.stepT<=0){P.stepT=1.3;SFX.step()}
+      break;
     }
     wWorld(w,L,P.pos);
   }
@@ -2057,12 +2076,16 @@ function drawWalkers(C,FC){
     const H=WH,dk=[.16,.17,.2],or=[.85,.4,.12],st=[.42,.45,.5];
     part(0,3+H,-3.53,4,.45,.05,[1,.3,.2],1);                                  // visor
     part(-2.3,2.1+H,-3.53,.5,.3,.05,[1,.95,.8],1);part(2.3,2.1+H,-3.53,.5,.3,.05,[1,.95,.8],1); // headlights
-    part(0,3.77+H,0,3.6,.04,4.5,[1,.9,.75],.8);                               // cabin light
+    part(0,3.77+H,-1.2,3.6,.04,3.8,[1,.9,.75],.8);                            // cabin light
     for(const sd of [-1,1]){part(sd*3.06,1.95+H,0,.12,.9,6.2,st,0);part(sd*3.06,1.55+H,0,.14,.12,6.4,[1,.76,.08],.15)} // armour skirts
     part(1.6,4.1+H+.9,1.8,.06,1.8,.06,dk,0);part(1.6,4.1+H+1.8,1.8,.16,.16,.16,[1,.3,.2],Math.sin(NOW*5)>0?1:.2); // antenna
     for(const sd of [-1,1]){part(sd*1.6,4.1+H+.45,2.9,.45,.9,.45,dk,0);part(sd*1.6,4.1+H+.92,2.9,.5,.06,.5,or,.2)} // exhausts
-    for(const sd of [-1,1]){const a=wWorld(w,_w2.set(sd*1.1,1.3+WH,4.9),v3()),b2=wWorld(w,_w3.set(sd*1.1,1.1,9.75),v3());C.beam(a,b2,.12,.16,.17,.2,0);const c2=wWorld(w,_w2.set(sd*1.1,1.6,9.6),v3()),d2=wWorld(w,_w3.set(sd*1.1,5,9.6),v3());C.beam(c2,d2,.08,.16,.17,.2,0)} // stair stringers
-    if(!w.doorOpen)part(0,2.4+H,3.47,1.2,.12,.03,[1,.6,.1],.9);
+    // ladders: up the back, and inside under the hatch
+    for(const sd of [-1,1]){const a=wWorld(w,_w2.set(sd*.5,4.1+H,3.62),v3()),b2=wWorld(w,_w3.set(sd*.5,.3,3.62),v3());C.beam(a,b2,.09,.16,.17,.2,0);
+      const c2=wWorld(w,_w2.set(sd*.5,4.1+H,2.72),v3()),d2=wWorld(w,_w3.set(sd*.5,1.4+H,2.72),v3());C.beam(c2,d2,.07,.16,.17,.2,0)}
+    for(let y=.6;y<4.1+H;y+=.45)part(0,y,3.62,1.05,.06,.06,y>1.6+H?[.42,.45,.5]:[1,.76,.08],0);
+    for(let y=1.8+H;y<4.1+H;y+=.45)part(0,y,2.72,.95,.05,.05,[.42,.45,.5],0);
+    if(!w.doorOpen){part(0,4.19+H,2,1.3,.03,.15,[1,.6,.1],.9);part(0,4.19+H,2,.15,.03,1.3,[1,.6,.1],.9)}else{for(const sd of [-1,1]){part(sd*.88,4.12+H,2,.12,.03,1.8,[1,.6,.1],.6);part(0,4.12+H,2+sd*.88,1.8,.03,.12,[1,.6,.1],.6)}} // hatch markings
     for(const g of w.guns){
       part(g.side*3.45,2.9+H,-2.5,.3,.3,1.8,dk,0);
       part(g.side*3.45,2.9+H,-3.42,.34,.34,.08,[1,.45,.15],g.st==='aim'||g.st==='lock'?1:.4);
