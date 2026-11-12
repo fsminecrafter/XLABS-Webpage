@@ -1213,7 +1213,7 @@ function playerStep(dt){
   let wx=-sy*fw+cy*st,wz=-cy*fw-sy*st;const wl=Math.hypot(wx,wz);if(wl>0){wx/=wl;wz/=wl}
   const wish=wl>0;
   P.sprint=(k.ShiftLeft||k.ShiftRight)&&performance.now()-(IN.shiftDown||0)>200&&fw>0&&!P.crouch;
-  P.comboT-=dt;
+  P.comboT-=dt;P.hatchCd=(P.hatchCd||0)-dt;
   P.coyote-=dt;P.jumpBuf-=dt;P.slideCd-=dt;P.padCd-=dt;P.kickCd-=dt;P.kickT-=dt;P.grap.cd-=dt;
   if(P.dash.ch<2){P.dash.ch=Math.min(2,P.dash.ch+dt/MV.DASH_RC)}
   // ---- mantle animation ----
@@ -2034,10 +2034,13 @@ function playerWalkers(dt){
   for(const w of walkers){
     if(!w.alive||Math.hypot(P.pos.x-w.pos.x,P.pos.z-w.pos.z)>14)continue;
     const L=wLocal(w,P.pos,_w1),r=MV.HW+.02,h=P.h,py0=P._py;
+    // over the open hatch: drop in instead of standing on its rim
+    const inHatch=w.doorOpen&&L.x>-.8&&L.x<.8&&L.z>1.2&&L.z<2.8&&L.y>2.5+WH&&!P.ladderHold&&!(P.hatchCd>0);
+    if(inHatch){if(P.vel.y>-5)P.vel.y=-5;P.ladderRelease=true} // and don't grab the inner ladder until you let go of W/Space
     for(const b of WK){
       if(!wActive(w,b)||L.y>=b[4]||L.y+h<=b[1])continue;
       const cx=clamp(L.x,b[0],b[3]),cz=clamp(L.z,b[2],b[5]),dx=L.x-cx,dz=L.z-cz,d2=dx*dx+dz*dz;if(d2>=r*r)continue;
-      if(py0>=b[4]-.35&&P.vel.y<=2){L.y=b[4];if(P.vel.y<0)P.vel.y=0;if(!P.grounded){P.grounded=true;P.airJumps=1;P.climb.used=false}P.onWalker=w;P.coyote=.12;continue}
+      if(py0>=b[4]-.35&&P.vel.y<=2&&!(inHatch&&b[6]==='roof')){L.y=b[4];if(P.vel.y<0)P.vel.y=0;if(!P.grounded){P.grounded=true;P.airJumps=1;P.climb.used=false}P.onWalker=w;P.coyote=.12;continue}
       if(py0+h<=b[1]+.15&&P.vel.y>0){L.y=b[1]-h;P.vel.y=0;continue}
       let nx,nz,pen;
       if(d2>1e-8){const dd=Math.sqrt(d2);nx=dx/dd;nz=dz/dd;pen=r-dd}
@@ -2046,15 +2049,17 @@ function playerWalkers(dt){
       const wn=wDirW(w,nx,nz,_w2),vn=P.vel.x*wn.x+P.vel.z*wn.z;if(vn<0){P.vel.x-=wn.x*vn;P.vel.z-=wn.z*vn}
     }
     // ladders: hold W or Space to climb, S to go down; you step off onto the roof at the top
-    const up=IN.keys.KeyW||IN.keys.Space,down=IN.keys.KeyS&&!up;
+    const up=IN.keys.KeyW||IN.keys.Space,down=IN.keys.KeyS&&!up;if(!up)P.ladderRelease=false;
     for(const ld of LADDERS){
       if((ld.inside&&!w.doorOpen)||L.x<ld.x0-.25||L.x>ld.x1+.25||L.z<ld.z0-.25||L.z>ld.z1+.25||L.y<ld.y0||L.y>ld.y1+.2)continue;
-      if(!up&&!down&&!(P.ladderHold&&L.y>ld.y0+.3))continue;
+      if(!P.ladderHold){ // grabbing: climb up from below (not from the roof, not while falling), or S to climb down
+        if(down){}else if(up){if(L.y>ld.y1-1||P.vel.y<-1||P.ladderRelease)continue}else continue}
+      else if(!up&&!down&&L.y<=ld.y0+.3)continue;
       if((IN.keys.KeyA||IN.keys.KeyD)&&!up)continue; // step off sideways
       P.onLadder=true;P.ladderW=w;P.onWalker=w;P.vel.set(0,0,0);P.airJumps=1;P.climb.used=false;if(up)P.grounded=false;
       const cx=(ld.x0+ld.x1)/2,cz=ld.inside?(ld.z0+ld.z1)/2:(ld.z0+.45);L.x+=(cx-L.x)*Math.min(1,10*dt);L.z+=(cz-L.z)*Math.min(1,10*dt);
       if(up)L.y+=4.6*dt;else if(down)L.y=Math.max(ld.y0+.01,L.y-3.4*dt);
-      if(L.y>=ld.exitY-1.0){L.y=ld.exitY+.01;L.z=ld.exitZ;L.x=0;P.grounded=true;P.coyote=.12;flashMove('ON TOP')}
+      if(up&&L.y>=ld.exitY-1.0){if(ld.inside)P.hatchCd=1.2;L.y=ld.exitY+.01;L.z=ld.exitZ;L.x=0;P.grounded=true;P.coyote=.12;flashMove('ON TOP')}
       else if(up&&P.stepT<=0){P.stepT=1.3;SFX.step()}
       break;
     }
