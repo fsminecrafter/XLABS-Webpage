@@ -529,14 +529,14 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
       <div class="split rev">
         <div>
           <h3 class="big">Physics. Parkour. Firepower.</h3>
-          <p>A first-person shooter where everything obeys F = m·a, including you. Slide down ramps to build speed, wall-run, climb, grapple and dash between platforms, lean around cover, and press <kbd>G</kbd> to slow time while you line up the shot. Momentum weapons knock drones, crates and steel balls around, and the shotgun can blast you into the air.</p>
+          <p>A first-person shooter where everything obeys F = m·a, including you. Slide down ramps to build speed, wall-run, climb, grapple and dash between platforms, lean around cover, and press <kbd>G</kbd> to slow time while you line up the shot. Momentum weapons knock drones, crates and steel balls around, and the shotgun can blast you into the air. A guided tutorial teaches every move, then take on the Arena, the Sky Trial or the 1.2 km Sky Marathon.</p>
           <div class="btns"><a class="btn" href="#/newtshooter">Open full page</a><a class="btn" href="games/newtshooter/" target="_blank" rel="noopener">Open in its own tab</a><a class="btn" href="#/docs/newtshooter">Guide</a></div>
         </div>
         <div class="embed" data-sandbox data-src="games/newtshooter/" data-title="NewtShooter">
           <div class="poster ns">
             <span class="tag">3D · WebGL2 · sound on</span>
             <strong>NewtShooter</strong>
-            <span>One 170 KB file. Needs a keyboard and mouse.</span>
+            <span>One 180 KB file. Needs a keyboard and mouse.</span>
             <button class="btn primary" type="button" data-launch>Start the game</button>
           </div>
         </div>
@@ -3176,8 +3176,10 @@ int main(void) {
 <p class="eyebrow">Documentation updates</p>
 <h1>What's New?</h1>
 <p class="intro">A guide to recently added and expanded documentation. Follow a link to read the new material in context.</p>
+<h2>NewtShooter: tutorial and Sky Marathon</h2>
+<p>The guide now covers the new <a href="#/docs/newtshooter/tutorial">tutorial</a> (skip any step with Enter, replay it from the title screen) and the <a href="#/docs/newtshooter/marathon">Sky Marathon</a>, a 1.2 km course with 29 checkpoints.</p>
 <h2>New game: NewtShooter</h2>
-<p>A new <a href="#/docs/newtshooter">NewtShooter guide</a> covers the physics parkour shooter on this site: the <a href="#/docs/newtshooter/controls">controls</a>, every <a href="#/docs/newtshooter/movement">movement technique</a> with its numbers, <a href="#/docs/newtshooter/slow-motion">slow motion</a>, the <a href="#/docs/newtshooter/weapons">weapons</a> and <a href="#/docs/newtshooter/enemies">enemies</a>, <a href="#/docs/newtshooter/arena-and-scoring">scoring and style bonuses</a>, the <a href="#/docs/newtshooter/the-course">Sky Trial course</a> and <a href="#/docs/newtshooter/how-it-works">how the renderer, physics and soundtrack work</a>.</p>
+<p>A new <a href="#/docs/newtshooter">NewtShooter guide</a> covers the physics parkour shooter on this site: the <a href="#/docs/newtshooter/controls">controls</a>, every <a href="#/docs/newtshooter/movement">movement technique</a> with its numbers, <a href="#/docs/newtshooter/slow-motion">slow motion</a>, the <a href="#/docs/newtshooter/weapons">weapons</a> and <a href="#/docs/newtshooter/enemies">enemies</a>, <a href="#/docs/newtshooter/arena-and-scoring">scoring and style bonuses</a>, the <a href="#/docs/newtshooter/sky-trial">Sky Trial course</a> and <a href="#/docs/newtshooter/how-it-works">how the renderer, physics and soundtrack work</a>.</p>
 <h2>Media formats and playback</h2>
 <p>The <a href="#/docs/media">Images and video guide</a> now covers the <code>.vid</code> format, its converter commands and file layout, playback, and decoding. Start with <a href="#/docs/media/making-files">making media files</a>, then read the <a href="#/docs/media/vid-layout">video layout</a> and <a href="#/docs/media/hardware-decoding">hardware decoding</a> sections.</p>
 <h2>GPU and 3D graphics</h2>
@@ -3191,13 +3193,23 @@ int main(void) {
 <h1>NewtShooter</h1>
 <p class="intro">A first-person shooter where everything obeys F = m·a, including you. It mixes physics, parkour movement and gunplay, and runs from a single HTML file with no libraries: its own WebGL2 renderer, rigid-body physics, movement controller and synthesized sound.</p>
 <div class="btns"><a class="btn primary" href="#/newtshooter">Play it here</a><a class="btn" href="games/newtshooter/" target="_blank" rel="noopener">Open in its own tab</a></div>
-<nav class="fn-index toc" aria-label="On this page"><span>On this page</span><a href="#/docs/newtshooter/getting-started">Getting started</a><a href="#/docs/newtshooter/controls">Controls</a><a href="#/docs/newtshooter/movement">Movement</a><a href="#/docs/newtshooter/slow-motion">Slow motion</a><a href="#/docs/newtshooter/weapons">Weapons</a><a href="#/docs/newtshooter/enemies">Enemies</a><a href="#/docs/newtshooter/arena-and-scoring">Arena and scoring</a><a href="#/docs/newtshooter/the-course">The course</a><a href="#/docs/newtshooter/settings-and-saves">Settings and saves</a><a href="#/docs/newtshooter/how-it-works">How it works</a></nav>
+<nav class="fn-index toc" aria-label="On this page"><span>On this page</span><a href="#/docs/newtshooter/getting-started">Getting started</a><a href="#/docs/newtshooter/tutorial">Tutorial</a><a href="#/docs/newtshooter/controls">Controls</a><a href="#/docs/newtshooter/movement">Movement</a><a href="#/docs/newtshooter/slow-motion">Slow motion</a><a href="#/docs/newtshooter/weapons">Weapons</a><a href="#/docs/newtshooter/enemies">Enemies</a><a href="#/docs/newtshooter/arena-and-scoring">Arena and scoring</a><a href="#/docs/newtshooter/the-courses">The courses</a><a href="#/docs/newtshooter/settings-and-saves">Settings and saves</a><a href="#/docs/newtshooter/how-it-works">How it works</a></nav>
 <h2 id="newtshooter--getting-started">Getting started</h2>
 <p>Open the game, pick a mode and the game captures the mouse. <kbd>Esc</kbd> releases it and pauses. It needs a keyboard and mouse and a browser with WebGL2 (current Chrome, Edge, Firefox or Safari).</p>
 <ul>
+<li><strong>Tutorial</strong>: a guided training hall that teaches one move or weapon per step. The game offers it the first time you pick a mode.</li>
 <li><strong>Arena</strong>: survive waves of drones in Inertia Hall, a walled test chamber with a tower, ramps, pillars, launch pads and plenty of loose crates and steel balls.</li>
-<li><strong>Course</strong>: the Sky Trial, a parkour time trial over floating platforms. Hints along the way teach every move, so play it first.</li>
+<li><strong>Sky Trial</strong>: a short parkour time trial over floating platforms, with a hint for each section.</li>
+<li><strong>Marathon</strong>: the long course, 1.2 km of mixed parkour with 29 checkpoints.</li>
 </ul>
+<h2 id="newtshooter--tutorial">Tutorial</h2>
+<p>The tutorial takes place in the Training Hall, a long walled corridor with one station per move. A beam of light marks the next station and the panel at the bottom says what to do. A step completes when you actually do the move: walk, jump, double jump, slide, wall-run, wall jump, climb and mantle, high jump, dash, grapple, lean, kick, shoot three targets, blast-jump with the shotgun, fire a gravity well, slow time, and finally shoot down a live drone (its orbs don't hurt you here).</p>
+<ul>
+<li><strong>Skip a step</strong>: press <kbd>Enter</kbd>. You are moved to the start of the next station, so you can never get stuck behind a wall.</li>
+<li><strong>Skip the whole tutorial</strong>: press <kbd>Esc</kbd> and choose <em>Skip tutorial</em>, or answer <em>Skip it</em> when the game offers the tutorial.</li>
+<li><strong>Replay it</strong>: the <em>Tutorial</em> button on the title screen, or <em>Replay tutorial</em> on its results screen.</li>
+</ul>
+<p>The first time you pick Arena, Sky Trial or Marathon, the game asks whether you want the tutorial first. Finishing or skipping it once stops the question.</p>
 <h2 id="newtshooter--controls">Controls</h2>
 <div class="tw"><table><thead><tr><th>Input</th><th>Action</th></tr></thead><tbody>
 <tr><td><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></td><td>Run</td></tr>
@@ -3213,6 +3225,7 @@ int main(void) {
 <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>, wheel</td><td>Switch weapon; <kbd>X</kbd> swaps to the last one</td></tr>
 <tr><td><kbd>R</kbd></td><td>Reload</td></tr>
 <tr><td><kbd>Esc</kbd></td><td>Pause</td></tr>
+<tr><td><kbd>Enter</kbd></td><td>Skip the current tutorial step</td></tr>
 </tbody></table></div>
 <h2 id="newtshooter--movement">Movement</h2>
 <p>You run at 9.6 m/s. Friction only bites hard at normal speed; above it you keep momentum for a while, and in the air nothing slows you down, so speed you build stays with you. Jumping on the frame you land skips friction entirely (bunny hopping), and air strafing works.</p>
@@ -3267,18 +3280,22 @@ int main(void) {
 <tr><td>Double, triple, quad, mega kill</td><td>100 per extra kill</td><td>Kills less than 0.7 s apart</td></tr>
 </tbody></table></div>
 <p>Shooting down an orb scores 25 and kicking one back 120. The results screen shows your score, wave, kills, top speed, time survived and the style that earned you the most.</p>
-<h2 id="newtshooter--the-course">The course</h2>
+<h2 id="newtshooter--the-courses">The courses</h2>
+<p>Both courses run in the sky over floating platforms. The clock starts when you first move and keeps real time, so slow motion is no shortcut. Fall off and you reappear at the last checkpoint; targets you already hit stay hit.</p>
+<h3 id="newtshooter--sky-trial">Sky Trial</h3>
 <p>The Sky Trial is a line of platforms in the sky, about 450 m long, in twelve sections: gaps, a slide under barriers and down a ramp, a wall-run, a wall-to-wall chain, a climb, a high jump, a grapple swing, a dash gap, a launch pad, a gate that opens when you shoot five targets, a bridge swept by wrecking balls (a good place for slow motion) and a last wall you blast-jump or grapple up. The orange arch at the top is the finish.</p>
-<p>The clock starts when you first move and keeps real time, so slow motion is no shortcut. Fall off and you reappear at the last checkpoint; targets you already hit stay hit. Finish in 70 s for gold, 95 s for silver or 130 s for bronze.</p>
+<p>Finish in 70 s for gold, 95 s for silver or 130 s for bronze.</p>
+<h3 id="newtshooter--marathon">Marathon</h3>
+<p>The Sky Marathon is the long one: 1.2 km in 28 sections, with a checkpoint after each (29 in all). It strings together every kind of section from the Sky Trial plus three new ones: narrow zig-zag beams, rising blocks to jump up, and a 20 m drop where you steer your fall onto the landing. Several kinds come back later in a new order, and the path climbs and falls between about 8 m below and 30 m above the start. A short hint appears the first time you meet each kind of section. The layout is the same every time, so you can learn it. Finish in 3:30 for gold, 4:50 for silver or 6:40 for bronze.</p>
 <h2 id="newtshooter--settings-and-saves">Settings and saves</h2>
-<p>Settings has mouse sensitivity, field of view (75–120°, measured horizontally on a 16:9 screen; it widens a little more at speed), sound and music volume, graphics quality and inverted mouse Y. <em>High</em> renders at up to 1.5× pixel density with a 2048 × 2048 shadow map; <em>Fast</em> renders at 0.75× with a 1024 × 1024 one. Settings and your best arena score and course time are kept in this browser's local storage under <code>newtshooter-settings</code> and <code>newtshooter-best</code>.</p>
+<p>Settings has mouse sensitivity, field of view (75–120°, measured horizontally on a 16:9 screen; it widens a little more at speed), sound and music volume, graphics quality and inverted mouse Y. <em>High</em> renders at up to 1.5× pixel density with a 2048 × 2048 shadow map; <em>Fast</em> renders at 0.75× with a 1024 × 1024 one. Settings together with your best arena score, both best course times and whether you have seen the tutorial, are kept in this browser's local storage under <code>newtshooter-settings</code> and <code>newtshooter-best</code>.</p>
 <h2 id="newtshooter--how-it-works">How it works</h2>
-<p>Everything lives in <code>games/newtshooter/index.html</code>, about 170 KB of HTML, CSS and JavaScript. The only thing it loads from elsewhere is its fonts.</p>
+<p>Everything lives in <code>games/newtshooter/index.html</code>, about 180 KB of HTML, CSS and JavaScript. The only thing it loads from elsewhere is its fonts.</p>
 <ul>
 <li><strong>Rendering</strong>: WebGL2. The level is one merged mesh of boxes and ramps with procedural lab-panel, wall-run and tech materials drawn in the fragment shader. Moving objects are instanced cubes and spheres. A directional shadow map follows the camera with 3 × 3 filtered samples, then ACES tone mapping, distance fog, a gradient sky and additive glow effects. The weapon is drawn in a second pass with its own field of view.</li>
 <li><strong>Physics</strong>: rigid boxes and spheres with real rotation and inertia. Box corners and spheres collide with the static world; bodies collide with each other through corner-in-box and sphere tests. Contacts are solved with sequential impulses with friction and restitution, and resting bodies go to sleep. Everything steps at 120 Hz, with the world and the player on separate clocks so slow motion can scale them differently.</li>
 <li><strong>Player</strong>: a box collider moved one axis at a time against boxes and ramps, with step-up, ground snapping on slopes (velocity follows the slope, so running up a ramp and off its end launches you), coyote time and jump buffering.</li>
-<li><strong>Sound</strong>: synthesized with Web Audio and positioned by distance and stereo pan. The soundtrack, <em>Terminal Velocity</em>, is a 140 BPM electro track in A minor generated live: kick, claps, hats, a sidechained rolling bass, a supersaw hook through a dotted-eighth echo, chord stabs, pads, arpeggios, risers and crashes. It is built from 8-bar intro, build, drop and breakdown sections and follows the game: drops while enemies are up, breakdowns between waves, a calmer loop on the title screen.</li>
+<li><strong>Sound</strong>: synthesized with Web Audio and positioned by distance and stereo pan. The soundtrack, <em>Terminal Velocity</em>, is a 140 BPM electro track in A minor generated live: kick, claps, hats, a sidechained rolling bass, a supersaw hook through a dotted-eighth echo, chord stabs, pads, arpeggios, risers and crashes. It is built from 8-bar intro, build, drop and breakdown sections and follows the game: drops while enemies are up, breakdowns between waves, a calmer loop on the title screen. Music is scheduled 0.6 s ahead on its own timer so frame hitches don't interrupt it. Sound effects have a voice budget, so minor sounds such as impacts and footsteps are skipped when the mix is crowded. If the browser or the system suspends audio, the game resumes it.</li>
 </ul>
 <p>The website embeds the game in an iframe that loads only when you press Start and unloads when you leave the page. Pointer lock and fullscreen work inside it.</p>
 </article>
@@ -3759,7 +3776,7 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
     <div class="poster ns">
       <span class="tag">3D · WebGL2 · sound on</span>
       <strong>NewtShooter</strong>
-      <span>One 170 KB file. Needs a keyboard and mouse.</span>
+      <span>One 180 KB file. Needs a keyboard and mouse.</span>
       <button class="btn primary" type="button" data-launch>Start the game</button>
     </div>
   </div>
@@ -3770,11 +3787,11 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
     </div>
     <div>
       <h2>Physics does the damage</h2>
-      <p>The Newton-9 rifle pushes whatever it hits, the Momentum shotgun shoves you backwards (aim down to blast-jump), and the Singularity launcher opens gravity wells that pull drones and crates together before they burst. Kick a crate into a drone and the crate does the work. Two modes: Arena waves and the Sky Trial parkour course.</p>
+      <p>The Newton-9 rifle pushes whatever it hits, the Momentum shotgun shoves you backwards (aim down to blast-jump), and the Singularity launcher opens gravity wells that pull drones and crates together before they burst. Kick a crate into a drone and the crate does the work. Modes: a guided tutorial, Arena waves, the Sky Trial and the 1.2 km Sky Marathon.</p>
     </div>
     <div>
       <h2>Controls</h2>
-      <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move · <kbd>Space</kbd> jump · <kbd>C</kbd> slide · <kbd>Shift</kbd> dash · <kbd>V</kbd> grapple · <kbd>F</kbd> kick · <kbd>Q</kbd>/<kbd>E</kbd> lean · <kbd>G</kbd> slow time · <kbd>1</kbd>–<kbd>3</kbd> weapons · <kbd>R</kbd> reload · <kbd>Esc</kbd> pause. <a href="#/docs/newtshooter">Full guide</a>.</p>
+      <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move · <kbd>Space</kbd> jump · <kbd>C</kbd> slide · <kbd>Shift</kbd> dash · <kbd>V</kbd> grapple · <kbd>F</kbd> kick · <kbd>Q</kbd>/<kbd>E</kbd> lean · <kbd>G</kbd> slow time · <kbd>1</kbd>–<kbd>3</kbd> weapons · <kbd>R</kbd> reload · <kbd>Esc</kbd> pause · <kbd>Enter</kbd> skip a tutorial step. <a href="#/docs/newtshooter">Full guide</a>.</p>
     </div>
   </div>
 </main>
