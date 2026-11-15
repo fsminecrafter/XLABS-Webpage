@@ -36,7 +36,7 @@ Open `studio/index.html` through a web server (Web Workers do not run from
 node studio/tools/build-sdk.mjs path/to/Minimal-OS-SDK   # after the SDK headers change
 node studio/tools/build-templates.mjs                    # after editing studio/templates/
 node studio/tools/build-apps.mjs path/to/MOSdesk         # after MOSdesk's apps or Mxplorer change
-node tools/build-docs.mjs path/to/Minimal-OS               # after Minimal-OS or SDK docs/ change
+node tools/build-docs.mjs path/to/Minimal-OS path/to/Minimal-OS-SDK path/to/Farcade-Engine
 ```
 
 `build-sdk.mjs` copies the SDK's `include/` tree (including `iostream`) unchanged
@@ -44,10 +44,13 @@ except for the three inline-assembly syscall stubs, whose bodies become mcc's
 `__syscall` builtin.
 Freestanding headers and the crt0 live in `tools/builtin/`.
 
-`tools/build-docs.mjs` (at the repository root) renders Minimal-OS's
-`docs/*.md` and the SDK's `docs/*.md` (from the `Minimal-OS-SDK` submodule, or
-a path given as a second argument) into the website's Docs pages in
-`index.html`, and writes `studio/docs.js` with the same pages for the docs pane.
+`tools/build-docs.mjs` (at the repository root) renders every Markdown page in
+Minimal-OS, the SDK and Farcade Engine `docs/` folders into the website's Docs
+pages in `index.html`, and writes `studio/docs.js` with the same pages for the
+docs pane. The SDK path defaults to the `Minimal-OS-SDK` submodule; Farcade
+Engine's docs are included when its checkout is supplied. The website's
+GitHub Action checks the upstream repositories hourly and commits generated
+documentation changes.
 
 `build-sdk.mjs` also swaps FarcadeGL's one-instruction `fglSqrt` (SSE inline
 assembly) for the same square root in plain C.

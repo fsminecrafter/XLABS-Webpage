@@ -1,29 +1,33 @@
 #!/usr/bin/env node
-// Regenerates the website's Docs pages from a Minimal-OS checkout.
+// Regenerates the website's Docs pages from the upstream project checkouts.
 //
-//   node tools/build-docs.mjs path/to/Minimal-OS [path/to/Minimal-OS-SDK]
+//   node tools/build-docs.mjs path/to/Minimal-OS [path/to/Minimal-OS-SDK] [path/to/Farcade-Engine]
 //
 // The SDK defaults to the Minimal-OS-SDK submodule inside the Minimal-OS
 // checkout. Reads
-//   - Minimal-OS/docs/*.md: the system guides (boot, drivers, GPU, ...);
-//   - Minimal-OS-SDK/docs/*.md: the function reference, one page per
+//   - every Markdown file under Minimal-OS/docs;
+//   - every Markdown file under Minimal-OS-SDK/docs: the function reference, one page per
 //     header and one "## `name`" section per function;
+//   - every Markdown file under Farcade-Engine/docs, when supplied;
 // and writes:
-//   - both sets of pages and their sidebar links into index.html, between
-//     the <!-- os-docs:... --> and <!-- sdk-docs:... --> markers;
-//   - studio/docs.js: the same pages and a function index, for Run
-//     Studio's docs panel.
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+//   - their pages and sidebar links into index.html;
+//   - studio/docs.js: the same pages and a function index, for Run Studio's docs panel.
+import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
+import { join, dirname, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const osRoot = process.argv[2];
-if (!osRoot) { console.error('usage: build-docs.mjs <Minimal-OS> [<Minimal-OS-SDK>]'); process.exit(2); }
+if (!osRoot) { console.error('usage: build-docs.mjs <Minimal-OS> [<Minimal-OS-SDK> [<Farcade-Engine>]]'); process.exit(2); }
 const sdkRoot = process.argv[3] || join(osRoot, 'Minimal-OS-SDK');
+const farcadeRoot = process.argv[4];
 const site = join(dirname(fileURLToPath(import.meta.url)), '..');
 const osDocs = join(osRoot, 'docs'), sdkDocs = join(sdkRoot, 'docs');
+const farcadeDocs = farcadeRoot && join(farcadeRoot, 'docs');
+const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const slug = (s) => s.toLowerCase().replace(/::/g, '-').replace(/[^a-z0-9_]+/g, '-').replace(/^-|-$/g, '');
 for (const f of [join(osDocs, 'system-overview.md'), join(sdkDocs, 'README.md')])
   if (!existsSync(f)) { console.error(f + ' not found'); process.exit(1); }
+if (farcadeDocs && !existsSync(farcadeDocs)) { console.error(farcadeDocs + ' not found'); process.exit(1); }
 
 // Page order and sidebar labels. OS page ids are the file name; SDK page
 // ids are "sdk-" + the file name.
@@ -42,6 +46,7 @@ const OS_PAGES = [
   ['install-and-services', 'Install and services'],
   ['user-programs', 'User programs'],
   ['user-sdk-syscalls', 'SDK and syscalls'],
+  ['README', 'Documentation index'],
 ];
 const SDK_PAGES = [
   ['README', 'Overview'],
@@ -66,31 +71,63 @@ const SDK_PAGES = [
   ['audio', 'Playing audio'],
 ];
 const sdkId = (file) => file === 'README' ? 'sdk-functions' : 'sdk-' + file;
+const pathId = (prefix) => (file) => prefix + slug(file.replace(/\.md$/, '').replace(/\//g, '-'));
+function markdownFiles(dir, prefix = '') {
+  return readdirSync(join(dir, prefix), { withFileTypes: true }).flatMap((entry) => {
+    const file = prefix ? prefix + '/' + entry.name : entry.name;
+    if (entry.isDirectory()) return markdownFiles(dir, file);
+    return entry.isFile() && entry.name.endsWith('.md') ? [file.slice(0, -3)] : [];
+  }).sort((a, b) => a.localeCompare(b));
+}
+function discoverPages(dir, preferred, id, labelFallback) {
+  const pages = [...preferred];
+  const known = new Set(pages.map(([file]) => file));
+  for (const file of markdownFiles(dir)) {
+    if (!known.has(file)) {
+      const source = readFileSync(join(dir, file + '.md'), 'utf8');
+      const title = source.match(/^#\s+(.+)$/m)?.[1]?.replace(/`/g, '').trim();
+      pages.push([file, title || labelFallback(file)]);
+    }
+  }
+  return pages.map(([file, label]) => [file, label, id(file)]);
+}
+const osPageDefs = discoverPages(osDocs, OS_PAGES, (file) => file === 'README' ? 'os-readme' : file, (file) => file);
+const sdkPageDefs = discoverPages(sdkDocs, SDK_PAGES, sdkId, (file) => file);
+const farcadePageDefs = farcadeDocs
+  ? discoverPages(farcadeDocs, [], pathId('farcade-'), (file) => file)
+  : [];
+const pageFiles = (pages) => new Map(pages.flatMap(([file, , id]) => [
+  [file + '.md', id],
+  ...(file.includes('/') ? [] : [[file, id]]),
+]));
 const SETS = {
-  os: { dir: osDocs, github: 'https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/', id: (f) => f, files: new Set(OS_PAGES.map(p => p[0])) },
-  sdk: { dir: sdkDocs, github: 'https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/', id: sdkId, files: new Set(SDK_PAGES.map(p => p[0])) },
+  os: { dir: osDocs, github: 'https://github.com/fsminecrafter/Minimal-OS/blob/main/docs/', pages: osPageDefs, files: pageFiles(osPageDefs) },
+  sdk: { dir: sdkDocs, github: 'https://github.com/fsminecrafter/Minimal-OS-SDK/blob/main/docs/', pages: sdkPageDefs, files: pageFiles(sdkPageDefs) },
+  farcade: { dir: farcadeDocs, github: 'https://github.com/fsminecrafter/Farcade-Engine/blob/main/docs/', pages: farcadePageDefs, files: pageFiles(farcadePageDefs) },
 };
 
 // ---------------------------------------------------------------------
 //  Markdown, the subset the docs use
 // ---------------------------------------------------------------------
-const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-const slug = (s) => s.toLowerCase().replace(/::/g, '-').replace(/[^a-z0-9_]+/g, '-').replace(/^-|-$/g, '');
-
-// The page being rendered: { id, set } (set is 'os' or 'sdk')
+// The page being rendered: { id, set, file }
 let cur;
 
-// A link to another page of the same set wins; then the other set; then
-// the file on GitHub. files.md#mos_fwrite -> #/docs/sdk-files/mos_fwrite
+// A link to another page of the same set wins; then another set; then GitHub.
 function href(link) {
   if (/^[a-z]+:/.test(link)) return { url: link, ext: true };
   let m = link.match(/^#(.+)$/);
   if (m) return { url: '#/docs/' + cur.id + '/' + slug(m[1]), ext: false };
-  m = link.match(/^([\w-]+)\.md(?:#(.*))?$/);
+  m = link.match(/^(.+?)\.md(?:#(.*))?$/);
   if (m) {
-    const other = cur.set === 'os' ? 'sdk' : 'os';
-    const set = SETS[cur.set].files.has(m[1]) ? cur.set : SETS[other].files.has(m[1]) ? other : null;
-    if (set) return { url: '#/docs/' + SETS[set].id(m[1]) + (m[2] ? '/' + slug(m[2]) : ''), ext: false };
+    const target = m[1];
+    const currentPath = posix.normalize(posix.join(posix.dirname(cur.file), target + '.md'));
+    const candidates = [cur.set, ...Object.keys(SETS).filter((set) => set !== cur.set)];
+    for (const set of candidates) {
+      const files = SETS[set].files;
+      const key = set === cur.set ? currentPath : posix.normalize(target + '.md');
+      const id = files.get(key) || (!target.includes('/') && files.get(target));
+      if (id) return { url: '#/docs/' + id + (m[2] ? '/' + slug(m[2]) : ''), ext: false };
+    }
   }
   return { url: new URL(link, SETS[cur.set].github).href, ext: true };
 }
@@ -192,16 +229,15 @@ function render(md) {
 // ---------------------------------------------------------------------
 //  Pages
 // ---------------------------------------------------------------------
-function build(set, list) {
-  return list.map(([file, label]) => {
-    const id = SETS[set].id(file);
-    cur = { id, set };
+function build(set) {
+  return SETS[set].pages.map(([file, label, id]) => {
+    cur = { id, set, file: file + '.md' };
     const r = render(readFileSync(join(SETS[set].dir, file + '.md'), 'utf8'));
     return { set, file, id, label, title: r.title, html: r.html, sections: r.sections };
   });
 }
-const osPages = build('os', OS_PAGES), sdkPages = build('sdk', SDK_PAGES);
-const allPages = osPages.concat(sdkPages);
+const osPages = build('os'), sdkPages = build('sdk'), farcadePages = build('farcade');
+const allPages = osPages.concat(sdkPages, farcadePages);
 
 // A box under the title: the functions on a function page, otherwise the
 // page's sections when there are enough of them to need one.
@@ -254,8 +290,10 @@ const indexPath = join(site, 'index.html');
 let index = readFileSync(indexPath, 'utf8');
 index = between(index, 'os-docs:nav', nav('Minimal-OS docs', osPages));
 index = between(index, 'sdk-docs:nav', nav('SDK functions', sdkPages));
+index = between(index, 'farcade-docs:nav', nav('Farcade Engine docs', farcadePages));
 index = between(index, 'os-docs:pages', '\n' + osPages.map(p => p.article).join('\n') + '\n');
 index = between(index, 'sdk-docs:pages', '\n' + sdkPages.map(p => p.article).join('\n') + '\n');
+index = between(index, 'farcade-docs:pages', '\n' + farcadePages.map(p => p.article).join('\n') + '\n');
 writeFileSync(indexPath, index);
 
 // ---------------------------------------------------------------------
@@ -266,6 +304,7 @@ const data = {
   categories: [
     { name: 'SDK functions', pages: sdkPages.map(forStudio) },
     { name: 'Minimal-OS docs', pages: osPages.map(forStudio) },
+    ...(farcadePages.length ? [{ name: 'Farcade Engine docs', pages: farcadePages.map(forStudio) }] : []),
   ],
   functions: Object.fromEntries(all.map(f => [f.name, f.page + '/' + f.id])),
 };
@@ -278,6 +317,6 @@ for (const name of Object.keys(data.functions)) {
 const gfx = readFileSync(join(sdkRoot, 'include', 'graphics.h'), 'utf8');
 for (const m of gfx.matchAll(/#define\s+(graphics_\w+)\s+(mos_\w+)/g)) if (data.functions[m[2]]) data.functions[m[1]] = data.functions[m[2]];
 writeFileSync(join(site, 'studio', 'docs.js'),
-  '// Generated by tools/build-docs.mjs from Minimal-OS/docs, Minimal-OS-SDK/docs. Do not edit.\n' +
+  '// Generated by tools/build-docs.mjs from the Minimal-OS, Minimal-OS-SDK and Farcade-Engine docs. Do not edit.\n' +
   'window.STUDIO_DOCS = ' + JSON.stringify(data) + ';\n');
-console.log('Docs: ' + osPages.length + ' Minimal-OS pages, ' + sdkPages.length + ' SDK pages, ' + all.length + ' functions');
+console.log('Docs: ' + osPages.length + ' Minimal-OS pages, ' + sdkPages.length + ' SDK pages, ' + farcadePages.length + ' Farcade Engine pages, ' + all.length + ' functions');

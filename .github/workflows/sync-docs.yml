@@ -1,0 +1,49 @@
+name: Sync upstream documentation
+
+on:
+  # GitHub Actions cannot subscribe to pushes in other repositories; poll upstream hourly.
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: fsminecrafter/Minimal-OS
+          ref: main
+          path: sources/Minimal-OS
+          sparse-checkout: docs
+      - uses: actions/checkout@v4
+        with:
+          repository: fsminecrafter/Minimal-OS-SDK
+          ref: main
+          path: sources/Minimal-OS-SDK
+          sparse-checkout: |
+            docs
+            include
+      - uses: actions/checkout@v4
+        with:
+          repository: fsminecrafter/Farcade-Engine
+          ref: main
+          path: sources/Farcade-Engine
+          sparse-checkout: docs
+      - name: Regenerate site and Studio docs
+        run: node tools/build-docs.mjs sources/Minimal-OS sources/Minimal-OS-SDK sources/Farcade-Engine
+      - name: Commit documentation updates
+        run: |
+          if git diff --quiet -- index.html studio/docs.js; then
+            echo "Documentation is already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html studio/docs.js
+          git commit -m "docs: sync upstream documentation"
+          git push
