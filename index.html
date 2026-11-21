@@ -341,6 +341,7 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
         <div class="game-menu">
           <a href="#/red-sandbox">Red Sandbox</a>
           <a href="#/newtshooter">NewtShooter</a>
+          <a href="#/lanternfall">Lanternfall</a>
           <a href="#/haul-and-wrench">Haul &amp; Wrench</a>
           <a href="#/neon-pong">Neon Pong</a>
           <a href="https://joel-minecrafter.itch.io/hashtycoon" target="_blank" rel="noopener">Hash Tycoon ↗</a>
@@ -431,6 +432,7 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
       <h2>Games</h2>
       <div class="cards">
         <a class="card" href="#/newtshooter"><span class="tag">Game · JavaScript, WebGL2 · new</span><h3>NewtShooter</h3><p>A physics FPS with parkour movement: slide, wall-run, grapple, lean and slow time with G while momentum weapons throw drones, and you, around.</p><span class="more">Play it here →</span></a>
+        <a class="card" href="#/lanternfall"><span class="tag">Game · JavaScript, Canvas · new</span><h3>Lanternfall</h3><p>Platform through eight areas, dodge traps, and fight monsters to level up.</p><span class="more">Play it here →</span></a>
         <a class="card" href="#/haul-and-wrench"><span class="tag">Game · JavaScript, Canvas · new</span><h3>Haul &amp; Wrench</h3><p>Run deliveries between towns in a tired 1968 Volta Bug and keep it alive yourself: diagnose faults by ear, scan codes, and torque every bolt by hand.</p><span class="more">Play it here →</span></a>
         <a class="card" href="#/neon-pong"><span class="tag">Game · JavaScript, Canvas</span><h3>Neon Pong</h3><p>Level up through arcade modes, challenge boss stages, and build your Tycoon paddle with upgrades.</p><span class="more">Play it here →</span></a>
         <a class="card" href="https://joel-minecrafter.itch.io/hashtycoon" target="_blank" rel="noopener"><span class="tag">Game · itch.io</span><h3>Hash Tycoon</h3><p>A tycoon game, published on itch.io.</p><span class="more">Play on itch.io ↗</span></a>
@@ -578,6 +580,25 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
             <span class="tag">Arcade · Canvas · sound on</span>
             <strong>Neon Pong</strong>
             <span>Pick a mode and return the ball. Progress saves in this browser.</span>
+            <button class="btn primary" type="button" data-launch>Start the game</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="lanternfall">
+      <h2>Play: Lanternfall</h2>
+      <div class="split rev">
+        <div>
+          <h3 class="big">Follow the road. Reach the end.</h3>
+          <p>Platform through eight areas, dodge traps, and battle monsters. Win fights to level up and stay alive.</p>
+          <div class="btns"><a class="btn" href="#/lanternfall">Open full page</a><a class="btn" href="games/lanternfall/" target="_blank" rel="noopener">Open in its own tab</a><a class="btn" href="#/docs/lanternfall">Guide</a></div>
+        </div>
+        <div class="embed" data-sandbox data-src="games/lanternfall/" data-title="Lanternfall">
+          <div class="poster">
+            <span class="tag">Adventure · Canvas · sound on</span>
+            <strong>Lanternfall</strong>
+            <span>Use the arrow keys or WASD to move.</span>
             <button class="btn primary" type="button" data-launch>Start the game</button>
           </div>
         </div>
@@ -6821,6 +6842,8 @@ int id = scripts.add_instance(entity, "scripts/door.lua", text, size, props, npr
 <p>The guide now covers the new <a href="#/docs/newtshooter/tutorial">tutorial</a> (skip any step with Enter, replay it from the title screen) and the <a href="#/docs/newtshooter/marathon">Sky Marathon</a>, a 1.2 km course with 29 checkpoints.</p>
 <h2>New game: NewtShooter</h2>
 <p>A new <a href="#/docs/newtshooter">NewtShooter guide</a> covers the physics parkour shooter on this site: the <a href="#/docs/newtshooter/controls">controls</a>, every <a href="#/docs/newtshooter/movement">movement technique</a> with its numbers, <a href="#/docs/newtshooter/slow-motion">slow motion</a>, the <a href="#/docs/newtshooter/weapons">weapons</a> and <a href="#/docs/newtshooter/enemies">enemies</a>, <a href="#/docs/newtshooter/arena-and-scoring">scoring and style bonuses</a>, the <a href="#/docs/newtshooter/sky-trial">Sky Trial course</a> and <a href="#/docs/newtshooter/how-it-works">how the renderer, physics and soundtrack work</a>.</p>
+<h2>New game: Lanternfall</h2>
+<p><a href="#/docs/lanternfall">Lanternfall's guide</a> covers the eight-area platform adventure, trap-dodging, monster battles and keyboard controls.</p>
 <h2>Media formats and playback</h2>
 <p>The <a href="#/docs/media">Images and video guide</a> now covers the <code>.vid</code> format, its converter commands and file layout, playback, and decoding. Start with <a href="#/docs/media/making-files">making media files</a>, then read the <a href="#/docs/media/vid-layout">video layout</a> and <a href="#/docs/media/hardware-decoding">hardware decoding</a> sections.</p>
 <h2>GPU and 3D graphics</h2>
@@ -6943,6 +6966,21 @@ int id = scripts.add_instance(entity, "scripts/door.lua", text, size, props, npr
 <li><strong>Sound</strong>: synthesized with Web Audio and positioned by distance and stereo pan. The soundtrack, <em>Terminal Velocity</em>, is a 140 BPM electro track in A minor generated live: kick, claps, hats, a sidechained rolling bass, a supersaw hook through a dotted-eighth echo, chord stabs, pads, arpeggios, risers and crashes. It is built from 8-bar intro, build, drop and breakdown sections and follows the game: drops while enemies are up, breakdowns between waves, a calmer loop on the title screen. Music is scheduled 0.6 s ahead on its own timer so frame hitches don't interrupt it. Sound effects have a voice budget, so minor sounds such as impacts and footsteps are skipped when the mix is crowded. If the browser or the system suspends audio, the game resumes it.</li>
 </ul>
 <p>The website embeds the game in an iframe that loads only when you press Start and unloads when you leave the page. Pointer lock and fullscreen work inside it.</p>
+</article>
+<article class="doc" data-doc="lanternfall" hidden>
+<h1>Lanternfall</h1>
+<p class="intro">A platform adventure: cross eight areas, avoid traps and fight monsters. Winning fights levels you up.</p>
+<div class="btns"><a class="btn primary" href="#/lanternfall">Play it here</a><a class="btn" href="games/lanternfall/" target="_blank" rel="noopener">Open in its own tab</a></div>
+<h2 id="lanternfall--getting-started">Getting started</h2>
+<p>Follow the road to the end. Move through each area, dodge its traps and touch monsters to begin a battle. Win fights to level up and stay alive.</p>
+<h2 id="lanternfall--controls">Controls</h2>
+<div class="tw"><table><thead><tr><th>Input</th><th>Action</th></tr></thead><tbody>
+<tr><td><kbd>Arrow keys</kbd> or <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></td><td>Move</td></tr>
+<tr><td><kbd>Space</kbd> or <kbd>Up</kbd></td><td>Jump</td></tr>
+<tr><td><kbd>Z</kbd> or <kbd>Enter</kbd></td><td>Start or confirm</td></tr>
+<tr><td><kbd>P</kbd></td><td>Pause</td></tr>
+<tr><td><kbd>M</kbd></td><td>Mute or unmute</td></tr>
+</tbody></table></div>
 </article>
 </div></main>
 <main id="pages" class="docs" hidden>
@@ -7483,6 +7521,34 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
   </div>
 </main>
 
+<main id="lantern" hidden>
+  <div class="sandbox-head">
+    <div>
+      <p class="eyebrow">Game · JavaScript, Canvas, Web Audio</p>
+      <h1 class="page-title">Lanternfall</h1>
+    </div>
+    <div class="btns"><a class="btn" href="games/lanternfall/" target="_blank" rel="noopener">Open in its own tab</a><a class="btn" href="#/docs/lanternfall">Read the guide</a></div>
+  </div>
+  <div class="embed tall" data-sandbox data-src="games/lanternfall/" data-title="Lanternfall">
+    <div class="poster">
+      <span class="tag">Adventure · Canvas · sound on</span>
+      <strong>Lanternfall</strong>
+      <span>Platform through eight areas, dodge traps, and fight monsters.</span>
+      <button class="btn primary" type="button" data-launch>Start the game</button>
+    </div>
+  </div>
+  <div class="sandbox-info">
+    <div>
+      <h2>Reach the end</h2>
+      <p>Follow the road through eight areas. Dodge traps, and touch monsters to battle them. Winning fights helps you level up.</p>
+    </div>
+    <div>
+      <h2>Controls</h2>
+      <p><kbd>Arrow keys</kbd> or <kbd>W</kbd>/<kbd>A</kbd>/<kbd>S</kbd>/<kbd>D</kbd> move · <kbd>Space</kbd> or <kbd>Up</kbd> jump · <kbd>Z</kbd>/<kbd>Enter</kbd> confirm · <kbd>P</kbd> pause · <kbd>M</kbd> mute. <a href="#/docs/lanternfall">Full guide</a>.</p>
+    </div>
+  </div>
+</main>
+
 <main id="media" hidden>
   <div class="sandbox-head">
     <div>
@@ -7714,8 +7780,8 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
 </script>
 <script>
 (function(){
-  var home=document.getElementById('home'),docs=document.getElementById('docs'),pages=document.getElementById('pages'),sandbox=document.getElementById('sandbox'),haul=document.getElementById('haul'),media=document.getElementById('media'),newt=document.getElementById('newt'),pong=document.getElementById('pong');
-  var mains=[home,docs,pages,sandbox,haul,media,newt,pong];
+  var home=document.getElementById('home'),docs=document.getElementById('docs'),pages=document.getElementById('pages'),sandbox=document.getElementById('sandbox'),haul=document.getElementById('haul'),media=document.getElementById('media'),newt=document.getElementById('newt'),pong=document.getElementById('pong'),lantern=document.getElementById('lantern');
+  var mains=[home,docs,pages,sandbox,haul,media,newt,pong,lantern];
   var arts=docs.querySelectorAll('.doc'),links=docs.querySelectorAll('[data-nav]');
   var parts=pages.querySelectorAll('[data-page]'),plinks=pages.querySelectorAll('[data-page-nav]');
   var top=document.querySelectorAll('header nav [data-route]');
@@ -7759,6 +7825,8 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
       show(newt);document.title='NewtShooter · Xlabs';mark('games');window.scrollTo(0,0);
     }else if(/^#\/neon-pong/.test(h)){
       show(pong);document.title='Neon Pong · Xlabs';mark('games');window.scrollTo(0,0);
+    }else if(/^#\/lanternfall/.test(h)){
+      show(lantern);document.title='Lanternfall · Xlabs';mark('games');window.scrollTo(0,0);
     }else if(/^#\/player/.test(h)){
       show(media);document.title='Media Player · Xlabs';mark('player');window.scrollTo(0,0);
     }else{
@@ -8176,7 +8244,7 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
     document.querySelectorAll('#pages [data-page]').forEach(function(art){
       index.push({t:txt(art.querySelector('h1')),w:'Project',u:'#/p/'+art.dataset.page,k:0});
     });
-    index.push({t:'Red Sandbox',w:'Project',u:'#/red-sandbox',k:0},{t:'NewtShooter',w:'Game',u:'#/newtshooter',k:0},{t:'Neon Pong',w:'Game',u:'#/neon-pong',k:0},{t:'Haul & Wrench',w:'Game',u:'#/haul-and-wrench',k:0},{t:'Hash Tycoon',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/hashtycoon',k:0},{t:'Last Shelter',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/last',k:0},{t:'VRsandbox',w:'Game on GitHub',u:'https://github.com/fsminecrafter/VRsandbox',k:0},{t:'Run Studio',w:'Open the studio',u:'studio/',k:0},{t:'Media Player',w:'Open .img, .vid and .adi files',u:'#/player',k:0});
+    index.push({t:'Red Sandbox',w:'Project',u:'#/red-sandbox',k:0},{t:'NewtShooter',w:'Game',u:'#/newtshooter',k:0},{t:'Lanternfall',w:'Game',u:'#/lanternfall',k:0},{t:'Neon Pong',w:'Game',u:'#/neon-pong',k:0},{t:'Haul & Wrench',w:'Game',u:'#/haul-and-wrench',k:0},{t:'Hash Tycoon',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/hashtycoon',k:0},{t:'Last Shelter',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/last',k:0},{t:'VRsandbox',w:'Game on GitHub',u:'https://github.com/fsminecrafter/VRsandbox',k:0},{t:'Run Studio',w:'Open the studio',u:'studio/',k:0},{t:'Media Player',w:'Open .img, .vid and .adi files',u:'#/player',k:0});
     var fns={};index.forEach(function(e){if(e.k===1)fns[e.t]=1});
     index=index.filter(function(e){return !(e.c&&fns[e.t])});
     index.forEach(function(e){e.l=e.t.toLowerCase()});
