@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#EEEFF1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#111214" media="(prefers-color-scheme: dark)">
-<meta name="description" content="Xlabs builds Minimal-OS and its SDK, FarcadeGL and Farcade Engine, MinimaSSL, MOSdesk and mosWM, Run Studio, and browser games including NewtShooter and Neon Pong.">
+<meta name="description" content="Xlabs builds Minimal-OS and its SDK, FarcadeGL and Farcade Engine, MinimaSSL, MOSdesk and mosWM, Run Studio, and browser games including NewtShooter, Neon Pong and Street Rush 3D.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -192,6 +192,8 @@ h3.big{font-size:clamp(26px,3vw,34px);letter-spacing:-.03em;font-weight:500;marg
 .poster.ns .btn.primary:hover{background:#FF6A2B;border-color:#FF6A2B;color:#120804}
 .poster.np{background:radial-gradient(110% 90% at 85% 8%,rgba(255,76,143,.35),transparent 58%),radial-gradient(80% 70% at 8% 100%,rgba(76,243,255,.25),transparent 60%),repeating-linear-gradient(0deg,transparent 0 31px,rgba(76,243,255,.08) 31px 32px),repeating-linear-gradient(90deg,transparent 0 31px,rgba(76,243,255,.08) 31px 32px),#04060B}
 .poster.np .btn.primary:hover{background:#4CF3FF;border-color:#4CF3FF;color:#04141A}
+.poster.sr{background:radial-gradient(110% 90% at 85% 8%,rgba(232,163,23,.4),transparent 58%),radial-gradient(80% 70% at 8% 100%,rgba(80,115,180,.2),transparent 60%),repeating-linear-gradient(0deg,transparent 0 31px,rgba(255,255,255,.06) 31px 32px),repeating-linear-gradient(90deg,transparent 0 31px,rgba(255,255,255,.06) 31px 32px),#0b0d12}
+.poster.sr .btn.primary:hover{background:#e8a317;border-color:#e8a317;color:#111}
 .tick.done{color:var(--accent)}
 .cols{row-gap:36px}
 .eyebrow{margin:0 0 8px}
@@ -344,6 +346,7 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
           <a href="#/lanternfall">Lanternfall</a>
           <a href="#/haul-and-wrench">Haul &amp; Wrench</a>
           <a href="#/neon-pong">Neon Pong</a>
+          <a href="#/street-rush-3d">Street Rush 3D</a>
           <a href="https://joel-minecrafter.itch.io/hashtycoon" target="_blank" rel="noopener">Hash Tycoon ↗</a>
           <a href="https://joel-minecrafter.itch.io/last" target="_blank" rel="noopener">Last Shelter ↗</a>
           <a href="https://github.com/fsminecrafter/VRsandbox" target="_blank" rel="noopener">VRsandbox ↗</a>
@@ -435,6 +438,7 @@ code,pre,kbd,.term,.doc code{font-variant-ligatures:none}
         <a class="card" href="#/lanternfall"><span class="tag">Game · JavaScript, Canvas · new</span><h3>Lanternfall</h3><p>Platform through eight areas, dodge traps, and fight monsters to level up.</p><span class="more">Play it here →</span></a>
         <a class="card" href="#/haul-and-wrench"><span class="tag">Game · JavaScript, Canvas · new</span><h3>Haul &amp; Wrench</h3><p>Run deliveries between towns in a tired 1968 Volta Bug and keep it alive yourself: diagnose faults by ear, scan codes, and torque every bolt by hand.</p><span class="more">Play it here →</span></a>
         <a class="card" href="#/neon-pong"><span class="tag">Game · JavaScript, Canvas</span><h3>Neon Pong</h3><p>Level up through arcade modes, challenge boss stages, and build your Tycoon paddle with upgrades.</p><span class="more">Play it here →</span></a>
+        <a class="card" href="#/street-rush-3d"><span class="tag">Game · JavaScript, Three.js · 3D</span><h3>Street Rush 3D</h3><p>Explore a 3D city on foot or behind the wheel, take on street crime, and evade the cops.</p><span class="more">Play it here →</span></a>
         <a class="card" href="https://joel-minecrafter.itch.io/hashtycoon" target="_blank" rel="noopener"><span class="tag">Game · itch.io</span><h3>Hash Tycoon</h3><p>A tycoon game, published on itch.io.</p><span class="more">Play on itch.io ↗</span></a>
         <a class="card" href="https://joel-minecrafter.itch.io/last" target="_blank" rel="noopener"><span class="tag">Game · itch.io</span><h3>Last Shelter</h3><p>A game published on itch.io.</p><span class="more">Play on itch.io ↗</span></a>
         <a class="card" href="https://github.com/fsminecrafter/VRsandbox" target="_blank" rel="noopener"><span class="tag">Game · Godot · VR</span><h3>VRsandbox</h3><p>A VR sandbox for building, experimenting and causing a little chaos.</p><span class="more">View on GitHub ↗</span></a>
@@ -7549,6 +7553,34 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
   </div>
 </main>
 
+<main id="street-rush" hidden>
+  <div class="sandbox-head">
+    <div>
+      <p class="eyebrow">Game · JavaScript, Three.js, Web Audio</p>
+      <h1 class="page-title">Street Rush 3D</h1>
+    </div>
+    <div class="btns"><a class="btn" href="games/street-rush-3d/" target="_blank" rel="noopener">Open in its own tab</a></div>
+  </div>
+  <div class="embed tall" data-sandbox data-src="games/street-rush-3d/" data-title="Street Rush 3D">
+    <div class="poster sr">
+      <span class="tag">Open-world · 3D · sound on</span>
+      <strong>Street Rush 3D</strong>
+      <span>Explore the city, drive, and make your escape.</span>
+      <button class="btn primary" type="button" data-launch>Start the game</button>
+    </div>
+  </div>
+  <div class="sandbox-info">
+    <div>
+      <h2>Explore the city</h2>
+      <p>Move through a 3D city on foot or drive, find shops, and get out before the cops catch up.</p>
+    </div>
+    <div>
+      <h2>Controls</h2>
+      <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move or drive · <kbd>Mouse</kbd> look · <kbd>Click</kbd> shoot · <kbd>Shift</kbd> sprint · <kbd>Space</kbd> handbrake · <kbd>E</kbd> interact or exit a moving car · <kbd>Esc</kbd> settings.</p>
+    </div>
+  </div>
+</main>
+
 <main id="media" hidden>
   <div class="sandbox-head">
     <div>
@@ -7780,8 +7812,8 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
 </script>
 <script>
 (function(){
-  var home=document.getElementById('home'),docs=document.getElementById('docs'),pages=document.getElementById('pages'),sandbox=document.getElementById('sandbox'),haul=document.getElementById('haul'),media=document.getElementById('media'),newt=document.getElementById('newt'),pong=document.getElementById('pong'),lantern=document.getElementById('lantern');
-  var mains=[home,docs,pages,sandbox,haul,media,newt,pong,lantern];
+  var home=document.getElementById('home'),docs=document.getElementById('docs'),pages=document.getElementById('pages'),sandbox=document.getElementById('sandbox'),haul=document.getElementById('haul'),media=document.getElementById('media'),newt=document.getElementById('newt'),pong=document.getElementById('pong'),lantern=document.getElementById('lantern'),streetRush=document.getElementById('street-rush');
+  var mains=[home,docs,pages,sandbox,haul,media,newt,pong,lantern,streetRush];
   var arts=docs.querySelectorAll('.doc'),links=docs.querySelectorAll('[data-nav]');
   var parts=pages.querySelectorAll('[data-page]'),plinks=pages.querySelectorAll('[data-page-nav]');
   var top=document.querySelectorAll('header nav [data-route]');
@@ -7827,6 +7859,8 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
       show(pong);document.title='Neon Pong · Xlabs';mark('games');window.scrollTo(0,0);
     }else if(/^#\/lanternfall/.test(h)){
       show(lantern);document.title='Lanternfall · Xlabs';mark('games');window.scrollTo(0,0);
+    }else if(/^#\/street-rush-3d/.test(h)){
+      show(streetRush);document.title='Street Rush 3D · Xlabs';mark('games');window.scrollTo(0,0);
     }else if(/^#\/player/.test(h)){
       show(media);document.title='Media Player · Xlabs';mark('player');window.scrollTo(0,0);
     }else{
@@ -8244,7 +8278,7 @@ HOST=0.0.0.0 PORT=8787 node studio/proxy/server.mjs</code></pre>
     document.querySelectorAll('#pages [data-page]').forEach(function(art){
       index.push({t:txt(art.querySelector('h1')),w:'Project',u:'#/p/'+art.dataset.page,k:0});
     });
-    index.push({t:'Red Sandbox',w:'Project',u:'#/red-sandbox',k:0},{t:'NewtShooter',w:'Game',u:'#/newtshooter',k:0},{t:'Lanternfall',w:'Game',u:'#/lanternfall',k:0},{t:'Neon Pong',w:'Game',u:'#/neon-pong',k:0},{t:'Haul & Wrench',w:'Game',u:'#/haul-and-wrench',k:0},{t:'Hash Tycoon',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/hashtycoon',k:0},{t:'Last Shelter',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/last',k:0},{t:'VRsandbox',w:'Game on GitHub',u:'https://github.com/fsminecrafter/VRsandbox',k:0},{t:'Run Studio',w:'Open the studio',u:'studio/',k:0},{t:'Media Player',w:'Open .img, .vid and .adi files',u:'#/player',k:0});
+    index.push({t:'Red Sandbox',w:'Project',u:'#/red-sandbox',k:0},{t:'NewtShooter',w:'Game',u:'#/newtshooter',k:0},{t:'Lanternfall',w:'Game',u:'#/lanternfall',k:0},{t:'Neon Pong',w:'Game',u:'#/neon-pong',k:0},{t:'Street Rush 3D',w:'Game',u:'#/street-rush-3d',k:0},{t:'Haul & Wrench',w:'Game',u:'#/haul-and-wrench',k:0},{t:'Hash Tycoon',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/hashtycoon',k:0},{t:'Last Shelter',w:'Game on itch.io',u:'https://joel-minecrafter.itch.io/last',k:0},{t:'VRsandbox',w:'Game on GitHub',u:'https://github.com/fsminecrafter/VRsandbox',k:0},{t:'Run Studio',w:'Open the studio',u:'studio/',k:0},{t:'Media Player',w:'Open .img, .vid and .adi files',u:'#/player',k:0});
     var fns={};index.forEach(function(e){if(e.k===1)fns[e.t]=1});
     index=index.filter(function(e){return !(e.c&&fns[e.t])});
     index.forEach(function(e){e.l=e.t.toLowerCase()});
