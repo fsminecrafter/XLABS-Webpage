@@ -112,10 +112,10 @@ body:not(.play) .o,body:not(.play) #gear{visibility:hidden}
 <div id="veh" class="o"></div><div id="hint" class="o"></div><div id="msg" class="o"></div><div id="xh" class="o"></div>
 <button id="gear" title="Settings (Esc)">⚙</button>
 <div id="intro" class="o"><b>STREET RUSH</b>WASD move · Shift sprint · Mouse look · Click or Space shoot · 1-6 or wheel: weapons<br>E: car, gun shop · Rob a store: gun out, shoot the cameras, aim at the clerk, grab the cash · Drive: W/S, A/D, Space handbrake · E at speed: bail out<br>Burgle: F window (loud) · E lockpick (quiet) · C crouch · sell loot at PAWN SHOPS<br>V first person · H health pack · Esc settings · M music · N next song<br>Press any key to start</div>
-<div id="menu"><div class="mp"><h2>SETTINGS</h2><div class="sec">GRAPHICS</div><label><span>Shadows</span><input type="checkbox" id="s_shadow"></label><label><span>Resolution scale</span><input type="range" id="s_res" min="50" max="150" step="25"><b id="v_res"></b></label><label><span>Draw distance</span><input type="range" id="s_dist" min="800" max="2200" step="100"><b id="v_dist"></b></label><label><span>Field of view (third person)</span><input type="range" id="s_fov" min="45" max="90" step="1"><b id="v_fov"></b></label><label><span>Field of view (first person)</span><input type="range" id="s_fovf" min="60" max="110" step="1"><b id="v_fovf"></b></label><div class="sec">AUDIO</div><label><span>Music</span><input type="checkbox" id="s_music"></label><label><span>Music volume</span><input type="range" id="s_mvol" min="0" max="100" step="5"><b id="v_mvol"></b></label><div class="sec">GAMEPLAY</div><label><span>Difficulty</span><select id="s_diff"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select></label><label><span>Traffic density</span><input type="range" id="s_traf" min="0" max="45" step="1"><b id="v_traf"></b></label><label><span>Pedestrian density</span><input type="range" id="s_peds" min="0" max="120" step="5"><b id="v_peds"></b></label><div class="sec">CAMERA AND CONTROLS</div><label><span>Camera view</span><select id="s_view"><option value="third">Third person</option><option value="first">First person</option></select></label><label><span>Mouse sensitivity</span><input type="range" id="s_sens" min="20" max="300" step="10"><b id="v_sens"></b></label><label><span>Invert look Y</span><input type="checkbox" id="s_inv"></label><label><span>Camera shake</span><input type="checkbox" id="s_shake"></label><div class="sec">INTERFACE</div><label><span>Show minimap</span><input type="checkbox" id="s_map"></label><label><span>Show hints</span><input type="checkbox" id="s_hints"></label><div class="btns"><button id="b_res">RESUME</button><button id="b_def" class="g">RESET</button><button id="b_new" class="g">NEW GAME</button></div><p class="nt">Esc or P opens and closes this menu. Settings are saved in this browser.</p></div></div>
+<div id="menu"><div class="mp"><h2>SETTINGS</h2><div class="sec">GRAPHICS</div><label><span>Shadows</span><input type="checkbox" id="s_shadow"></label><label><span>Resolution scale</span><input type="range" id="s_res" min="50" max="150" step="25"><b id="v_res"></b></label><label><span>Auto resolution (drops resolution to keep FPS up)</span><input type="checkbox" id="s_autores"></label><label><span>Draw distance</span><input type="range" id="s_dist" min="800" max="2200" step="100"><b id="v_dist"></b></label><label><span>Field of view (third person)</span><input type="range" id="s_fov" min="45" max="90" step="1"><b id="v_fov"></b></label><label><span>Field of view (first person)</span><input type="range" id="s_fovf" min="60" max="110" step="1"><b id="v_fovf"></b></label><div class="sec">AUDIO</div><label><span>Music</span><input type="checkbox" id="s_music"></label><label><span>Music volume</span><input type="range" id="s_mvol" min="0" max="100" step="5"><b id="v_mvol"></b></label><div class="sec">GAMEPLAY</div><label><span>Difficulty</span><select id="s_diff"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select></label><label><span>Traffic density</span><input type="range" id="s_traf" min="0" max="45" step="1"><b id="v_traf"></b></label><label><span>Pedestrian density</span><input type="range" id="s_peds" min="0" max="120" step="5"><b id="v_peds"></b></label><div class="sec">CAMERA AND CONTROLS</div><label><span>Camera view</span><select id="s_view"><option value="third">Third person</option><option value="first">First person</option></select></label><label><span>Mouse sensitivity</span><input type="range" id="s_sens" min="20" max="300" step="10"><b id="v_sens"></b></label><label><span>Invert look Y</span><input type="checkbox" id="s_inv"></label><label><span>Camera shake</span><input type="checkbox" id="s_shake"></label><div class="sec">INTERFACE</div><label><span>Show minimap</span><input type="checkbox" id="s_map"></label><label><span>Show hints</span><input type="checkbox" id="s_hints"></label><div class="btns"><button id="b_res">RESUME</button><button id="b_def" class="g">RESET</button><button id="b_new" class="g">NEW GAME</button></div><p class="nt">Esc or P opens and closes this menu. Settings are saved in this browser.</p></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script id="gsrc" type="text/plain">
-var TOFF=0,V6E=[],V6HINT='',EV=()=>{},GH=()=>0,V6T=()=>{},V6A=()=>{},V6D=()=>{},V6H=()=>{},V6M=()=>{},V6U=()=>0,V6B=()=>0,V6Mel=()=>{},V6Rk=()=>{},V6Shop=()=>'',V6Armor=()=>{},V6Sleep=()=>{},V6Equip=()=>{},V6Slot=n=>n-1,DNAME=null;const SPEC=[];
+var TOFF=0,V6E=[],V6HINT='',EV=()=>{},GH=()=>0,V6T=()=>{},V6A=()=>{},V6D=()=>{},V6H=()=>{},V6M=()=>{},V6U=()=>0,V6B=()=>0,V6Mel=()=>{},V6Rk=()=>{},V6Shop=()=>'',V6Armor=()=>{},V6Sleep=()=>{},V6Equip=()=>{},V6Slot=n=>n-1,DNAME=null,DRS=1;const SPEC=[];
 const T=48,BT=20,LOT=BT-3,NB=16,N=NB*BT,cv=document.getElementById('c'),mc=document.getElementById('mm').getContext('2d');
 let W,H;function rs(){W=cv.clientWidth;H=cv.clientHeight;if(self.rdy)R3()}addEventListener('resize',rs);rs();
 const rnd=(a,b)=>a+Math.random()*(b-a),cl=(v,a,b)=>Math.max(a,Math.min(b,v)),D=[0,Math.PI/2,Math.PI,-Math.PI/2],angd=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
@@ -382,7 +382,7 @@ const GK=(()=>{
   build(){const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(this.p,3));G.setAttribute('normal',new THREE.Float32BufferAttribute(this.n,3));G.setAttribute('uv',new THREE.Float32BufferAttribute(this.u,2));G.setAttribute('color',new THREE.Float32BufferAttribute(this.c,3));G.setIndex(this.i);return G}}
  return{Mg,pBox,pCyl,pSph,pRoof,pEx}})();
 const MG=()=>new GK.Mg();
-const R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(2,devicePixelRatio));R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});R.setPixelRatio(Math.min(1.5,devicePixelRatio));R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
 const SC=new THREE.Scene(),CAM=new THREE.PerspectiveCamera(60,1,2,2600);
 SC.fog=new THREE.Fog('#cfdde8',500,1600);
 /* ---- sky: gradient dome with sun glow + slowly drifting cloud layer ---- */
@@ -548,7 +548,7 @@ function humGeo(shirt,pants,r,o){const sk=SK[r()*5|0],hr=HR[r()*HR.length|0],top
  SHN.box(1.95,3.3,1.95,0,-1.65,0,bot==0?pc:sk).box(1.8,.9,1.8,0,-3.3,0,bot==0?pc:'#f4f4f0');FT.box(3.6,.9,2.3,.8,-.55,0,shoe).box(3.9,.55,2.4,.8,-1,0,sole).box(1.3,.5,1.9,1.6,-.15,0,sk2(shoe,1.3));if(o.cop)SHN.box(2.1,2,2.1,0,-2.6,0,'#0c0c10');
  return{tor:T.build(),hd:H.build(),ua:UA.build(),fa:FA.build(),th:TH.build(),sh:SHN.build(),ft:FT.build()}}
 function mkHum(shirt,pants,sd,o){o=o||{};const r=mulberry(sd||Math.random()*1e9|0),g=humGeo(shirt,pants,r,o),gp=new THREE.Group(),
- M=(ge,p)=>{const m=new THREE.Mesh(ge,mHum);m.castShadow=true;p.add(m);return m},G=(x,y,z,p)=>{const q=new THREE.Group();q.position.set(x,y,z);p.add(q);return q};
+ M=(ge,p)=>{const m=new THREE.Mesh(ge,mHum);m.castShadow=ge===g.tor||ge===g.th;p.add(m);return m},G=(x,y,z,p)=>{const q=new THREE.Group();q.position.set(x,y,z);p.add(q);return q};
  const tor=G(0,9.25,0,gp);M(g.tor,tor);const hd=G(0,6.8,0,tor);M(g.hd,hd);
  const l=[-1.15,1.15].map(z=>{const L=G(0,9.15,z,gp);M(g.th,L);const k=G(0,-4.6,0,L);M(g.sh,k);const an=G(0,-3.3,0,k);M(g.ft,an);L.userData.k=k;L.userData.an=an;return L}),
  a=[-3.4,3.4].map(z=>{const A=G(0,5.3,z,tor);M(g.ua,A);const e=G(0,-3.5,0,A);M(g.fa,e);A.userData.e=e;e.userData.hand=G(0,-3.9,0,e);return A});
@@ -610,9 +610,9 @@ const polT=(()=>{const c=document.createElement('canvas');c.width=128;c.height=3
  mPo=new THREE.MeshBasicMaterial({map:polT}),gPo=new THREE.PlaneGeometry(14,3.4),
  gCop=(()=>{const g=MG();g.box(15,4.5,21.4,0,5.8,0).box(5.5,.8,17,CP[0].gx,16,0).box(1.2,3,18,22,4.4,0).box(1.2,.8,18,22.3,5.4,0);for(const z of[-6,-3,0,3,6])g.box(.6,3.2,.6,22.6,4.4,z*1.4);return g.build()})();
 function mkCarM(c){const gp=new THREE.Group(),ty=c.ty||0,P=CP[ty],bm=new THREE.MeshPhongMaterial({color:c.c,shininess:70,specular:'#666666'}),
- add=(g,m)=>{const o=new THREE.Mesh(g,m);o.castShadow=true;gp.add(o);return o};
+ add=(g,m)=>{const o=new THREE.Mesh(g,m);o.castShadow=g===P.paint||g===P.black;gp.add(o);return o};
  add(P.paint,bm);add(P.glass,mGl);add(P.black,mK);add(P.chrome,mRm);add(P.head,mHl).castShadow=false;add(P.tail,mTl).castShadow=false;const tb=add(P.tailB,mTlB);tb.visible=false;tb.castShadow=false;
- const wh=[];for(const[x,z]of[[14,-9.7],[14,9.7],[-14,-9.7],[-14,9.7]]){const st=new THREE.Group();st.position.set(x,3.5,z);const sp=new THREE.Mesh(gWh,mHum);sp.castShadow=true;st.add(sp);gp.add(st);wh.push({st,sp,f:x>0})}
+ const wh=[];for(const[x,z]of[[14,-9.7],[14,9.7],[-14,-9.7],[-14,9.7]]){const st=new THREE.Group();st.position.set(x,3.5,z);const sp=new THREE.Mesh(gWh,mHum);st.add(sp);gp.add(st);wh.push({st,sp,f:x>0})}
  gp.userData={bm,tb,wh,pv:c.v||0,sa:0,sp:0};gp.rotation.order='YZX';
  if(c.cop){add(gCop,mSt);const gx=P.gx,l1=new THREE.Mesh(new THREE.BoxGeometry(4,1.8,7.5),new THREE.MeshBasicMaterial()),l2=new THREE.Mesh(new THREE.BoxGeometry(4,1.8,7.5),new THREE.MeshBasicMaterial());l1.position.set(gx,17.2,-4.2);l2.position.set(gx,17.2,4.2);gp.add(l1,l2);gp.userData.l=[l1,l2];
   for(const z of[-1,1]){const d=new THREE.Mesh(gPo,mPo);d.position.set(1,6.4,z*10.3);if(z<0)d.rotation.y=Math.PI;gp.add(d)}}
@@ -709,7 +709,7 @@ function mTick(){const A=AU,c=A.c;if(!c||c.state!='running'||!ST.music)return;
  if(A.next<c.currentTime-.5)A.next=c.currentTime+.1;
  while(A.next<c.currentTime+.15){stepAt(A.next,A.step,A.bar);A.next+=60/A.tr.bpm/4;if(++A.step>15){A.step=0;A.bar++}}}
 addEventListener('keydown',e=>{if(e.repeat)return;if(e.code=='KeyM'){ST.music=ST.music?0:1;SET.music();musicApply();save()}if(e.code=='KeyN'&&AU.tr!==TRK[3])AU.tr=null});
-const DEF={shadow:1,res:100,dist:1600,fov:58,fovf:78,diff:'normal',traf:26,peds:70,view:'third',sens:100,inv:0,shake:1,map:1,hints:1,music:1,mvol:60},ST=Object.assign({},DEF);
+const DEF={shadow:1,res:100,autores:1,dist:1600,fov:58,fovf:78,diff:'normal',traf:26,peds:70,view:'third',sens:100,inv:0,shake:1,map:1,hints:1,music:1,mvol:60},ST=Object.assign({},DEF);
 try{Object.assign(ST,JSON.parse(localStorage.getItem('sr3d')||'{}'))}catch(e){}
 const DF=()=>({easy:{c:1,d:.6},normal:{c:2,d:1},hard:{c:3,d:1.6}}[ST.diff]||{c:2,d:1});
 let paused=0;
@@ -721,7 +721,7 @@ function setN(){const ai=cars.filter(c=>c.t=='ai');
  while(peds.length>ST.peds)peds.pop()}
 function apply(k){
  if(k=='shadow'){R.shadowMap.enabled=!!ST.shadow;sun.castShadow=!!ST.shadow;SC.traverse(o=>{const m=o.material;if(m)[].concat(m).forEach(x=>x.needsUpdate=true)})}
- else if(k=='res'){R.setPixelRatio(Math.min(2,devicePixelRatio)*ST.res/100);R3()}
+ else if(k=='res'){R.setPixelRatio(Math.min(1.5,devicePixelRatio)*ST.res/100*DRS);R3()}
  else if(k=='dist'){SC.fog.near=ST.dist*.3;SC.fog.far=ST.dist;CAM.far=ST.dist+900;CAM.updateProjectionMatrix()}
  else if(k=='traf'||k=='peds')setN();
  else if(k=='view'){FP=ST.view=='first';pit=0}
@@ -1941,13 +1941,33 @@ wheelDraw=function(){if(!wheelOn)return;const L=wheelOn.L||[0],n=L.length;if(Mat
 const MK=[];const mkG=new THREE.CylinderGeometry(18,18,160,20,1,true).translate(0,80,0),rgG=new THREE.RingGeometry(20,26,28).rotateX(-Math.PI/2);
 function marker(i,x,y,col,big2){let m=MK[i];if(!m){m=new THREE.Group();const b=new THREE.Mesh(mkG,new THREE.MeshBasicMaterial({transparent:true,opacity:.28,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending})),r=new THREE.Mesh(rgG,new THREE.MeshBasicMaterial({transparent:true,opacity:.8,depthWrite:false,side:THREE.DoubleSide}));m.add(b,r);m.userData={b,r};SC.add(m);MK[i]=m}
  m.visible=true;m.position.set(x,GH(x,y)+1,y);m.userData.b.material.color.set(col);m.userData.r.material.color.set(col);const s=big2?2.2:1;m.scale.set(s,1,s);m.userData.b.visible=Math.hypot(CAM.position.x-x,CAM.position.z-y)>30*s+20;m.userData.b.material.opacity=.22;m.userData.r.rotation.y=performance.now()/600}
+
+/* ---------------- performance: static instanced meshes are split into map chunks so the camera and the sun's shadow camera
+   only draw nearby, on-screen parts of the city; far chunks are dropped beyond the draw distance ---------------- */
+const CHUNKS=[],CHS=BT*T*2;
+{const list=[];for(const o of SC.children)if(o.isInstancedMesh&&o.count>24)list.push(o);const m4=new THREE.Matrix4(),v=new THREE.Vector3(),c3=new THREE.Color();
+ for(const im of list){const g=im.geometry;if(!g.boundingSphere)g.computeBoundingSphere();const gr=g.boundingSphere.radius,gc=g.boundingSphere.center,B=new Map();
+  for(let i=0;i<im.count;i++){im.getMatrixAt(i,m4);v.setFromMatrixPosition(m4);const k=Math.floor(v.x/CHS)+','+Math.floor(v.z/CHS);let b=B.get(k);if(!b)B.set(k,b=[]);b.push(i)}
+  for(const ids of B.values()){const ng=new THREE.BufferGeometry();ng.setIndex(g.index);for(const a in g.attributes)ng.setAttribute(a,g.attributes[a]);for(const q of g.groups)ng.addGroup(q.start,q.count,q.materialIndex);
+   const n=new THREE.InstancedMesh(ng,im.material,ids.length),box=new THREE.Box3();let mr=0;
+   ids.forEach((i,j)=>{im.getMatrixAt(i,m4);n.setMatrixAt(j,m4);if(im.instanceColor){im.getColorAt(i,c3);n.setColorAt(j,c3)}v.copy(gc).applyMatrix4(m4);const r=gr*m4.getMaxScaleOnAxis();if(r>mr)mr=r;box.expandByPoint(v.clone().addScalar(r));box.expandByPoint(v.clone().addScalar(-r))});
+   ng.boundingBox=box;ng.boundingSphere=box.getBoundingSphere(new THREE.Sphere());n.castShadow=im.castShadow;n.receiveShadow=im.receiveShadow;n.renderOrder=im.renderOrder;n.matrixAutoUpdate=false;
+   SC.add(n);CHUNKS.push({m:n,b:box,s:mr<60})}
+  SC.remove(im)}}
+let ema=16,lastFt=performance.now(),drsT=0;const FR=new THREE.Frustum(),FM=new THREE.Matrix4();
+function perfTick(){const now=performance.now(),ft=now-lastFt;lastFt=now;if(ft<250)ema+=(ft-ema)*.06;drsT+=ft;
+ const cx=CAM.position.x,cz=CAM.position.z,far=ST.dist*1.04,sm=Math.min(far,820);CAM.updateMatrixWorld();FR.setFromProjectionMatrix(FM.multiplyMatrices(CAM.projectionMatrix,CAM.matrixWorldInverse));
+ for(const c of CHUNKS){const b=c.b,d=Math.hypot(Math.max(b.min.x-cx,0,cx-b.max.x),Math.max(b.min.z-cz,0,cz-b.max.z));c.m.visible=d<(c.s?sm:far)&&(d<420||FR.intersectsBox(b))}
+ for(const[p,m]of mp.p)m.visible=Math.hypot(p.x-cx,p.y-cz)<Math.min(far,850);for(const[c,m]of mp.c)if(m.visible)m.visible=Math.hypot(c.x-cx,c.y-cz)<far+60;
+ lampPts.visible=lampPool.visible=lampPts.material.opacity>.01;starPts.visible=starPts.material.opacity>.01;
+ if(ST.autores&&started&&!paused&&drsT>1500){drsT=0;let n=DRS;if(ema>21)n=Math.max(.5,DRS-.1);else if(ema<17.4&&DRS<1)n=Math.min(1,DRS+.05);if(n!=DRS){DRS=+n.toFixed(2);apply('res')}}else if(!ST.autores&&DRS!=1){DRS=1;apply('res')}}
 /* ---------------- per-frame logic ---------------- */
 let wasDead=0;
 V6T=SF(function(dt){statTick(dt);ffTick(dt);if(BUSTN&&P.dead<=0&&!P.car&&!P.in)P.bust+=dt;else P.bust=Math.max(0,P.bust-dt*.7);BUSTN=0;if(P.bust>=1.7)doBust();
  rbTick(dt);heliTick(dt);gangTick(dt);rkTick(dt);pedTick(dt);raceTick(dt);jobTick(dt);missionTick(dt);incomeTick();bankTick(dt);
  if(P.car&&!P.frz){const c=P.car,co=Math.cos(c.a),si=Math.sin(c.a),sl=(GH(c.x+co*20,c.y+si*20)-GH(c.x-co*20,c.y-si*20))/40;if(sl)c.v-=sl*260*dt}
  autoT-=dt;if(autoT<=0){autoT=60;saveG()}wasDead=P.dead>0},'tick');
-V6D=SF(function(fdt){const t=performance.now()/1000;lighting();carPost();terrainPost();gangDraw(fdt,t);rkDraw();heliDraw(t);
+V6D=SF(function(fdt){const t=performance.now()/1000;lighting();carPost();terrainPost();perfTick();gangDraw(fdt,t);rkDraw();heliDraw(t);
  const u=pl.userData,w=WP[P.w];
  if(P.busted&&P.dead>0){pl.visible=true;pl.position.set(P.x,GH(P.x,P.y),P.y);pl.rotation.set(0,-P.a,0);pl.scale.setScalar(u.sc);poseHum(pl,{a:0,t,hup:1});for(const k in gm)gm[k].visible=false}
  else if(pl.visible&&!P.rag){
@@ -1980,7 +2000,7 @@ V6M=SF(function(tx,ty){const C=(x,y)=>[(x/T-tx)*3,(y/T-ty)*3];if(P.in)return;
  for(const g of GANG){const[a,b]=C(g.x,g.y);mc.fillStyle='#ff3030';mc.fillRect(a-2,b-2,4,4)}if(HELI.on){const[a,b]=C(HELI.x,HELI.y);mc.fillStyle='#4a7dff';mc.fillRect(a-3,b-3,6,6)}
  if(MYCAR&&cars.includes(MYCAR)&&MYCAR!==P.car)dot(MYCAR.x,MYCAR.y,'#ffffff','c');
  const tg=stepTarget();if(tg)dot(tg[0],tg[1],'#ffd400','!',1);if(JOB.on)dot(JOB.x,JOB.y,'#f2a35a','D',1);if(RACE.on){const c=RACE.R.cps[RACE.i];if(c)dot(c[0],c[1],'#ff4adf','',1)}if(WPT)dot(WPT[0],WPT[1],'#ff4adf','W',1)},'map');
-return{dbg:{SPEC,PROPS,MS,ST6,RACES,GANG,HELI,spawnGang,startMission,startRace,saveG,dealerMenu,casinoMenu,openJournal,get RACE(){return RACE}}}})();
+return{dbg:{CHUNKS,SPEC,PROPS,MS,ST6,RACES,GANG,HELI,spawnGang,startMission,startRace,saveG,dealerMenu,casinoMenu,openJournal,get RACE(){return RACE}}}})();
 
 let last=performance.now();(function loop(t){const dt=Math.min(.05,(t-last)/1000)*(wheelOn?.2:1);last=t;if(started&&!paused)update(dt);draw();requestAnimationFrame(loop)})(last);
 window.__built=1;
